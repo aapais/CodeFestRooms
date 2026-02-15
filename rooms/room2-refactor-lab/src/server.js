@@ -76,12 +76,6 @@ app.get('/api/validate-complexity', (req, res) => {
       message: "✅ Clean Code Achieved! Complexity is within limits." 
     });
   });
-    // Se não deu erro, passou no teste
-    res.json({ 
-      ok: true, 
-      message: "✅ Clean Code Achieved! Complexity is within limits." 
-    });
-  });
 });
 
 const PORT = process.env.PORT || 3002;
