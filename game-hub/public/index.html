@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Live Leaderboard</title>
+  <style>
+    body { font-family: "Segoe UI", sans-serif; margin: 0; padding: 24px; background: #f5f7fb; color: #1a202c; }
+    .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .title { font-size: 24px; font-weight: 700; }
+    .sub { color: #4a5568; font-size: 14px; }
+    .board { background: #fff; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 12px 14px; text-align: left; border-bottom: 1px solid #edf2f7; font-size: 14px; }
+    th { background: #f7fafc; font-weight: 600; color: #4a5568; }
+    .rank { font-weight: 700; }
+    .room { text-transform: uppercase; font-size: 12px; color: #718096; }
+    .status { font-size: 12px; color: #2d3748; }
+    .score { font-weight: 700; }
+    .pill { display: inline-block; padding: 2px 8px; border-radius: 999px; background: #edf2f7; font-size: 12px; }
+    .badge { display: inline-block; padding: 2px 6px; border-radius: 8px; background: #e0f2fe; color: #0c4a6e; font-size: 11px; margin-right: 4px; }
+    .badges { white-space: nowrap; }
+    .empty { padding: 24px; text-align: center; color: #718096; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <div class="title">Live Leaderboard</div>
+      <div class="sub">Real-time progress per team</div>
+    </div>
+    <div class="pill" id="conn">Connecting...</div>
+  </div>
+
+  <div class="board">
+    <table>
+      <thead>
+        <tr>
+          <th>Rank</th>
+          <th>Team</th>
+          <th>Room</th>
+          <th>Status</th>
+          <th>Score</th>
+          <th>Completed</th>
+          <th>Last Result</th>
+        </tr>
+      </thead>
+      <tbody id="rows">
+        <tr><td colspan="6" class="empty">No teams yet</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    const rowsEl = document.getElementById('rows');
+    const connEl = document.getElementById('conn');
+    const wsUrl = `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.hostname}:4000`;
+
+    function render(teams) {
+      if (!teams || teams.length === 0) {
+        rowsEl.innerHTML = '<tr><td colspan="7" class="empty">No teams yet</td></tr>';
+        return;
+      }
+
+      rowsEl.innerHTML = teams.map((t, idx) => `
+        <tr>
+          <td class="rank">${idx + 1}</td>
+          <td>${t.name}</td>
+          <td><span class="room">${t.room || '-'}</span></td>
+          <td class="status">${t.status || '-'}</td>
+          <td class="score">${t.score ?? 0}</td>
+          <td class="badges">${(t.completedRooms || []).map(r => `<span class="badge">${r}</span>`).join('') || '-'}</td>
+          <td>${t.lastResult || '-'}</td>
+        </tr>
+      `).join('');
+    }
+
+    const ws = new WebSocket(wsUrl);
+    ws.onopen = () => { connEl.textContent = 'Connected'; };
+    ws.onclose = () => { connEl.textContent = 'Disconnected'; };
+    ws.onerror = () => { connEl.textContent = 'Error'; };
+    ws.onmessage = (event) => {
+      try {
+        const payload = JSON.parse(event.data);
+        if (payload.type === 'state') {
+          render(payload.teams || []);
+        }
+      } catch (e) {
+        // Ignore malformed messages
+      }
+    };
+  </script>
+</body>
+</html>

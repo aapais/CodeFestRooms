@@ -16,23 +16,26 @@
     .team-actions { margin-left: auto; display: flex; gap: 8px; }
     .btn-secondary { background: #6b7280; }
     .btn-secondary:hover { background: #4b5563; }
+    .team-status { color: #4a5568; font-size: 12px; }
   </style>
 </head>
 <body>
-  <h1>🏚 Legacy Shop (Room 1)</h1>
-  <p>Bem-vindo à loja legacy. O código é antigo, mas "funciona" (achamos nós).</p>
-
   <div class="team-bar">
     <strong>Team</strong>
     <input type="text" id="teamName" placeholder="Team name" />
     <button onclick="joinTeam()">Join</button>
-    <span id="teamStatus" style="color:#4a5568;"></span>
+    <span id="teamStatus" class="team-status"></span>
+    <div id="badges" style="display:flex; gap:4px; font-size:11px; margin-left:8px;"></div>
     <div class="team-actions">
       <button class="btn-secondary" onclick="openLeaderboard()">Leaderboard</button>
       <button onclick="goPrevRoom()">Prev Room</button>
       <button onclick="goNextRoom()">Next Room</button>
+      <button class="btn-secondary" onclick="markComplete()">Mark Complete</button>
     </div>
   </div>
+
+  <h1>Legacy Shop (Room 1)</h1>
+  <p>Bem-vindo a loja legacy. O codigo e antigo, mas "funciona" (achamos nos).</p>
 
   <div class="card" id="login-section">
     <h2>1. Login</h2>
@@ -44,96 +47,30 @@
 
   <div class="card" id="shop-section" style="display:none; opacity: 0.5;">
     <h2>2. Checkout</h2>
-    <p>Items: <b>2x "Mystery Box"</b> (1000€ cada)</p>
-    <p>Subtotal: 2000€</p>
+    <p>Items: <b>2x "Mystery Box"</b> (1000EUR cada)</p>
+    <p>Subtotal: 2000EUR</p>
     <p>Discount Code: <input type="text" id="discount" value="WELCOME10" /> (10%)</p>
-    <p>Shipping to: <b>Portugal</b> (Shipping: 450€ flat rate)</p>
+    <p>Shipping to: <b>Portugal</b> (Shipping: 450EUR flat rate)</p>
     <button onclick="doCheckout()">Place Order</button>
 
     <h3>Fatura Gerada:</h3>
     <pre id="invoice-result" style="background:#f4f4f4; padding:1rem;">...</pre>
-    
+
     <div id="bug-hint" style="display:none; border-left: 5px solid orange; padding-left: 10px;">
-      <p>🧐 <b>Espera...</b> Faz as contas à mão.</p>
+      <p><b>Espera...</b> Faz as contas a mao.</p>
       <ul>
-        <li>Subtotal: 2000€</li>
-        .team-bar { display: flex; gap: 8px; align-items: center; padding: 10px; border: 1px solid #ddd; border-radius: 6px; background: #fafafa; margin-bottom: 16px; }
-        .team-bar input { padding: 6px 8px; }
-        .team-bar .spacer { flex: 1; }
-        .team-bar button { padding: 6px 10px; }
-        .team-status { font-size: 12px; color: #555; }
-        <li>Discount: -200€ (10%)</li>
-        <li>Shipping: +450€</li>
-        <li><b>Taxable Base:</b> devia ser (2000 - 200 + 450) = 2250€?</li>
-        <li><b>IVA (23%):</b> 2250 * 0.23 = <b>517.50€</b></li>
+        <li>Subtotal: 2000EUR</li>
+        <li>Discount: -200EUR (10%)</li>
+        <li>Shipping: +450EUR</li>
+        <li><b>Taxable Base:</b> devia ser (2000 - 200 + 450) = 2250EUR?</li>
+        <li><b>IVA (23%):</b> 2250 * 0.23 = <b>517.50EUR</b></li>
       </ul>
       <p>O que apareceu na fatura? Se for diferente, encontraste o Bug!</p>
     </div>
   </div>
 
-      <div class="team-bar">
-        <strong>Team</strong>
-        <input type="text" id="teamName" placeholder="Team name" />
-        <button onclick="joinTeam()">Join</button>
-        <button onclick="markComplete()">Mark Room Complete</button>
-        <span class="spacer"></span>
-        <button onclick="goRoom('room1')">Room 1</button>
-        <button onclick="goRoom('room2')">Room 2</button>
-        <button onclick="goRoom('room3')">Room 3</button>
-        <button onclick="goRoom('final')">Final</button>
-      </div>
-      <div class="team-status" id="teamStatus">Not connected</div>
-
   <script>
     let token = null;
-    const CURRENT_ROOM = 'room1';
-    const HUB_PORT = 4000;
-    const HUB_BASE = `${location.protocol}//${location.hostname}:${HUB_PORT}`;
-
-    function getTeamName() {
-      return localStorage.getItem('teamName') || '';
-    }
-
-    function setTeamName(name) {
-      localStorage.setItem('teamName', name);
-      document.getElementById('teamName').value = name;
-    }
-
-    async function joinTeam() {
-      const name = document.getElementById('teamName').value.trim();
-      if (!name) return alert('Enter a team name');
-      setTeamName(name);
-      await fetch(`${HUB_BASE}/api/team/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name })
-      });
-      await updateTeam({ room: CURRENT_ROOM, status: 'in-progress' });
-      document.getElementById('teamStatus').textContent = `Connected as ${name}`;
-    }
-
-    async function updateTeam(payload) {
-      const name = getTeamName();
-      if (!name) return;
-      await fetch(`${HUB_BASE}/api/team/update`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, ...payload })
-      });
-    }
-
-    async function markComplete() {
-      await updateTeam({ room: CURRENT_ROOM, status: 'completed', scoreDelta: 100, result: 'Room 1 complete' });
-      document.getElementById('teamStatus').textContent = 'Room marked complete.';
-    }
-
-    function goRoom(roomId) {
-      const ports = { room1: 3000, room2: 3002, room3: 3003, final: 8080 };
-      updateTeam({ room: roomId, status: 'in-progress' });
-      const port = ports[roomId];
-      if (!port) return;
-      window.location.href = `${location.protocol}//${location.hostname}:${port}/`;
-    }
     const HUB_URL = `${location.protocol}//${location.hostname}:4000`;
     const ROOM_ID = 'room1';
     const ROOM_ORDER = ['room1', 'room2', 'room3', 'final'];
@@ -141,7 +78,8 @@
 
     function setTeamName(name) {
       localStorage.setItem('teamName', name);
-      document.getElementById('teamStatus').textContent = name ? `Joined as ${name}` : '';
+      document.getElementById('teamName').value = name;
+      document.getElementById('teamStatus').textContent = name ? `Connected as ${name}` : '';
     }
 
     function getTeamName() {
@@ -150,7 +88,7 @@
 
     async function joinTeam() {
       const name = document.getElementById('teamName').value.trim();
-      if (!name) return;
+      if (!name) return alert('Enter a team name');
       setTeamName(name);
       await fetch(`${HUB_URL}/api/team/login`, {
         method: 'POST',
@@ -168,6 +106,40 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, ...payload })
       });
+    }
+
+    async function markComplete() {
+      await updateTeam({ room: ROOM_ID, status: 'in-progress', completedRoom: ROOM_ID, result: 'Room 1 complete', scoreDelta: 0 });
+      document.getElementById('teamStatus').textContent = 'Room marked complete.';
+      updateBadges();
+    }
+
+    let teamState = { completedRooms: [] };
+
+    function updateBadges() {
+      const badge = document.getElementById('badges');
+      badge.innerHTML = ROOM_ORDER.map((r, i) => {
+        const done = teamState.completedRooms && teamState.completedRooms.includes(r);
+        const icons = { room1: '🏚', room2: '🧱', room3: '🔐', final: '🏢' };
+        const labels = { room1: '1', room2: '2', room3: '3', final: 'F' };
+        return `<span style="color: ${done ? '#22c55e' : '#888'}; font-weight: bold;" title="${r}">${icons[r]} ${labels[r]}</span>`;
+      }).join('');
+    }
+
+    async function fetchTeamState() {
+      try {
+        const res = await fetch(`${HUB_URL}/api/state`);
+        const data = await res.json();
+        if (data.ok && data.teams) {
+          const me = data.teams.find(t => t.name === getTeamName());
+          if (me) {
+            teamState = me;
+            updateBadges();
+          }
+        }
+      } catch (e) {
+        console.error('Failed to fetch team state:', e);
+      }
     }
 
     function openLeaderboard() {
@@ -218,28 +190,21 @@
     async function doCheckout() {
       if (!token) return alert('Faz login primeiro!');
       const discount = document.getElementById('discount').value;
-      
-
-      const savedTeam = getTeamName();
-      if (savedTeam) {
-        setTeamName(savedTeam);
-        joinTeam();
-      }
-      const cart = [ { sku: 'MysteryBox', qty: 2, priceCents: 100000 } ]; // 1000 eur * 100
+      const cart = [ { sku: 'MysteryBox', qty: 2, priceCents: 100000 } ];
 
       const res = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          token, 
-          cart, 
+        body: JSON.stringify({
+          token,
+          cart,
           discountCode: discount,
           shippingAddress: { country: 'PT' }
         })
       });
       const data = await res.json();
-      
-      const fmt = (cents) => (cents / 100).toFixed(2) + '€';
+
+      const fmt = (cents) => (cents / 100).toFixed(2) + 'EUR';
 
       if (data.ok) {
         const amt = data.order.amounts;
@@ -261,14 +226,15 @@ TOTAL:    ${fmt(amt.totalCents)}
       }
     }
 
-    (function initTeam() {
-      const saved = getTeamName();
-      if (saved) {
-        document.getElementById('teamName').value = saved;
-        setTeamName(saved);
-        updateTeam({ room: ROOM_ID, status: 'in-progress', result: 'Opened Room 1' });
-      }
-    })();
+    const savedTeam = getTeamName();
+    if (savedTeam) {
+      setTeamName(savedTeam);
+      joinTeam();
+      setTimeout(fetchTeamState, 500);
+    }
+    
+    // Refresh badges every 3s
+    setInterval(fetchTeamState, 3000);
   </script>
 </body>
 </html>

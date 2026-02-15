@@ -30,6 +30,7 @@
         <button onclick="joinTeam()">Join</button>
         <button onclick="markComplete()">Mark Room Complete</button>
         <span class="spacer"></span>
+        <div id="badges" style="display:flex; gap:4px; font-size:11px;"></div>
         <button onclick="goRoom('room1')">Room 1</button>
         <button onclick="goRoom('room2')">Room 2</button>
         <button onclick="goRoom('room3')">Room 3</button>
@@ -62,6 +63,35 @@
         const CURRENT_ROOM = 'final';
         const HUB_PORT = 4000;
         const HUB_BASE = `${location.protocol}//${location.hostname}:${HUB_PORT}`;
+        const ROOM_ORDER = ['room1', 'room2', 'room3', 'final'];
+
+        let teamState = { completedRooms: [] };
+
+        function updateBadges() {
+            const badge = document.getElementById('badges');
+            badge.innerHTML = ROOM_ORDER.map((r, i) => {
+                const done = teamState.completedRooms && teamState.completedRooms.includes(r);
+                const icons = { room1: '🏚', room2: '🧱', room3: '🔐', final: '🏢' };
+                const labels = { room1: '1', room2: '2', room3: '3', final: 'F' };
+                return `<span style="color: ${done ? '#22c55e' : '#888'}; font-weight: bold;" title="${r}">${icons[r]} ${labels[r]}</span>`;
+            }).join('');
+        }
+
+        async function fetchTeamState() {
+            try {
+                const res = await fetch(`${HUB_BASE}/api/state`);
+                const data = await res.json();
+                if (data.ok && data.teams) {
+                    const me = data.teams.find(t => t.name === getTeamName());
+                    if (me) {
+                        teamState = me;
+                        updateBadges();
+                    }
+                }
+            } catch (e) {
+                console.error('Failed to fetch team state:', e);
+            }
+        }
 
         function getTeamName() {
             return localStorage.getItem('teamName') || '';
@@ -83,6 +113,7 @@
             });
             await updateTeam({ room: CURRENT_ROOM, status: 'in-progress' });
             document.getElementById('teamStatus').textContent = `Connected as ${name}`;
+            fetchTeamState();
         }
 
         async function updateTeam(payload) {
@@ -96,8 +127,10 @@
         }
 
         async function markComplete() {
-            await updateTeam({ room: CURRENT_ROOM, status: 'completed', scoreDelta: 200, result: 'Final room complete' });
+            await updateTeam({ room: CURRENT_ROOM, status: 'in-progress', completedRoom: CURRENT_ROOM, result: 'Final room complete', scoreDelta: 0 });
             document.getElementById('teamStatus').textContent = 'Room marked complete.';
+            fetchTeamState();
+        }
         }
 
         function goRoom(roomId) {
@@ -149,7 +182,11 @@
         if (savedTeam) {
             setTeamName(savedTeam);
             joinTeam();
+            setTimeout(fetchTeamState, 500);
         }
+
+        // Refresh badges every 3s
+        setInterval(fetchTeamState, 3000);
     </script>
 </body>
 </html>

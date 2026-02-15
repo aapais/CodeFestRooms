@@ -26,6 +26,7 @@
         <input type="text" id="teamName" placeholder="Team name" />
         <button onclick="joinTeam()">Join</button>
         <div class="team-actions">
+            <div id="badges" style="display:flex; gap:4px; font-size:11px;"></div>
             <button class="btn-secondary" onclick="openLeaderboard()">Leaderboard</button>
             <button onclick="goPrevRoom()">Prev Room</button>
             <button onclick="goNextRoom()">Next Room</button>
@@ -54,6 +55,34 @@
         const ROOM_ORDER = ['room1', 'room2', 'room3', 'final'];
         const ROOM_PORTS = { room1: 3000, room2: 3002, room3: 3003, final: 8080 };
 
+        let teamState = { completedRooms: [] };
+
+        function updateBadges() {
+            const badge = document.getElementById('badges');
+            badge.innerHTML = ROOM_ORDER.map((r, i) => {
+                const done = teamState.completedRooms && teamState.completedRooms.includes(r);
+                const icons = { room1: '🏚', room2: '🧱', room3: '🔐', final: '🏢' };
+                const labels = { room1: '1', room2: '2', room3: '3', final: 'F' };
+                return `<span style="color: ${done ? '#22c55e' : '#888'}; font-weight: bold;" title="${r}">${icons[r]} ${labels[r]}</span>`;
+            }).join('');
+        }
+
+        async function fetchTeamState() {
+            try {
+                const res = await fetch(`${HUB_BASE}/api/state`);
+                const data = await res.json();
+                if (data.ok && data.teams) {
+                    const me = data.teams.find(t => t.name === getTeamName());
+                    if (me) {
+                        teamState = me;
+                        updateBadges();
+                    }
+                }
+            } catch (e) {
+                console.error('Failed to fetch team state:', e);
+            }
+        }
+
         function getTeamName() {
             return localStorage.getItem('teamName') || '';
         }
@@ -74,6 +103,7 @@
             });
             await updateTeam({ room: CURRENT_ROOM, status: 'in-progress' });
             document.getElementById('teamStatus').textContent = `Connected as ${name}`;
+            fetchTeamState();
         }
 
         async function updateTeam(payload) {
@@ -116,7 +146,8 @@
                 
                 if (data.ok) {
                     el.innerHTML = `<div style="background:#f0fff4; padding:1rem; border:1px solid #c6f6d5; color: green; font-weight: bold;">${data.message}</div>`;
-                    updateTeam({ room: CURRENT_ROOM, status: 'completed', result: 'Complexity OK', scoreDelta: 100 });
+                    updateTeam({ room: CURRENT_ROOM, status: 'in-progress', completedRoom: CURRENT_ROOM, result: 'Complexity OK', scoreDelta: 0 });
+                    fetchTeamState();
                 } else {
                     const details = (data.details || 'No details provided.').trim();
                     el.innerHTML = `<div style="background:#fff5f5; padding:1rem; border:1px solid #feb2b2; color: #c53030;">
@@ -226,7 +257,11 @@
         if (savedTeam) {
             setTeamName(savedTeam);
             joinTeam();
+            setTimeout(fetchTeamState, 500);
         }
+        
+        // Refresh badges every 3s
+        setInterval(fetchTeamState, 3000);
     </script>
 </body>
 </html>

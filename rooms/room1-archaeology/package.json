@@ -3,7 +3,8 @@
   "private": true,
   "type": "commonjs",
   "scripts": {
-    "test": "jest --runInBand"
+    "test": "jest --runInBand",
+    "start": "node src/server.js"
   },
   "devDependencies": {
     "jest": "^29.7.0"
