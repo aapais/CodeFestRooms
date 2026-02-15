@@ -34,7 +34,7 @@ app.get('/api/search', (req, res) => {
     res.json({ ok: true, queryExecuted: result.query });
 });
 
-const PORT = 3003;
+const PORT = process.env.PORT || 3003;
 app.listen(PORT, () => {
   console.log(`🔐 Security Vault running at http://localhost:${PORT}`);
 });

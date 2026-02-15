@@ -34,7 +34,7 @@ app.post('/api/invoice', (req, res) => {
   }
 });
 
-const PORT = 3002;
+const PORT = process.env.PORT || 3002;
 app.listen(PORT, () => {
   console.log(`🧾 Invoice Engine running at http://localhost:${PORT}`);
 });
