@@ -6,6 +6,11 @@
     <title>Room 3: Corporate Login</title>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #2d3748; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .team-bar { position: fixed; top: 16px; left: 16px; right: 16px; display: flex; gap: 8px; align-items: center; padding: 10px; border: 1px solid #444; border-radius: 6px; background: #1a202c; color: #e2e8f0; z-index: 5; }
+        .team-bar input { padding: 6px 8px; }
+        .team-bar .spacer { flex: 1; }
+        .team-bar button { padding: 6px 10px; border: none; border-radius: 4px; cursor: pointer; }
+        .team-status { position: fixed; top: 58px; left: 16px; color: #cbd5e0; font-size: 12px; z-index: 5; }
         .login-box { background: white; padding: 2.5rem; border-radius: 8px; width: 100%; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
         h1 { margin-top: 0; color: #1a202c; text-align: center; }
         input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #cbd5e0; border-radius: 4px; box-sizing: border-box; }
@@ -18,6 +23,19 @@
     </style>
 </head>
 <body>
+    <div class="team-bar">
+        <strong>Team</strong>
+        <input type="text" id="teamName" placeholder="Team name" />
+        <button onclick="joinTeam()">Join</button>
+        <button onclick="markComplete()">Mark Room Complete</button>
+        <span class="spacer"></span>
+        <button onclick="goRoom('room1')">Room 1</button>
+        <button onclick="goRoom('room2')">Room 2</button>
+        <button onclick="goRoom('room3')">Room 3</button>
+        <button onclick="goRoom('final')">Final</button>
+    </div>
+    <div class="team-status" id="teamStatus">Not connected</div>
+
     <div class="login-box">
         <h1>🔒 Secure Vault</h1>
         <form id="loginForm">
@@ -34,6 +52,55 @@
     </div>
 
     <script>
+        const CURRENT_ROOM = 'room3';
+        const HUB_PORT = 4000;
+        const HUB_BASE = `${location.protocol}//${location.hostname}:${HUB_PORT}`;
+
+        function getTeamName() {
+            return localStorage.getItem('teamName') || '';
+        }
+
+        function setTeamName(name) {
+            localStorage.setItem('teamName', name);
+            document.getElementById('teamName').value = name;
+        }
+
+        async function joinTeam() {
+            const name = document.getElementById('teamName').value.trim();
+            if (!name) return alert('Enter a team name');
+            setTeamName(name);
+            await fetch(`${HUB_BASE}/api/team/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name })
+            });
+            await updateTeam({ room: CURRENT_ROOM, status: 'in-progress' });
+            document.getElementById('teamStatus').textContent = `Connected as ${name}`;
+        }
+
+        async function updateTeam(payload) {
+            const name = getTeamName();
+            if (!name) return;
+            await fetch(`${HUB_BASE}/api/team/update`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, ...payload })
+            });
+        }
+
+        async function markComplete() {
+            await updateTeam({ room: CURRENT_ROOM, status: 'completed', scoreDelta: 150, result: 'Room 3 complete' });
+            document.getElementById('teamStatus').textContent = 'Room marked complete.';
+        }
+
+        function goRoom(roomId) {
+            const ports = { room1: 3000, room2: 3002, room3: 3003, final: 8080 };
+            updateTeam({ room: roomId, status: 'in-progress' });
+            const port = ports[roomId];
+            if (!port) return;
+            window.location.href = `${location.protocol}//${location.hostname}:${port}/`;
+        }
+
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const msg = document.getElementById('message');
@@ -62,6 +129,12 @@
                 msg.className = "error";
             }
         });
+
+        const savedTeam = getTeamName();
+        if (savedTeam) {
+            setTeamName(savedTeam);
+            joinTeam();
+        }
     </script>
 </body>
 </html>

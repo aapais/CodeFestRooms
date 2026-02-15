@@ -6,6 +6,11 @@
     <title>Enterprise Monolith Status</title>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #222; color: #eee; padding: 40px; }
+        .team-bar { display: flex; gap: 8px; align-items: center; padding: 10px; border: 1px solid #444; border-radius: 6px; background: #1a202c; color: #e2e8f0; margin-bottom: 16px; }
+        .team-bar input { padding: 6px 8px; }
+        .team-bar .spacer { flex: 1; }
+        .team-bar button { padding: 6px 10px; border: none; border-radius: 4px; cursor: pointer; }
+        .team-status { font-size: 12px; color: #cbd5e0; margin-bottom: 16px; }
         .dashboard { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .card { background: #333; padding: 20px; border-radius: 8px; }
         h1 { color: #4fc3f7; border-bottom: 2px solid #4fc3f7; padding-bottom: 10px; }
@@ -19,6 +24,19 @@
     </style>
 </head>
 <body>
+    <div class="team-bar">
+        <strong>Team</strong>
+        <input type="text" id="teamName" placeholder="Team name" />
+        <button onclick="joinTeam()">Join</button>
+        <button onclick="markComplete()">Mark Room Complete</button>
+        <span class="spacer"></span>
+        <button onclick="goRoom('room1')">Room 1</button>
+        <button onclick="goRoom('room2')">Room 2</button>
+        <button onclick="goRoom('room3')">Room 3</button>
+        <button onclick="goRoom('final')">Final</button>
+    </div>
+    <div class="team-status" id="teamStatus">Not connected</div>
+
     <h1>🏢 Legacy Enterprise Dashboard</h1>
     <div class="dashboard">
         <!-- Monitoring Panel -->
@@ -41,6 +59,54 @@
     </div>
 
     <script>
+        const CURRENT_ROOM = 'final';
+        const HUB_PORT = 4000;
+        const HUB_BASE = `${location.protocol}//${location.hostname}:${HUB_PORT}`;
+
+        function getTeamName() {
+            return localStorage.getItem('teamName') || '';
+        }
+
+        function setTeamName(name) {
+            localStorage.setItem('teamName', name);
+            document.getElementById('teamName').value = name;
+        }
+
+        async function joinTeam() {
+            const name = document.getElementById('teamName').value.trim();
+            if (!name) return alert('Enter a team name');
+            setTeamName(name);
+            await fetch(`${HUB_BASE}/api/team/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name })
+            });
+            await updateTeam({ room: CURRENT_ROOM, status: 'in-progress' });
+            document.getElementById('teamStatus').textContent = `Connected as ${name}`;
+        }
+
+        async function updateTeam(payload) {
+            const name = getTeamName();
+            if (!name) return;
+            await fetch(`${HUB_BASE}/api/team/update`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, ...payload })
+            });
+        }
+
+        async function markComplete() {
+            await updateTeam({ room: CURRENT_ROOM, status: 'completed', scoreDelta: 200, result: 'Final room complete' });
+            document.getElementById('teamStatus').textContent = 'Room marked complete.';
+        }
+
+        function goRoom(roomId) {
+            const ports = { room1: 3000, room2: 3002, room3: 3003, final: 8080 };
+            updateTeam({ room: roomId, status: 'in-progress' });
+            const port = ports[roomId];
+            if (!port) return;
+            window.location.href = `${location.protocol}//${location.hostname}:${port}/`;
+        }
         async function checkHealth() {
             const box = document.getElementById('statusBox');
             box.innerText = "Pinging...";
@@ -78,6 +144,12 @@
 
         // Auto check on load
         checkHealth();
+
+        const savedTeam = getTeamName();
+        if (savedTeam) {
+            setTeamName(savedTeam);
+            joinTeam();
+        }
     </script>
 </body>
 </html>

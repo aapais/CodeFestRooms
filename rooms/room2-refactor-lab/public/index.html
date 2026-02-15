@@ -6,6 +6,12 @@
     <title>Room 2: Invoice Generator</title>
     <style>
         body { font-family: sans-serif; padding: 2rem; background: #f0f2f5; }
+        .team-bar { display: flex; gap: 8px; align-items: center; padding: 10px; border: 1px solid #ddd; border-radius: 6px; background: #fafafa; margin-bottom: 16px; }
+        .team-bar input { padding: 6px 8px; }
+        .team-actions { margin-left: auto; display: flex; gap: 8px; }
+        .team-status { font-size: 12px; color: #555; margin-bottom: 16px; }
+        .btn-secondary { background: #6b7280; }
+        .btn-secondary:hover { background: #4b5563; }
         .card { background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); max-width: 600px; margin: 0 auto; }
         pre { background: #fee; padding: 1rem; border-radius: 4px; overflow-x: auto; font-size: 0.9rem; }
         .success { background: #e6fffa; color: #2c7a7b; }
@@ -15,6 +21,18 @@
     </style>
 </head>
 <body>
+    <div class="team-bar">
+        <strong>Team</strong>
+        <input type="text" id="teamName" placeholder="Team name" />
+        <button onclick="joinTeam()">Join</button>
+        <div class="team-actions">
+            <button class="btn-secondary" onclick="openLeaderboard()">Leaderboard</button>
+            <button onclick="goPrevRoom()">Prev Room</button>
+            <button onclick="goNextRoom()">Next Room</button>
+        </div>
+    </div>
+    <div class="team-status" id="teamStatus">Not connected</div>
+
     <div class="card">
         <h1>🧾 Legacy Invoice Engine</h1>
         <p>This system handles billing. The code is messy and hard to maintain.</p>
@@ -30,6 +48,65 @@
     </div>
 
     <script>
+        const CURRENT_ROOM = 'room2';
+        const HUB_PORT = 4000;
+        const HUB_BASE = `${location.protocol}//${location.hostname}:${HUB_PORT}`;
+        const ROOM_ORDER = ['room1', 'room2', 'room3', 'final'];
+        const ROOM_PORTS = { room1: 3000, room2: 3002, room3: 3003, final: 8080 };
+
+        function getTeamName() {
+            return localStorage.getItem('teamName') || '';
+        }
+
+        function setTeamName(name) {
+            localStorage.setItem('teamName', name);
+            document.getElementById('teamName').value = name;
+        }
+
+        async function joinTeam() {
+            const name = document.getElementById('teamName').value.trim();
+            if (!name) return alert('Enter a team name');
+            setTeamName(name);
+            await fetch(`${HUB_BASE}/api/team/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name })
+            });
+            await updateTeam({ room: CURRENT_ROOM, status: 'in-progress' });
+            document.getElementById('teamStatus').textContent = `Connected as ${name}`;
+        }
+
+        async function updateTeam(payload) {
+            const name = getTeamName();
+            if (!name) return;
+            await fetch(`${HUB_BASE}/api/team/update`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, ...payload })
+            });
+        }
+
+        function openLeaderboard() {
+            window.open(`${HUB_BASE}/`, '_blank');
+        }
+
+        function goToRoom(roomId) {
+            updateTeam({ room: roomId, status: 'in-progress', result: `Moved to ${roomId}` });
+            const port = ROOM_PORTS[roomId];
+            if (!port) return;
+            window.location.href = `${location.protocol}//${location.hostname}:${port}/`;
+        }
+
+        function goPrevRoom() {
+            const idx = ROOM_ORDER.indexOf(CURRENT_ROOM);
+            if (idx > 0) goToRoom(ROOM_ORDER[idx - 1]);
+        }
+
+        function goNextRoom() {
+            const idx = ROOM_ORDER.indexOf(CURRENT_ROOM);
+            if (idx >= 0 && idx < ROOM_ORDER.length - 1) goToRoom(ROOM_ORDER[idx + 1]);
+        }
+
         async function validate() {
             const el = document.getElementById('quality-result');
             el.innerHTML = '<p>Running ESLint complexity check...</p>';
@@ -39,12 +116,14 @@
                 
                 if (data.ok) {
                     el.innerHTML = `<div style="background:#f0fff4; padding:1rem; border:1px solid #c6f6d5; color: green; font-weight: bold;">${data.message}</div>`;
+                    updateTeam({ room: CURRENT_ROOM, status: 'completed', result: 'Complexity OK', scoreDelta: 100 });
                 } else {
                     const details = (data.details || 'No details provided.').trim();
                     el.innerHTML = `<div style="background:#fff5f5; padding:1rem; border:1px solid #feb2b2; color: #c53030;">
                         <strong>${data.message}</strong>
                         <pre style="background:transparent; padding:0; margin-top:5px; white-space:pre-wrap;">${details}</pre>
                     </div>`;
+                    updateTeam({ room: CURRENT_ROOM, status: 'in-progress', result: 'Complexity too high' });
                 }
             } catch (e) {
                 el.innerHTML = `<pre>Error running check: ${e.message}</pre>`;
@@ -112,12 +191,22 @@
                                         <th style="padding:8px;">Total</th>
                                     </tr>
                                 </thead>
+                                updateTeam({ room: CURRENT_ROOM, status: 'in-progress', result: 'Invoice generated' });
                                 <tbody>${rows}</tbody>
                             </table>
 
                             <div style="margin-top:1.5rem; text-align:right; border-top:1px solid #e2e8f0; padding-top:1rem;">
                                 <div style="color:#718096; font-size:0.9rem;">Subtotal: €${inv.amounts.subtotal}</div>
                                 <div style="color:#718096; font-size:0.9rem;">Tax: €${inv.amounts.tax}</div>
+
+                    (function initTeam() {
+                        const saved = getTeamName();
+                        if (saved) {
+                            document.getElementById('teamName').value = saved;
+                            document.getElementById('teamStatus').textContent = `Connected as ${saved}`;
+                            updateTeam({ room: CURRENT_ROOM, status: 'in-progress', result: 'Opened Room 2' });
+                        }
+                    })();
                                 <div style="font-size:1.2rem; font-weight:bold; color:#2d3748; margin-top:0.5rem;">Total: €${inv.amounts.total}</div>
                             </div>
                             
@@ -131,6 +220,12 @@
                 console.error(e);
                 el.innerHTML = `<pre style="color:red">Network Error: ${e.message}</pre>`;
             }
+        }
+
+        const savedTeam = getTeamName();
+        if (savedTeam) {
+            setTeamName(savedTeam);
+            joinTeam();
         }
     </script>
 </body>
