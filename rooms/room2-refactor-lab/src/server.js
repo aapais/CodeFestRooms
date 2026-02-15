@@ -45,31 +45,29 @@ app.get('/api/validate-complexity', (req, res) => {
   exec('npm run complexity', { cwd: path.join(__dirname, '..') }, (error, stdout, stderr) => {
     const rawOutput = (stdout || '') + (stderr || '');
     
-    // 1. Tenta encontrar a mensagem específica de complexidade
-    // Exemplo: "Method 'generateInvoice' has a complexity of 34"
-    const complexityMatch = rawOutput.match(/Method\s+'(\w+)'\s+has\s+a\s+complexity\s+of\s+(\d+)/);
+    // 1. Remove ANSI codes globally first used a proven regex
+    // eslint-disable-next-line no-control-regex
+    const cleanOutput = rawOutput.replace(/\x1B\[[0-9;]*[a-zA-Z]/g, '');
+
+    // 2. Search for the complexity message in clean text
+    const match = cleanOutput.match(/Method '(\w+)' has a complexity of (\d+)/);
     
-    if (complexityMatch) {
+    if (match) {
         return res.json({
             ok: false,
             message: "⚠️ Complexity Too High",
-            details: `Method '${complexityMatch[1]}' is too complex (${complexityMatch[2]}). Maximum allowed is 10.`
+            details: `Method '${match[1]}' is too complex (${match[2]}). Maximum allowed is 10.`
         });
     }
 
     if (error) {
-        // Se falhou mas não achamos o erro de complexidade, pode ser outro erro de lint
-        // Vamos tentar limpar os códigos ANSI de forma mais agressiva para mostrar algo legível
-        // eslint-disable-next-line no-control-regex
-        const cleanLog = rawOutput.replace(/\x1B\[[0-9;]*[a-zA-Z]/g, '');
-        
         return res.json({ 
             ok: false, 
             message: "⚠️ Lint/Quality Checks Failed",
-            details: cleanLog.substring(0, 300) + "..." // Truncar para não poluir
+            details: cleanOutput.substring(0, 500).trim() // Clean log
         });
     }
-
+    
     // Se não deu erro
     res.json({ 
       ok: true, 
