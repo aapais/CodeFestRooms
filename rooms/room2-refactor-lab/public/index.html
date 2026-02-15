@@ -33,21 +33,44 @@
             el.innerHTML = '<p>Processing (Legacy Slow)...</p>';
             
             try {
-                const req = await fetch('/api/invoice');
-                const data = await req.json();
+                // Mock payload specifically designed to trigger complex logic
+                const payload = {
+                    items: [
+                        { id: 'p1', price: 100, type: 'subscription' },
+                        { id: 'p2', price: 50, type: 'service' }
+                    ],
+                    region: 'EU',
+                    isB2B: true
+                };
+
+                const res = await fetch('/api/invoice', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
                 
-                if (data.error) {
-                    el.innerHTML = `<pre class="complex">Error: ${data.error}</pre>`;
+                // Check if response is JSON to avoid parsing HTML errors
+                const contentType = res.headers.get("content-type");
+                if (!contentType || !contentType.includes("application/json")) {
+                    throw new Error("Server returned non-JSON response (Check console)");
+                }
+
+                const data = await res.json();
+                
+                if (!data.ok) {
+                    el.innerHTML = `<pre class="complex" style="color: red;">Error: ${data.error}</pre>`;
                 } else {
                     el.innerHTML = `
                         <div style="background:#f0fff4; padding:1rem; border-radius:4px; border:1px solid #c6f6d5">
                             <h3>✅ Invoice Generated</h3>
-                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                            <pre>${JSON.stringify(data.invoice, null, 2)}</pre>
+                            <small>⏱️ Time: ${data.meta.timeMs}ms</small>
                         </div>
                     `;
                 }
             } catch (e) {
-                el.innerHTML = `<pre>Network Error: ${e.message}</pre>`;
+                console.error(e);
+                el.innerHTML = `<pre style="color:red">Network Error: ${e.message}</pre>`;
             }
         }
     </script>
