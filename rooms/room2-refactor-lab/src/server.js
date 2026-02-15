@@ -41,16 +41,20 @@ app.post('/api/invoice', (req, res) => {
 const { exec } = require('child_process');
 
 app.get('/api/validate-complexity', (req, res) => {
-  // Executa o linter
-  exec('npm run complexity', { cwd: path.join(__dirname, '..') }, (error, stdout, stderr) => {
+  // Executa o linter com flag --no-color para facilitar parsing
+  // O '--' passa o argumento para o script 'complexity' (que é o eslint)
+  exec('npm run complexity -- --no-color', { cwd: path.join(__dirname, '..') }, (error, stdout, stderr) => {
     const rawOutput = (stdout || '') + (stderr || '');
     
-    // 1. Remove ANSI codes globally first used a proven regex
+    // Mesmo com --no-color, alguns ambientes forçam cor. Mantemos a limpeza como garantia.
     // eslint-disable-next-line no-control-regex
-    const cleanOutput = rawOutput.replace(/\x1B\[[0-9;]*[a-zA-Z]/g, '');
+    const cleanOutput = rawOutput.replace(/\x1B\[\d+;?\d*m/g, '').replace(/\[\d+m/g, '');
+
+    // Debug no terminal do servidor para saber o que está chegando
+    console.log('[DEBUG LINT OUTPUT]:', cleanOutput.substring(0, 100)); 
 
     // 2. Search for the complexity message in clean text
-    const match = cleanOutput.match(/Method '(\w+)' has a complexity of (\d+)/);
+    const match = cleanOutput.match(/Method\s+'(\w+)'\s+has\s+a\s+complexity\s+of\s+(\d+)/);
     
     if (match) {
         return res.json({
