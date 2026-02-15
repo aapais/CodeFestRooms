@@ -41,20 +41,55 @@ app.post('/api/invoice', (req, res) => {
 const { exec } = require('child_process');
 
 app.get('/api/validate-complexity', (req, res) => {
-  // Executa o linter com flag --no-color para facilitar parsing
-  // O '--' passa o argumento para o script 'complexity' (que é o eslint)
-  exec('npm run complexity -- --no-color', { cwd: path.join(__dirname, '..') }, (error, stdout, stderr) => {
+  // Executa o linter
+  // Alteração: FORCE_COLOR=0 para garantir que libs como chalk/eslint não emitam cores
+  const env = { ...process.env, FORCE_COLOR: '0', NO_COLOR: '1' };
+  
+  exec('npm run complexity', { cwd: path.join(__dirname, '..'), env }, (error, stdout, stderr) => {
+    // 1. Unifica stdout e stderr
     const rawOutput = (stdout || '') + (stderr || '');
     
-    // Mesmo com --no-color, alguns ambientes forçam cor. Mantemos a limpeza como garantia.
+    // 2. Debug para ver o que realmente estamos recebendo (no console do servidor)
+    console.log('[RAW OUT len]:', rawOutput.length); 
+
+    // 3. Limpeza Extrema de ANSI:
+    // Remove qualquer sequencia que comece com ESC [ e termine com letra
     // eslint-disable-next-line no-control-regex
-    const cleanOutput = rawOutput.replace(/\x1B\[\d+;?\d*m/g, '').replace(/\[\d+m/g, '');
+    let cleanOutput = rawOutput.replace(/\x1B\[[0-9;]*[mGK]/g, '');
+    
+    // Remove também caracteres de controle ASCII genéricos que não sejam newline/tab
+    // eslint-disable-next-line no-control-regex
+    cleanOutput = cleanOutput.replace(/[\x00-\x09\x0B-\x1F\x7F]/g, '');
 
-    // Debug no terminal do servidor para saber o que está chegando
-    console.log('[DEBUG LINT OUTPUT]:', cleanOutput.substring(0, 100)); 
+    console.log('[CLEAN OUT]:', cleanOutput.substring(0, 100));
 
-    // 2. Search for the complexity message in clean text
-    const match = cleanOutput.match(/Method\s+'(\w+)'\s+has\s+a\s+complexity\s+of\s+(\d+)/);
+    // 4. Procura padrao de complexidade
+    // Tentativa de match flexível (ignorando espaços extras que a limpeza pode ter deixado)
+    const complexityMatch = cleanOutput.match(/Method\s+'(\w+)'\s+has\s+a\s+complexity\s+of\s+(\d+)/);
+    
+    if (complexityMatch) {
+         return res.json({
+            ok: false,
+            message: "⚠️ Complexity Too High",
+            details: `Method '${complexityMatch[1]}' is too complex (${complexityMatch[2]}). Maximum allowed is 10.`
+        });
+    }
+
+    if (error) {
+         // Se não achou a msg específica, retorna o log limpo (truncado)
+         return res.json({ 
+            ok: false, 
+            message: "⚠️ Lint/Quality Checks Failed",
+            details: cleanOutput.substring(0, 500).trim() 
+        });
+    }
+
+    // Sucesso
+    res.json({ 
+      ok: true, 
+      message: "✅ Clean Code Achieved! Complexity is within limits." 
+    });
+  });
     
     if (match) {
         return res.json({
