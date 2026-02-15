@@ -7,7 +7,9 @@ app.use(express.static(path.join(__dirname, '../public')));
 app.use(express.json());
 
 app.post('/api/invoice', (req, res) => {
-  const start = Date.now();
+  const startTime = Date.now();
+  console.log('[DEBUG] Start processing invoice...');
+  
   try {
     const { items } = req.body;
     // Mock user context (since visual dashboard is anonymous)
@@ -26,7 +28,7 @@ app.post('/api/invoice', (req, res) => {
       ok: true,
       invoice,
       meta: {
-        timeMs: Date.now() - start,
+        timeMs: Date.now() - startTime,
         complexityWarn: "High CPU usage detected"
       }
     });
