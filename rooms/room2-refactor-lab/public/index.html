@@ -20,14 +20,38 @@
         <p>This system handles billing. The code is messy and hard to maintain.</p>
         <p><strong>Goal:</strong> Refactor `src/invoiceEngine.js` to reduce complexity.</p>
         
-        <div style="margin-top: 2rem; text-align: center;">
-            <button onclick="generate()">Generate VIP Invoice</button>
-        </div>
+            <div style="display: flex; gap: 10px; justify-content: center; margin-top: 2rem;">
+                <button onclick="generate()">⚡ 1. Test Logic (Generate Invoice)</button>
+                <button onclick="validate()" style="background-color: #805ad5;">🔍 2. Check Code Quality</button>
+            </div>
 
-        <div id="result" style="margin-top: 2rem;"></div>
+            <div id="quality-result" style="margin-top: 1rem;"></div>
+            <div id="result" style="margin-top: 2rem;"></div>
     </div>
 
     <script>
+        async function validate() {
+            const el = document.getElementById('quality-result');
+            el.innerHTML = '<p>Running ESLint complexity check...</p>';
+            try {
+                const req = await fetch('/api/validate-complexity');
+                const data = await req.json();
+                
+                if (data.ok) {
+                    el.innerHTML = `<div style="background:#f0fff4; padding:1rem; border:1px solid #c6f6d5; color: green; font-weight: bold;">${data.message}</div>`;
+                } else {
+                    // Show just the summary lines to avoid overwhelming output
+                    const summary = (data.details || '').split('\n').filter(l => l.includes('complexity') || l.includes('error')).slice(0, 5).join('\n');
+                    el.innerHTML = `<div style="background:#fff5f5; padding:1rem; border:1px solid #feb2b2; color: #c53030;">
+                        <strong>${data.message}</strong>
+                        <pre style="background:transparent; padding:0; margin-top:5px;">${summary || 'Check terminal for full details'}</pre>
+                    </div>`;
+                }
+            } catch (e) {
+                el.innerHTML = `<pre>Error running check: ${e.message}</pre>`;
+            }
+        }
+
         async function generate() {
             const el = document.getElementById('result');
             el.innerHTML = '<p>Processing (Legacy Slow)...</p>';

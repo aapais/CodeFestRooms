@@ -38,6 +38,27 @@ app.post('/api/invoice', (req, res) => {
   }
 });
 
+const { exec } = require('child_process');
+
+app.get('/api/validate-complexity', (req, res) => {
+  // Executa o linter para verificar a complexidade real do código refatorado
+  exec('npm run complexity', { cwd: path.join(__dirname, '..') }, (error, stdout, stderr) => {
+    if (error) {
+      // Se deu erro (exit code 1), significa que a complexidade ainda é alta ou tem lint errors
+      return res.json({ 
+        ok: false, 
+        message: "⚠️ Code Complexity is too high!",
+        details: stdout || stderr 
+      });
+    }
+    // Se não deu erro, passou no teste
+    res.json({ 
+      ok: true, 
+      message: "✅ Clean Code Achieved! Complexity is within limits." 
+    });
+  });
+});
+
 const PORT = process.env.PORT || 3002;
 app.listen(PORT, () => {
   console.log(`🧾 Invoice Engine (v2) running at http://localhost:${PORT}`);
