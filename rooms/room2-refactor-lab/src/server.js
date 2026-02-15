@@ -43,15 +43,24 @@ const { exec } = require('child_process');
 app.get('/api/validate-complexity', (req, res) => {
   // Executa o linter para verificar a complexidade real do código refatorado
   exec('npm run complexity', { cwd: path.join(__dirname, '..') }, (error, stdout, stderr) => {
-    // Remove códigos de cor ANSI (ex: [31m) para o texto ficar limpo no browser
-    const cleanOutput = (stdout || stderr).replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '');
+    // Regex mais robusta para limpar códigos ANSI (incluindo cores e reset)
+    const raw = (stdout || stderr || '').toString();
+    // eslint-disable-next-line no-control-regex
+    const cleanOutput = raw.replace(/\x1B\[\d+;?\d*m/g, '').replace(/\[\d+m/g, ''); 
     
+    // Tenta extrair apenas a mensagem relevante de complexidade
+    const match = cleanOutput.match(/Method '(\w+)' has a complexity of (\d+)/);
+    let userMessage = cleanOutput;
+    
+    if (match) {
+        userMessage = `Method '${match[1]}' complexity is ${match[2]} (Limit: 10).`;
+    }
+
     if (error) {
-      // Se deu erro (exit code 1), significa que a complexidade ainda é alta ou tem lint errors
       return res.json({ 
         ok: false, 
-        message: "⚠️ Code Complexity is too high!",
-        details: cleanOutput
+        message: "⚠️ Complexity too high!",
+        details: userMessage 
       });
     }
     // Se não deu erro, passou no teste
