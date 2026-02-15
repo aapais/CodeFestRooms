@@ -43,12 +43,15 @@ const { exec } = require('child_process');
 app.get('/api/validate-complexity', (req, res) => {
   // Executa o linter para verificar a complexidade real do código refatorado
   exec('npm run complexity', { cwd: path.join(__dirname, '..') }, (error, stdout, stderr) => {
+    // Remove códigos de cor ANSI (ex: [31m) para o texto ficar limpo no browser
+    const cleanOutput = (stdout || stderr).replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '');
+    
     if (error) {
       // Se deu erro (exit code 1), significa que a complexidade ainda é alta ou tem lint errors
       return res.json({ 
         ok: false, 
         message: "⚠️ Code Complexity is too high!",
-        details: stdout || stderr 
+        details: cleanOutput
       });
     }
     // Se não deu erro, passou no teste

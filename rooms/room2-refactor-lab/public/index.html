@@ -87,11 +87,44 @@
                 if (!data.ok) {
                     el.innerHTML = `<pre class="complex" style="color: red;">Error: ${data.error}</pre>`;
                 } else {
+                    const inv = data.invoice;
+                    const rows = inv.lines.map(l => `
+                        <tr>
+                            <td style="padding:8px; border-bottom:1px solid #eee;">${l.sku}</td>
+                            <td style="padding:8px; border-bottom:1px solid #eee;">${l.qty}</td>
+                            <td style="padding:8px; border-bottom:1px solid #eee;">€${l.unitPrice}</td>
+                            <td style="padding:8px; border-bottom:1px solid #eee;">€${l.lineTotal}</td>
+                        </tr>
+                    `).join('');
+
                     el.innerHTML = `
-                        <div style="background:#f0fff4; padding:1rem; border-radius:4px; border:1px solid #c6f6d5">
-                            <h3>✅ Invoice Generated</h3>
-                            <pre>${JSON.stringify(data.invoice, null, 2)}</pre>
-                            <small>⏱️ Time: ${data.meta.timeMs}ms</small>
+                        <div style="background:white; padding:1.5rem; border-radius:8px; border:1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-bottom:2px solid #3182ce; padding-bottom:0.5rem;">
+                                <h3 style="margin:0; color:#2d3748;">🧾 Invoice #${Date.now().toString().slice(-6)}</h3>
+                                <span style="background:#c6f6d5; color:#22543d; padding:4px 8px; border-radius:4px; font-size:0.8rem;">PAID</span>
+                            </div>
+                            
+                            <table style="width:100%; border-collapse:collapse; text-align:left; font-size:0.95rem;">
+                                <thead>
+                                    <tr style="background:#f7fafc; color:#4a5568;">
+                                        <th style="padding:8px;">Item</th>
+                                        <th style="padding:8px;">Qty</th>
+                                        <th style="padding:8px;">Price</th>
+                                        <th style="padding:8px;">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>${rows}</tbody>
+                            </table>
+
+                            <div style="margin-top:1.5rem; text-align:right; border-top:1px solid #e2e8f0; padding-top:1rem;">
+                                <div style="color:#718096; font-size:0.9rem;">Subtotal: €${inv.amounts.subtotal}</div>
+                                <div style="color:#718096; font-size:0.9rem;">Tax: €${inv.amounts.tax}</div>
+                                <div style="font-size:1.2rem; font-weight:bold; color:#2d3748; margin-top:0.5rem;">Total: €${inv.amounts.total}</div>
+                            </div>
+                            
+                            <div style="margin-top:1rem; font-size:0.8rem; color:#a0aec0; text-align:center;">
+                                ⏱️ Processed in ${data.meta.timeMs}ms | Currency: ${inv.currency}
+                            </div>
                         </div>
                     `;
                 }
