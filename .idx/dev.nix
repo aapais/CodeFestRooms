@@ -34,8 +34,11 @@
       enable = true;
       previews = {
         web = {
-          command = ["npm" "run" "start:room2"];
+          command = ["npm" "run" "start:room2" "--port" "$PORT"];
           manager = "web";
+          env = {
+            PORT = "$PORT";
+          };
         };
       };
     };
