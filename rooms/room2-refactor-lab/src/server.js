@@ -7,6 +7,7 @@ app.use(express.static(path.join(__dirname, '../public')));
 app.use(express.json());
 
 app.post('/api/invoice', (req, res) => {
+  const start = Date.now();
   try {
     const { items } = req.body;
     // Mock user context (since visual dashboard is anonymous)
