@@ -36,9 +36,6 @@
         web = {
           command = ["npm" "run" "start:room2"];
           manager = "web";
-          env = {
-            PORT = "$PORT";
-          };
         };
       };
     };
