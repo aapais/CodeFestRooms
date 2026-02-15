@@ -36,9 +36,12 @@
                 // Mock payload specifically designed to trigger complex logic
                 const payload = {
                     items: [
-                        { id: 'p1', price: 100, type: 'subscription' },
-                        { id: 'p2', price: 50, type: 'service' }
+                        { sku: 'VIP-SUB-YEAR', qty: 1, unitPrice: 1200, type: 'subscription' },
+                        { sku: 'SETUP-FEE', qty: 1, unitPrice: 150, type: 'service' },
+                        { sku: 'SUPPORT-HR', qty: 5, unitPrice: 60, type: 'service' }
                     ],
+                    discountCode: 'VIP20',
+                    shippingAddress: { country: 'PT' },
                     region: 'EU',
                     isB2B: true
                 };
