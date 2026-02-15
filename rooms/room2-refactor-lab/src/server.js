@@ -8,7 +8,8 @@ app.use(express.json());
 
 app.post('/api/invoice', (req, res) => {
   const startTime = Date.now();
-  console.log('[DEBUG] Start processing invoice...');
+  console.log(`[DEBUG] Handling invoice request. File: ${__filename}`);
+  console.log(`[DEBUG] startTime defined as: ${startTime}`);
   
   try {
     const { items } = req.body;
