@@ -41,28 +41,41 @@ app.post('/api/invoice', (req, res) => {
 const { exec } = require('child_process');
 
 app.get('/api/validate-complexity', (req, res) => {
-  // Executa o linter para verificar a complexidade real do código refatorado
+  // Executa o linter
   exec('npm run complexity', { cwd: path.join(__dirname, '..') }, (error, stdout, stderr) => {
-    // Regex mais robusta para limpar códigos ANSI (incluindo cores e reset)
-    const raw = (stdout || stderr || '').toString();
-    // eslint-disable-next-line no-control-regex
-    const cleanOutput = raw.replace(/\x1B\[\d+;?\d*m/g, '').replace(/\[\d+m/g, ''); 
+    const rawOutput = (stdout || '') + (stderr || '');
     
-    // Tenta extrair apenas a mensagem relevante de complexidade
-    const match = cleanOutput.match(/Method '(\w+)' has a complexity of (\d+)/);
-    let userMessage = cleanOutput;
+    // 1. Tenta encontrar a mensagem específica de complexidade
+    // Exemplo: "Method 'generateInvoice' has a complexity of 34"
+    const complexityMatch = rawOutput.match(/Method\s+'(\w+)'\s+has\s+a\s+complexity\s+of\s+(\d+)/);
     
-    if (match) {
-        userMessage = `Method '${match[1]}' complexity is ${match[2]} (Limit: 10).`;
+    if (complexityMatch) {
+        return res.json({
+            ok: false,
+            message: "⚠️ Complexity Too High",
+            details: `Method '${complexityMatch[1]}' is too complex (${complexityMatch[2]}). Maximum allowed is 10.`
+        });
     }
 
     if (error) {
-      return res.json({ 
-        ok: false, 
-        message: "⚠️ Complexity too high!",
-        details: userMessage 
-      });
+        // Se falhou mas não achamos o erro de complexidade, pode ser outro erro de lint
+        // Vamos tentar limpar os códigos ANSI de forma mais agressiva para mostrar algo legível
+        // eslint-disable-next-line no-control-regex
+        const cleanLog = rawOutput.replace(/\x1B\[[0-9;]*[a-zA-Z]/g, '');
+        
+        return res.json({ 
+            ok: false, 
+            message: "⚠️ Lint/Quality Checks Failed",
+            details: cleanLog.substring(0, 300) + "..." // Truncar para não poluir
+        });
     }
+
+    // Se não deu erro
+    res.json({ 
+      ok: true, 
+      message: "✅ Clean Code Achieved! Complexity is within limits." 
+    });
+  });
     // Se não deu erro, passou no teste
     res.json({ 
       ok: true, 
