@@ -48,10 +48,12 @@
             <div id="result" style="margin-top: 2rem;"></div>
     </div>
 
+    <script src="/config.js"></script>
     <script>
         const CURRENT_ROOM = 'room2';
-        const HUB_PORT = 4000;
-        const HUB_BASE = `${location.protocol}//${location.hostname}:${HUB_PORT}`;
+        const CFG = window.GAME_CONFIG || {};
+        CFG.CURRENT_ROOM = CURRENT_ROOM;
+        const HUB_BASE = CFG.GAME_HUB_URL || `${location.protocol}//${location.hostname}:4000`;
         const ROOM_ORDER = ['room1', 'room2', 'room3', 'final'];
         const ROOM_PORTS = { room1: 3000, room2: 3002, room3: 3003, final: 8080 };
 
@@ -122,9 +124,11 @@
 
         function goToRoom(roomId) {
             updateTeam({ room: roomId, status: 'in-progress', result: `Moved to ${roomId}` });
-            const port = ROOM_PORTS[roomId];
-            if (!port) return;
-            window.location.href = `${location.protocol}//${location.hostname}:${port}/`;
+            const fallbackPort = ROOM_PORTS[roomId];
+            const fallbackUrl = fallbackPort ? `${location.protocol}//${location.hostname}:${fallbackPort}/` : '';
+            const targetUrl = (CFG.getRoomUrl && CFG.getRoomUrl(roomId)) || fallbackUrl;
+            if (!targetUrl) return;
+            window.location.href = targetUrl;
         }
 
         function goPrevRoom() {

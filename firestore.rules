@@ -1,0 +1,25 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Teams collection - allow read/write for all during workshop
+    match /teams/{teamId} {
+      // Allow anyone to read team data (for leaderboard)
+      allow read: if true;
+      
+      // Allow anyone to create/update teams during workshop
+      // In production, add proper authentication
+      allow create, update: if true;
+      
+      // Only allow deletes from admin (for now, allow all for testing)
+      allow delete: if true;
+    }
+    
+    // Game state collection (optional - for global game settings)
+    match /gameState/{document=**} {
+      allow read: if true;
+      allow write: if true;
+    }
+  }
+}

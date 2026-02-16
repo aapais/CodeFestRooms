@@ -1,0 +1,26 @@
+{
+  "projects": {
+    "default": "codefestrooms-81695626"
+  },
+  "targets": {
+    "codefestrooms-81695626": {
+      "hosting": {
+        "game-hub": [
+          "codefestrooms-81695626"
+        ],
+        "room1": [
+          "codefest-room1"
+        ],
+        "room2": [
+          "codefest-room2"
+        ],
+        "room3": [
+          "codefest-room3"
+        ],
+        "final": [
+          "codefest-final"
+        ]
+      }
+    }
+  }
+}

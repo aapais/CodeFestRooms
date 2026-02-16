@@ -51,10 +51,12 @@
     </table>
   </div>
 
+  <script src="/config.js"></script>
   <script>
     const rowsEl = document.getElementById('rows');
     const connEl = document.getElementById('conn');
-    const wsUrl = `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.hostname}:4000`;
+    const CFG = window.GAME_CONFIG || {};
+    const wsUrl = (CFG.WS_URL && CFG.WS_URL.startsWith('ws')) ? CFG.WS_URL : `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.hostname}:4000`;
 
     function render(teams) {
       if (!teams || teams.length === 0) {
