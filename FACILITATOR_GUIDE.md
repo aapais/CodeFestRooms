@@ -1,0 +1,462 @@
+# 🎮 Guia do Facilitador - Visual Escape Room (Firebase)
+
+## ⏱️ Configuração: 50 Minutos
+
+A workshop tem **exatamente 50 minutos**. Todo o sistema está sincronizado em Firebase:
+- ⏱️ Timer global começa no Dashboard
+- 📊 Cada equipa vê o tempo restante na sua room
+- 🏆 Tempo é factor de desempate (quem termina mais rápido ganha)
+- 🎯 Cada room tem objetivo claro em preview antes de começar
+
+---
+
+## 📋 Visão Geral da Arquitetura
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                   FIREBASE HOSTING                          │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  ┌────────────┐  ┌────────────┐  ┌────────────┐             │
+│  │ Game Hub   │  │  Room 1    │  │  Room 2    │  ...         │
+│  │ (Central)  │  │(Archaeology)│ │ (Refactor) │             │
+│  └────────────┘  └────────────┘  └────────────┘             │
+│        ▲                                                      │
+│        │                                                      │
+│        └──────────────────┬──────────────────┘                │
+│                           ▼                                   │
+│                   ┌───────────────┐                           │
+│                   │   FIRESTORE   │                           │
+│                   │  (Centralizado)│                           │
+│                   └───────────────┘                           │
+│          • teams/{teamId}/                                    │
+│          • scores/results                                     │
+│          • leaderboard                                        │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 👥 Fluxo com Múltiplos Grupos em Máquinas Diferentes
+
+### **Pré-Evento (Facilitador)**
+
+```
+1. Deploy para Firebase (antes do evento)
+   $ npm run firebase:deploy:all
+   
+   Resultado:
+   ✅ Game Hub em: https://codefestrooms-81695626.web.app
+   ✅ Room 1 em: https://codefest-room1.web.app
+   ✅ Room 2 em: https://codefest-room2.web.app
+   ✅ Room 3 em: https://codefest-room3.web.app
+   ✅ Final em: https://codefest-final.web.app
+
+2. Partilhar URLs com os grupos via email/Slack/QR Code
+
+3. Preparar Dashboard (manter aberto durante o evento)
+   Abrir no browser: https://codefestrooms-81695626.web.app
+   
+   ⚠️ IMPORTANTE NO DASHBOARD:
+   - Botão "▶️ Start Game (50 min)" para começar
+   - Timer mostra tempo RESTANTE
+   - Leaderboard com ranking ao vivo
+   - Cor do timer: 🟢 Verde (>16 min) → 🟡 Amarelo (>5 min) → 🔴 Vermelho (<5 min)
+```
+
+---
+
+## 🎬 Durante o Evento
+
+### **Fase 1: Kickoff (0-2 min)**
+
+```
+FACILITADOR:
+✓ Explica o tema e as 4 rooms
+✓ Divide público em grupos (2-4 pessoas cada)
+✓ Partilha URLs ou mostra QR code no slide
+
+👉 AÇÃO CRÍTICA: Clica em "▶️ Start Game" no Dashboard
+   - Isto INICIA o timer global de 50 minutos
+   - Todos as rooms começam a contar tempo simultaneamente
+   - Sem isto, o jogo não começa!
+
+GRUPOS:
+→ Abrem: https://codefestrooms-81695626.web.app (Game Hub)
+→ Clicam botão da Room 1
+→ VÊM PREVIEW com objetivo claro (Screenshot abaixo)
+→ Clicam "Começar Desafio"
+→ Entram na Room 1
+```
+
+### **Preview que Cada Equipa Vê**
+
+```
+┌────────────────────────────────────────────────┐
+│                     🏚️                          │
+│       Arqueologia de Código                     │
+│            Easy 🟢 Room 1 de 4                  │
+│                                                 │
+│  📋 OBJETIVO:                                   │
+│  O bug está no cálculo de IVA. Encontra e      │
+│  explica.                                       │
+│                                                 │
+│  💡 DICA:                                       │
+│  O desconto e o shipping estão a afetar a      │
+│  base de imposto incorretamente.                │
+│                                                 │
+│  ⏱️ INFORMAÇÃO:                                 │
+│  Tempo estimado: 8-12 min                       │
+│  Tempo restante: 50m 00s ⏳                    │
+│                                                 │
+│  [← Voltar]  [Começar Desafio →]               │
+└────────────────────────────────────────────────┘
+```
+
+### **Fase 2: Grupos Navegam & Timer Conta (2-48 min)**
+
+#### **O Timer em Tempo Real:**
+
+```javascript
+┌─────────────────────────────────────────────────────────┐
+│  CADA EQUIPA VÊ NA TOOLBAR DA ROOM:                     │
+│                                                          │
+│  [Team Name] [Join] ⏱️ 47m 33s [Leaderboard] [Next]    │
+│                                                          │
+│  O timer DESATUALIZA em CADA EQUIPA:                    │
+│  - Começa em 50m 00s                                    │
+│  - Vai descendo: 49m 59s, 49m 58s, ...                │
+│  - Tudo sincronizado com o Firebase                    │
+│  - Cor muda automaticamente:                            │
+│    🟢 50:00 a 16:40 (verde - relaxado)                │
+│    🟡 16:40 a 05:00 (amarelo - aviso!)                │
+│    🔴 05:00 a 00:00 (vermelho - APRESSA-TE!)          │
+└─────────────────────────────────────────────────────────┘
+
+⏲️ NO DASHBOARD, O FACILITADOR VÊ:
+┌─────────────────────────────────────────────────────────┐
+│  🎮 VISUAL ESCAPE ROOM                                  │
+│  ▶️ Start Game (50 min)  🔄 Reset                       │
+│  ✅ Game started! Teams can now join rooms.             │
+│                                                          │
+│  ⏱️ 47m 33s (timer com cor dinâmica)                   │
+│                                                          │
+│  🏆 LEADERBOARD                                         │
+│  #1 🥇 Team Alpha      100 pts  🟢🟢🔘🔘              │
+│      Room: Room 2 (Refactor) | Tempo: 2m 27s           │
+│                                                          │
+│  #2 🥈 Team Beta       100 pts  🟢🟢🔘🔘              │
+│      Room: Room 2 (Refactor) | Tempo: 2m 34s           │
+│                                                          │
+│  #3 🥉 Team Gamma        0 pts  🔘🔘🔘🔘              │
+│      Room: Room 1 (Archaeo) | Tempo: 5m 12s            │
+└─────────────────────────────────────────────────────────┘
+
+NOTA: Se dois grupos terminarem 4 rooms com mesmo score:
+      → Tempo é fator de desempate!
+      → Quem completou tudo mais RÁPIDO ganha! ⚡
+```
+
+### **Fase 3: Grupos Completam (48-50 min)**
+┌──────────────────────────────────────────┐
+│     Máquina do Grupo 1 (Room 1)           │
+│  (browser em codefest-room1.web.app)      │
+│                                           │
+│  Quando clica "Mark Complete":            │
+│  1. Envia POST /api/team/login            │
+│  2. Firestore atualiza: teams/{groupId}   │
+│  3. Score calculado automaticamente       │
+│  4. Badges atualizadas em tempo real      │
+└──────────────────────────────────────────┘
+                    ▼
+            ┌───────────────┐
+            │   FIRESTORE   │
+            │  (Centralizado)│
+            └───────────────┘
+                    ▼
+┌──────────────────────────────────────────┐
+│     Máquina do Facilitador                │
+│  (browser aberto no Dashboard)            │
+│  (https://codefestrooms-81695626.web.app)│
+│                                           │
+│  Vê em TEMPO REAL:                        │
+│  - Grupo 1: Room 1 ✅ (100 pts)           │
+│  - Grupo 2: Room 2 🧱 (em progresso)      │
+│  - Grupo 3: Room 1 ✅ (100 pts)           │
+│  - Leaderboard atualizado                 │
+└──────────────────────────────────────────┘
+```
+
+## 🎯 Objetivos Claros por Room
+
+Cada equipa vê isto no PREVIEW antes de entrar:
+
+| Room | Emoji | Objetivo | Dica | Tempo | Complexidade |
+|------|-------|----------|------|-------|--------------|
+| 1 | 🏚️ | Encontra o bug de IVA | O desconto/shipping afetam taxa | 8-12 min | 🟢 Fácil |
+| 2 | 🧱 | Refactoriza até Complexity ≤ 10 | Usa Copilot para explicar | 12-18 min | 🟡 Médio |
+| 3 | 🔐 | Fixa vulnerabilidades de segurança | Procura XSS, SQL Injection | 12-18 min | 🟡 Médio |
+| Final | 🏢 | Desenha arquitetura moderna | REST API + Docker + CI/CD | 10-15 min | 🔴 Difícil |
+
+⏱️ **Tempo Total Recomendado:** 8+12+12+10 = **42 min** (deixa 8 min de buffer)
+
+---
+
+## 🏆 Pontuação & Desempate
+
+---
+
+## 🎮 O Papel do Facilitador
+
+### **1. PRÉ-EVENTO**
+- ✅ Deploy para Firebase (`npm run firebase:deploy:all`)
+- ✅ Testar URLs em incógnito (sem cache)
+- ✅ Preparar QR codes ou lista de URLs
+- ✅ Garantir que Firestore está ativo (sem regras restritivas)
+
+### **2. DURING EVENTO** 
+- ✅ Mantém Dashboard aberto: `https://codefestrooms-81695626.web.app`
+- ✅ Monitora leaderboard em tempo real
+- ✅ Presta atenção em grupos "stuck":
+  - Se alguém não consegue a Room 1 em 10 min → dar dica
+  - Se alguém clicou "Mark Complete" sem fazer nada → avisar
+- ✅ Anuncia marcos (ex: "Team Alpha terminou Room 1! 🎉")
+- ✅ Se alguém tem erro (browser/conexão):
+  - Pede refresh (Ctrl+Shift+R)
+  - Verifica internet
+  - Tenta de novo
+
+### **3. PÓS-EVENTO**
+- ✅ Leaderboard final está pronto no Dashboard
+- ✅ Anuncia top 3
+- ✅ Recolher feedback (que partes foram legais?)
+- ✅ Opcional: exportar scores
+
+---
+
+## 📊 Monitorização em Tempo Real
+
+### **O Que o Facilitador Vê no Dashboard**
+
+```
+https://codefestrooms-81695626.web.app
+
+┌────────────────────────────────────────────────┐
+│         🎮 VISUAL ESCAPE ROOM LEADERBOARD        │
+│                                                 │
+│  🏆 RANKING (atualizado a cada 3 segundos)      │
+│                                                 │
+│  #1 🥇 Team Alpha        450 pts  🟢🟢🟢🔘     │
+│      Room: Final (Last seen: 2min atrás)       │
+│      Status: Em progresso                       │
+│                                                 │
+│  #2 🥈 Team Beta         400 pts  🟢🟢🔘🔘     │
+│      Room: Room 3 (Last seen: 30s atrás)       │
+│      Status: Em progresso                       │
+│                                                 │
+│  #3 🥉 Team Gamma        100 pts  🟢🔘🔘🔘     │
+│      Room: Room 1 (Last seen: 5min atrás)      │
+│      Status: Em progresso (ou Stuck?)          │
+│                                                 │
+│  #4 💾 Team Delta          0 pts  🔘🔘🔘🔘     │
+│      Room: Room 1 (Nunca entrou?)             │
+│      Status: Não iniciou                       │
+│                                                 │
+├────────────────────────────────────────────────┤
+│ Refresh automático: ✅ | Último update: 2s atrás│
+└────────────────────────────────────────────────┘
+```
+
+---
+
+## 🚨 Troubleshooting para Facilitador
+
+### **Cenário 1: Um Grupo Não Consegue Aceder**
+
+```
+GRUPO: "Não conseguimos abrir o URL"
+
+FACILITADOR:
+1. Verifica Internet: ping google.com
+2. Verifica URL: Copiou corretamente?
+3. Tenta Incógnito (sem cache)
+4. Se Firebase está atualizado:
+   $ npm run firebase:deploy:all
+5. Aguarda 30s e tenta novamente (propagação DNS)
+```
+
+### **Cenário 2: Leaderboard Não Atualiza**
+
+```
+FACILITADOR: "Vi que clicaram Mark Complete mas score não subiu"
+
+Possíveis Causas:
+1. Browser: Ctrl+Shift+R (hard refresh da página)
+2. Firebase Rules:
+   $ firebase deploy --only firestore:rules
+3. Verificar logs: 
+   $ firebase functions:log
+
+Nota: Com Firebase Hosting, tudo é serverless.
+Não há "servidor próprio" para monitorar.
+Só Firestore + CDN.
+```
+
+### **Cenário 3: Um Grupo Clicou "Mark Complete" Mas Não Fez o Desafio**
+
+```
+FACILITADOR: Ve a pontuação de um grupo muito rápido
+
+Opções:
+1. Pedir ao grupo: "Verifica se completaste mesmo?"
+2. Ir para a sala e verificar código
+3. Se foi erro: 
+   - Acessar Firestore Console
+   - Editar: teams/{teamId}/completedRooms
+   - Remover "room1" manualmente
+   - Score atualiza automaticamente
+
+Firebase Console:
+https://console.firebase.google.com/project/codefestrooms-81695626
+```
+
+---
+
+## 🔐 Segurança & Regras Firestore
+
+### **IMPORTANTE: Ativar Regras antes do Evento**
+
+```javascript
+// firestore.rules - PRODUÇÃO
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Leaderboard público (todos podem ler)
+    match /teams/{teamId} {
+      allow read: if true;
+      // APENAS app pode escrever (via Cloud Function)
+      allow write: if false;
+    }
+  }
+}
+```
+
+**Deploy:**
+```powershell
+firebase deploy --only firestore:rules
+```
+
+---
+
+## ⏱️ Timeline Recomendada (60 min)
+
+| Tempo | Ação | O Que Monitar |
+|-------|------|--------------|
+| 0-5 min | Kickoff + Grupos entram | Que grupos já aparecem no Dashboard |
+| 5-10 min | Room 1 (Arqueologia) | Badges começam a ficar verdes |
+| 10-25 min | Room 2 (Refactor) | Verificar se alguém travou em Room 1 |
+| 25-40 min | Room 3 (Security) | Top groups já alcançando 300+ pts |
+| 40-55 min | Final Room | Quem consegue 600 pts? |
+| 55-60 min | Anúncio Top 3 | Leaderboard final consolidado |
+
+---
+
+## 📱 URLs para Partilhar com Grupos
+
+### **QR Code (gerador grátis: qr-server.com)**
+
+```
+Game Hub:
+https://qr-server.com/api/qr?size=300x300&data=
+https://codefestrooms-81695626.web.app
+
+Room 1:
+https://qr-server.com/api/qr?size=300x300&data=
+https://codefest-room1.web.app
+```
+
+### **Ou Simplesmente:**
+```
+Coloca num slide:
+
+🎮 VISUAL ESCAPE ROOM
+
+Game Hub: https://bit.ly/escape-hub
+Room 1:   https://bit.ly/escape-r1
+Room 2:   https://bit.ly/escape-r2
+Room 3:   https://bit.ly/escape-r3
+Final:    https://bit.ly/escape-final
+
+Ou:
+Game Hub:  https://codefestrooms-81695626.web.app
+```
+
+```
+COMO FUNCIONA A PONTUAÇÃO:
+
+1️⃣ CRITÉRIO PRIMÁRIO: Quantas rooms completaram?
+   Team A: 3 rooms ✅✅✅
+   Team B: 3 rooms ✅✅✅
+   Team C: 2 rooms ✅✅
+   
+   👉 Teams A e B estão EMPATADAS!
+
+2️⃣ CRITÉRIO SECUNDÁRIO: Tempo de conclusão
+   Team A completou tudo em 38 minutos
+   Team B completou tudo em 41 minutos
+   
+   🏆 Team A GANHA (terminou mais rápido!)
+
+3️⃣ EXEMPLO FINAL:
+
+   Dashboard mostra:
+   
+   #1 🥇 Team Alpha      400 pts  ⏱️ 38m 23s
+       4 rooms completadas em 38m 23s
+   
+   #2 🥈 Team Beta       400 pts  ⏱️ 41m 05s
+       4 rooms completadas em 41m 05s
+   
+   #3 🥉 Team Gamma      300 pts  ⏱️ 48m 40s
+       3 rooms completadas em 48m 40s
+```
+
+---
+
+## 🎮 Passo a Passo Concreto
+
+### **Antes do Evento**
+- [ ] Deploy para Firebase completado
+- [ ] Testar URLs em incógnito
+- [ ] Preparar QR codes / URLs
+- [ ] Firestore Rules atualizadas
+- [ ] Dashboard pronto para monitorização
+- [ ] Intervalo tem wifi / internet?
+
+### **Depois da Abertura**
+- [ ] Todos os grupos conseguem aceder
+- [ ] Nomes aparecem no Dashboard
+- [ ] Scores começam a atualizar
+
+### **Durante o Evento**
+- [ ] Dashboard constantemente monitorizado
+- [ ] Anotar grupos "stuck" após 10 min
+- [ ] Dar dicas se pedido
+
+### **No Final**
+- [ ] Leaderboard congelado
+- [ ] Screenshot score final para registos
+- [ ] Anuncia top 3
+- [ ] Pedir feedback
+
+---
+
+## 📞 Contacto & Dúvidas
+
+Se algo não funcionar:
+1. **Browser issue**: Limpar cache, incógnito, F5, Ctrl+Shift+R
+2. **Firebase issue**: Verificar Status de Services em console.firebase.google.com
+3. **Scores não atualizam**: Forçar refresh de todas as páginas abertas
+4. **Grupo avança sem completar**: Abrir Firestore Console e revistar dados
+

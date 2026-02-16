@@ -26,10 +26,20 @@
 <body>
   <div class="header">
     <div>
-      <div class="title">Live Leaderboard</div>
-      <div class="sub">Real-time progress per team</div>
+      <div class="title">🎮 Visual Escape Room</div>
+      <div class="sub">Real-time leaderboard & Game Management</div>
     </div>
-    <div class="pill" id="conn">Connecting...</div>
+    <div style="display: flex; gap: 8px; align-items: center;">
+      <div class="pill" id="timer" style="background: #fff; color: #1a202c; font-weight: 700; padding: 8px 16px;">⏱️ 50m 00s</div>
+      <div class="pill" id="conn">Connecting...</div>
+    </div>
+  </div>
+
+  <div style="margin-bottom: 20px; padding: 16px; background: #f0f9ff; border-radius: 8px; border-left: 4px solid #0284c7;">
+    <div style="font-weight: 600; margin-bottom: 8px;">🎯 Game Control</div>
+    <button onclick="kickoffGame()" id="kickoffBtn" style="padding: 8px 16px; background: #15803d; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; margin-right: 8px;">▶️ Start Game (50 min)</button>
+    <button onclick="resetGame()" id="resetBtn" style="padding: 8px 16px; background: #dc2626; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; display: none;">🔄 Reset</button>
+    <span id="gameStatus" style="margin-left: 16px; color: #4a5568; font-size: 14px;">Waiting for facilitator...</span>
   </div>
 
   <div class="board">
@@ -52,6 +62,7 @@
   </div>
 
   <script src="/config.js"></script>
+  <script src="/timingConfig.js"></script>
   <script>
     const rowsEl = document.getElementById('rows');
     const connEl = document.getElementById('conn');
@@ -75,6 +86,50 @@
           <td>${t.lastResult || '-'}</td>
         </tr>
       `).join('');
+    }
+
+    // Timer update
+    const TIMING = window.GAME_TIMING || {};
+    setInterval(() => {
+      const remaining = TIMING.getTimeRemaining();
+      const timerEl = document.getElementById('timer');
+      if (remaining === null) {
+        timerEl.textContent = '⏱️ Not started';
+      } else if (remaining <= 0) {
+        timerEl.textContent = '⏱️ Time\'s up!';
+        timerEl.style.background = '#fee2e2';
+        timerEl.style.color = '#991b1b';
+      } else {
+        timerEl.textContent = '⏱️ ' + TIMING.formatTime(remaining);
+        const status = TIMING.getTimeStatus();
+        if (status === 'green') {
+          timerEl.style.background = '#dcfce7';
+          timerEl.style.color = '#166534';
+        } else if (status === 'yellow') {
+          timerEl.style.background = '#fef3c7';
+          timerEl.style.color = '#92400e';
+        } else {
+          timerEl.style.background = '#fee2e2';
+          timerEl.style.color = '#991b1b';
+        }
+      }
+    }, 1000);
+
+    // Kickoff & Reset
+    function kickoffGame() {
+      TIMING.startTimer(Date.now());
+      document.getElementById('kickoffBtn').style.display = 'none';
+      document.getElementById('resetBtn').style.display = 'inline-block';
+      document.getElementById('gameStatus').textContent = '✅ Game started! Teams can now join rooms.';
+      console.log('🎮 Game started at', new Date());
+    }
+
+    function resetGame() {
+      TIMING.resetTimer();
+      document.getElementById('kickoffBtn').style.display = 'inline-block';
+      document.getElementById('resetBtn').style.display = 'none';
+      document.getElementById('gameStatus').textContent = 'Waiting for facilitator...';
+      console.log('🔄 Game reset');
     }
 
     const ws = new WebSocket(wsUrl);

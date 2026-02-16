@@ -26,16 +26,20 @@
     <button onclick="joinTeam()">Join</button>
     <span id="teamStatus" class="team-status"></span>
     <div id="badges" style="display:flex; gap:4px; font-size:11px; margin-left:8px;"></div>
-    <div class="team-actions">
-      <button class="btn-secondary" onclick="openLeaderboard()">Leaderboard</button>
-      <button onclick="goPrevRoom()">Prev Room</button>
-      <button onclick="goNextRoom()">Next Room</button>
-      <button class="btn-secondary" onclick="markComplete()">Mark Complete</button>
+    <div style="margin-left: auto; display: flex; gap: 8px; align-items: center;">
+      <div id="timer" style="padding: 6px 12px; background: #dcfce7; border-radius: 4px; font-weight: 600; color: #166534; font-size: 12px;">⏱️ 50m 00s</div>
+      <div class="team-actions">
+        <button class="btn-secondary" onclick="openLeaderboard()">Leaderboard</button>
+        <button onclick="goPrevRoom()">Prev Room</button>
+        <button onclick="goNextRoom()">Next Room</button>
+        <button class="btn-secondary" onclick="markComplete()">Mark Complete</button>
+      </div>
     </div>
   </div>
 
-  <h1>Legacy Shop (Room 1)</h1>
-  <p>Bem-vindo a loja legacy. O codigo e antigo, mas "funciona" (achamos nos).</p>
+  <h1>Legacy Shop (Room 1) - 🏚️ Arqueologia de Código</h1>
+  <p><strong>Objetivo:</strong> O bug está no cálculo de IVA. Encontra e explica.</p>
+  <hr style="margin: 15px 0;">
 
   <div class="card" id="login-section">
     <h2>1. Login</h2>
@@ -70,14 +74,43 @@
   </div>
 
   <script src="/config.js"></script>
+  <script src="/timingConfig.js"></script>
   <script>
     let token = null;
     const CFG = window.GAME_CONFIG || {};
+    const TIMING = window.GAME_TIMING || {};
     const ROOM_ID = 'room1';
     CFG.CURRENT_ROOM = ROOM_ID;
     const HUB_URL = CFG.GAME_HUB_URL || `${location.protocol}//${location.hostname}:4000`;
     const ROOM_ORDER = ['room1', 'room2', 'room3', 'final'];
     const ROOM_PORTS = { room1: 3000, room2: 3002, room3: 3003, final: 8080 };
+
+    // Timer update
+    setInterval(() => {
+      const remaining = TIMING.getTimeRemaining();
+      const timerEl = document.getElementById('timer');
+      if (remaining === null) {
+        timerEl.textContent = '⏱️ Not started';
+        timerEl.style.background = '#fee2e2';
+      } else if (remaining <= 0) {
+        timerEl.textContent = '⏱️ Time\'s up!';
+        timerEl.style.background = '#fee2e2';
+        timerEl.style.color = '#991b1b';
+      } else {
+        timerEl.textContent = '⏱️ ' + TIMING.formatTime(remaining);
+        const status = TIMING.getTimeStatus();
+        if (status === 'green') {
+          timerEl.style.background = '#dcfce7';
+          timerEl.style.color = '#166534';
+        } else if (status === 'yellow') {
+          timerEl.style.background = '#fef3c7';
+          timerEl.style.color = '#92400e';
+        } else {
+          timerEl.style.background = '#fee2e2';
+          timerEl.style.color = '#991b1b';
+        }
+      }
+    }, 1000);
 
     function setTeamName(name) {
       localStorage.setItem('teamName', name);
