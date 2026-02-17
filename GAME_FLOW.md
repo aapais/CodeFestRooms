@@ -6,7 +6,7 @@ Tens **múltiplas equipas em máquinas diferentes** tudo sincronizado em Firebas
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    FACILITADOR (Dashboard)                  │
+│                FACILITADOR (Game Hub - Dashboard)            │
 │          https://codefestrooms-81695626.web.app             │
 │                                                              │
 │  Button: "▶️ START GAME (50m)"  --------> Inicia TUDO       │
@@ -34,7 +34,7 @@ Tens **múltiplas equipas em máquinas diferentes** tudo sincronizado em Firebas
 │ Room 2:  ││ Room 1:   ││ Final:   │ │ Room 3:    │         
 │ refactor ││ archaeo   ││ modern   │ │ security   │         
 │          ││           ││          │ │            │         
-│ ⏱️ 12:45 ││ ⏱️ 8:30  ││ ⏱️ 45:22 │ │ ⏱️ 22:10  │         
+│ (Objetivo no topo)    │ (Objetivo no topo)    │            
 │ 🟢🟢🔘🔘 ││ 🟢🔘🔘🔘 ││ 🟢🟢🟢🔘 │ │ 🟢🟢🔘🔘  │         
 └──────────┘└──────────┘└──────────┘ └────────────┘         
 ```
@@ -44,18 +44,19 @@ Tens **múltiplas equipas em máquinas diferentes** tudo sincronizado em Firebas
 ## 🚀 Kickoff (Minuto 0)
 
 ### **Tu (Facilitador)**
-1. Abre o Dashboard: `https://codefestrooms-81695626.web.app`
+1. Abre o Game Hub (Dashboard): `https://codefestrooms-81695626.web.app`
 2. Mostra slide com QR Code + URLs
 3. Explica tema & regras (30 seg)
 4. Divide em grupos de 2-4
 
 ### **Grupos**
 1. Cada um abre o URL da Room 1 (ou clica QR)
-2. Veem **PREVIEW COM OBJETIVO CLARO**:
+2. Clicam no botão da Room 1 no Game Hub
+3. Veem o **OBJETIVO NO TOPO DA ROOM**:
    - 🏚️ Arqueologia: "Encontra o bug de IVA"
    - Dica: "O desconto/shipping afetam a taxa"
    - Tempo estimado: 8-12 min
-   - Botão "Começar Desafio"
+4. Começam o desafio
 
 ### **TU CLICAS: "▶️ START GAME"**
 - ✅ Timer começa em TODAS as máquinas
@@ -67,17 +68,18 @@ Tens **múltiplas equipas em máquinas diferentes** tudo sincronizado em Firebas
 ## ⏰ O Timer (Sincronização Global)
 
 ```javascript
-// Cada máquina calcula tempo restante em tempo real:
+// Timer SÓ VISÍVEL NO GAME HUB (Dashboard do Facilitador)
+// Grupos não veem timer (foco no desafio)
 
-FACILITADOR VÊ:  ⏱️ 47m 33s (verde)
-GRUPO 1 VÊ:      ⏱️ 47m 32s (verde)
-GRUPO 2 VÊ:      ⏱️ 47m 33s (verde)
-GRUPO 3 VÊ:      ⏱️ 47m 31s (verde)
+FACILITADOR VÊ:  ⏱️ 47m 33s (verde) - NO GAME HUB
+GRUPO 1 VÊ:      Nada (sem timer no room)
+GRUPO 2 VÊ:      Nada (sem timer no room)
+GRUPO 3 VÊ:      Nada (sem timer no room)
 
 // Tudo vem da mesma source: window.GAME_TIMING.startTime
 ```
 
-**Cores Dinâmicas:**
+**Cores Dinâmicas no Game Hub:**
 - 🟢 **Verde**: > 16 minutos (relaxado, tudo bem)
 - 🟡 **Amarelo**: 16 min até 5 min (começa a ficar apertado!)
 - 🔴 **Vermelho**: < 5 minutos (APRESSA-TE!)
@@ -88,15 +90,17 @@ GRUPO 3 VÊ:      ⏱️ 47m 31s (verde)
 
 ```
 MINUTO 1-2:
-├─ Grupo abre https://codefest-room1.web.app
-├─ VÊ PREVIEW: "[🏚️ Arqueologia] Encontra o bug de IVA"
-├─ Lê dica: "O desconto e shipping afetam base"
-├─ Vê timer: "⏱️ 49m 45s" em verde
-└─ Clica "Começar Desafio"
+├─ Grupo abre URL do Game Hub ou clica QR
+├─ Vê bot0ão de Room 1
+├─ Clica em Room 1
+├─ VÊEM OBJETIVO no topo da Room:
+│  "[🏚️ Arqueologia] Encontra o bug de IVA"
+│  Dica: "O desconto e shipping afetam base"
+└─ Começam desafio
 
 MINUTO 2-8:
-├─ Entram em Room 1
-├─ Timer na toolbar: ⏱️ 49m 30s → 43m 30s
+├─ Estão em Room 1 trabalhando
+├─ Sem timer visível (foco no work)
 ├─ Fazem login, veem fatura com bug
 ├─ Descobrem: 2000 - 200 + 450 = 2250 base
 │  Imposto deveria ser 2250 * 0.23 = 517.50€
@@ -107,8 +111,8 @@ MINUTO 2-8:
    ✅ Badge 🔘 → 🟢
 
 MINUTO 8-10:
-├─ Veem preview de Room 2: "[🧱 Refactor] Complexity ≤ 10"
-├─ Clicam "Começar Desafio"
+├─ Veem objetivo de Room 2: "[🧱 Refactor] Complexity ≤ 10"
+├─ Clicam em Room 2 no Game Hub
 └─ Entram em Room 2...
 
 MINUTO 20-48:
@@ -158,11 +162,11 @@ MINUTO 50:00:
 
 ---
 
-## 📊 Dashboard (Facilitador)
+## 📊 Game Hub (Facilitador)
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│ 🎮 VISUAL ESCAPE ROOM DASHBOARD                             │
+│ 🎮 VISUAL ESCAPE ROOM GAME HUB (DASHBOARD)                  │
 ├─────────────────────────────────────────────────────────────┤
 │                                                              │
 │ [▶️ Start Game] [🔄 Reset]  ✅ Game started! (50m)          │
@@ -213,7 +217,7 @@ MINUTO 50:00:
 [ ] Explica tema (30 seg)
 [ ] Divide grupos (1 min)
 [ ] Todos abrem URLs ou QR code (30 seg)
-[ ] 👉 CLICA "▶️ START GAME" NO DASHBOARD
+[ ] 👉 CLICA "▶️ START GAME" NO GAME HUB (DASHBOARD)
 [ ] Verifica se timer desceu em TODOS os browsers
 ```
 
@@ -240,7 +244,7 @@ MINUTO 50:00:
 
 | Componente | URL |
 |-----------|-----|
-| 📊 Dashboard | https://codefestrooms-81695626.web.app |
+| 📊 Game Hub (Dashboard) | https://codefestrooms-81695626.web.app |
 | 🏚️ Room 1 | https://codefest-room1.web.app |
 | 🧱 Room 2 | https://codefest-room2.web.app |
 | 🔐 Room 3 | https://codefest-room3.web.app |

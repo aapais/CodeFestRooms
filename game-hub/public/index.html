@@ -4,61 +4,345 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Live Leaderboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Spline+Sans:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
-    body { font-family: "Segoe UI", sans-serif; margin: 0; padding: 24px; background: #f5f7fb; color: #1a202c; }
-    .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
-    .title { font-size: 24px; font-weight: 700; }
-    .sub { color: #4a5568; font-size: 14px; }
-    .board { background: #fff; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); overflow: hidden; }
-    table { width: 100%; border-collapse: collapse; }
-    th, td { padding: 12px 14px; text-align: left; border-bottom: 1px solid #edf2f7; font-size: 14px; }
-    th { background: #f7fafc; font-weight: 600; color: #4a5568; }
-    .rank { font-weight: 700; }
-    .room { text-transform: uppercase; font-size: 12px; color: #718096; }
-    .status { font-size: 12px; color: #2d3748; }
-    .score { font-weight: 700; }
-    .pill { display: inline-block; padding: 2px 8px; border-radius: 999px; background: #edf2f7; font-size: 12px; }
-    .badge { display: inline-block; padding: 2px 6px; border-radius: 8px; background: #e0f2fe; color: #0c4a6e; font-size: 11px; margin-right: 4px; }
+    :root {
+      --bg: #0b0f1c;
+      --card: rgba(255, 255, 255, 0.08);
+      --card-strong: rgba(255, 255, 255, 0.12);
+      --text: #f5f7ff;
+      --muted: rgba(245, 247, 255, 0.65);
+      --accent: #6ee7ff;
+      --accent-2: #f8d377;
+      --accent-3: #8b7bff;
+      --success: #54f2b2;
+      --warning: #ffd36e;
+      --danger: #ff7a90;
+      --shadow: 0 20px 45px rgba(5, 9, 23, 0.45);
+      --radius-lg: 20px;
+      --radius-sm: 12px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Space Grotesk", "Spline Sans", sans-serif;
+      color: var(--text);
+      background: radial-gradient(circle at top left, #1b2b5f 0%, transparent 45%),
+                  radial-gradient(circle at 80% 10%, #3b1f59 0%, transparent 45%),
+                  linear-gradient(135deg, #070a15 0%, #0d1225 50%, #121a33 100%);
+    }
+
+    .page {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 40px 24px 60px;
+      position: relative;
+    }
+
+    .hero {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 24px;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: 28px;
+      animation: fadeIn 0.6s ease-out;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: rgba(110, 231, 255, 0.18);
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .hero h1 {
+      margin: 14px 0 8px;
+      font-size: clamp(28px, 4vw, 42px);
+      font-weight: 700;
+    }
+
+    .hero p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .status-stack {
+      display: grid;
+      gap: 12px;
+      min-width: 220px;
+    }
+
+    .status-card {
+      background: var(--card);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+    }
+
+    .status-label {
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+    }
+
+    .timer-pill,
+    .conn-pill {
+      margin-top: 8px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    .control-card {
+      background: var(--card-strong);
+      border-radius: var(--radius-lg);
+      padding: 22px 24px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(18px);
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 18px;
+      justify-content: space-between;
+      margin-bottom: 26px;
+      animation: slideUp 0.5s ease-out;
+    }
+
+    .control-title h2 {
+      margin: 0 0 6px;
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    .control-title p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .control-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .btn {
+      padding: 10px 18px;
+      border-radius: 999px;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .btn:hover { transform: translateY(-2px); }
+
+    .btn-start {
+      background: linear-gradient(135deg, #30e6a2, #27b3ff);
+      color: #06131d;
+      box-shadow: 0 10px 20px rgba(39, 179, 255, 0.3);
+    }
+
+    .btn-reset {
+      background: linear-gradient(135deg, #ff8ba7, #ff4d6d);
+      color: #1b0910;
+      box-shadow: 0 10px 20px rgba(255, 77, 109, 0.3);
+    }
+
+    .control-status {
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .board-card {
+      background: rgba(8, 12, 26, 0.75);
+      border-radius: var(--radius-lg);
+      padding: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+      animation: fadeIn 0.7s ease-out;
+    }
+
+    .board-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .board-header h2 {
+      margin: 0;
+      font-size: 20px;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    thead {
+      background: linear-gradient(135deg, rgba(110, 231, 255, 0.2), rgba(139, 123, 255, 0.2));
+    }
+
+    th, td {
+      padding: 14px 16px;
+      text-align: left;
+      font-size: 14px;
+    }
+
+    th {
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-size: 12px;
+    }
+
+    tbody tr {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      transition: background 0.2s ease;
+    }
+
+    tbody tr:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .rank { font-weight: 700; color: var(--accent-2); }
+    .room { text-transform: uppercase; font-size: 11px; letter-spacing: 0.1em; color: var(--muted); }
+    .status { font-size: 12px; color: var(--text); }
+    .score { font-weight: 700; color: var(--success); }
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: rgba(110, 231, 255, 0.18);
+      color: var(--accent);
+      font-size: 11px;
+      margin-right: 4px;
+    }
+
     .badges { white-space: nowrap; }
-    .empty { padding: 24px; text-align: center; color: #718096; }
+    .empty { padding: 24px; text-align: center; color: var(--muted); }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(18px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(26px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 768px) {
+      .page { padding: 32px 18px 48px; }
+      .control-card { align-items: flex-start; }
+      .board-header { gap: 12px; }
+      table { font-size: 13px; }
+      th, td { padding: 12px; }
+    }
   </style>
 </head>
 <body>
-  <div class="header">
-    <div>
-      <div class="title">🎮 Visual Escape Room</div>
-      <div class="sub">Real-time leaderboard & Game Management</div>
-    </div>
-    <div style="display: flex; gap: 8px; align-items: center;">
-      <div class="pill" id="timer" style="background: #fff; color: #1a202c; font-weight: 700; padding: 8px 16px;">⏱️ 50m 00s</div>
-      <div class="pill" id="conn">Connecting...</div>
-    </div>
-  </div>
+  <div class="page">
+    <header class="hero">
+      <div>
+        <div class="eyebrow">Visual Escape Room</div>
+        <h1>Game Hub Dashboard</h1>
+        <p>Monitoriza equipas, controla o kickoff e acompanha o tempo em tempo real.</p>
+      </div>
+      <div class="status-stack">
+        <div class="status-card">
+          <div class="status-label">Global Timer</div>
+          <div class="timer-pill" id="timer">⏱️ 50m 00s</div>
+        </div>
+        <div class="status-card">
+          <div class="status-label">Connection</div>
+          <div class="conn-pill" id="conn">Connecting...</div>
+        </div>
+      </div>
+    </header>
 
-  <div style="margin-bottom: 20px; padding: 16px; background: #f0f9ff; border-radius: 8px; border-left: 4px solid #0284c7;">
-    <div style="font-weight: 600; margin-bottom: 8px;">🎯 Game Control</div>
-    <button onclick="kickoffGame()" id="kickoffBtn" style="padding: 8px 16px; background: #15803d; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; margin-right: 8px;">▶️ Start Game (50 min)</button>
-    <button onclick="resetGame()" id="resetBtn" style="padding: 8px 16px; background: #dc2626; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; display: none;">🔄 Reset</button>
-    <span id="gameStatus" style="margin-left: 16px; color: #4a5568; font-size: 14px;">Waiting for facilitator...</span>
-  </div>
+    <section class="control-card">
+      <div class="control-title">
+        <h2>Game Control</h2>
+        <p>O kickoff inicia os 50 minutos para todas as equipas.</p>
+      </div>
+      <div class="control-actions">
+        <button onclick="kickoffGame()" id="kickoffBtn" class="btn btn-start">▶️ Start Game (50 min)</button>
+        <button onclick="resetGame()" id="resetBtn" class="btn btn-reset" style="display: none;">🔄 Reset</button>
+      </div>
+      <div class="control-status" id="gameStatus">Waiting for facilitator...</div>
+    </section>
 
-  <div class="board">
-    <table>
-      <thead>
-        <tr>
-          <th>Rank</th>
-          <th>Team</th>
-          <th>Room</th>
-          <th>Status</th>
-          <th>Score</th>
-          <th>Completed</th>
-          <th>Last Result</th>
-        </tr>
-      </thead>
-      <tbody id="rows">
-        <tr><td colspan="6" class="empty">No teams yet</td></tr>
-      </tbody>
-    </table>
+    <section class="board-card">
+      <div class="board-header">
+        <h2>Live Leaderboard</h2>
+        <div class="legend">
+          <span>⚡ Atualiza em tempo real</span>
+          <span>🏁 Tempo desempata</span>
+        </div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Team</th>
+            <th>Room</th>
+            <th>Status</th>
+            <th>Score</th>
+            <th>Completed</th>
+            <th>Last Result</th>
+          </tr>
+        </thead>
+        <tbody id="rows">
+          <tr><td colspan="7" class="empty">No teams yet</td></tr>
+        </tbody>
+      </table>
+    </section>
   </div>
 
   <script src="/config.js"></script>

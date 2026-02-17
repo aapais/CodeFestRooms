@@ -3,10 +3,10 @@
 ## ⏱️ Configuração: 50 Minutos
 
 A workshop tem **exatamente 50 minutos**. Todo o sistema está sincronizado em Firebase:
-- ⏱️ Timer global começa no Dashboard
-- 📊 Cada equipa vê o tempo restante na sua room
+- ⏱️ Timer global começa no Game Hub (Dashboard)
+- 📊 Timer visível APENAS no Game Hub
 - 🏆 Tempo é factor de desempate (quem termina mais rápido ganha)
-- 🎯 Cada room tem objetivo claro em preview antes de começar
+- 🎯 Objetivo de cada room aparece no topo da room
 
 ---
 
@@ -54,10 +54,10 @@ A workshop tem **exatamente 50 minutos**. Todo o sistema está sincronizado em F
 
 2. Partilhar URLs com os grupos via email/Slack/QR Code
 
-3. Preparar Dashboard (manter aberto durante o evento)
+3. Preparar Game Hub (Dashboard) (manter aberto durante o evento)
    Abrir no browser: https://codefestrooms-81695626.web.app
    
-   ⚠️ IMPORTANTE NO DASHBOARD:
+   ⚠️ IMPORTANTE NO GAME HUB (DASHBOARD):
    - Botão "▶️ Start Game (50 min)" para começar
    - Timer mostra tempo RESTANTE
    - Leaderboard com ranking ao vivo
@@ -76,7 +76,7 @@ FACILITADOR:
 ✓ Divide público em grupos (2-4 pessoas cada)
 ✓ Partilha URLs ou mostra QR code no slide
 
-👉 AÇÃO CRÍTICA: Clica em "▶️ Start Game" no Dashboard
+👉 AÇÃO CRÍTICA: Clica em "▶️ Start Game" no Game Hub (Dashboard)
    - Isto INICIA o timer global de 50 minutos
    - Todos as rooms começam a contar tempo simultaneamente
    - Sem isto, o jogo não começa!
@@ -84,33 +84,8 @@ FACILITADOR:
 GRUPOS:
 → Abrem: https://codefestrooms-81695626.web.app (Game Hub)
 → Clicam botão da Room 1
-→ VÊM PREVIEW com objetivo claro (Screenshot abaixo)
-→ Clicam "Começar Desafio"
-→ Entram na Room 1
-```
-
-### **Preview que Cada Equipa Vê**
-
-```
-┌────────────────────────────────────────────────┐
-│                     🏚️                          │
-│       Arqueologia de Código                     │
-│            Easy 🟢 Room 1 de 4                  │
-│                                                 │
-│  📋 OBJETIVO:                                   │
-│  O bug está no cálculo de IVA. Encontra e      │
-│  explica.                                       │
-│                                                 │
-│  💡 DICA:                                       │
-│  O desconto e o shipping estão a afetar a      │
-│  base de imposto incorretamente.                │
-│                                                 │
-│  ⏱️ INFORMAÇÃO:                                 │
-│  Tempo estimado: 8-12 min                       │
-│  Tempo restante: 50m 00s ⏳                    │
-│                                                 │
-│  [← Voltar]  [Começar Desafio →]               │
-└────────────────────────────────────────────────┘
+→ VÊEM o objetivo no topo da Room 1
+→ Começam o desafio
 ```
 
 ### **Fase 2: Grupos Navegam & Timer Conta (2-48 min)**
@@ -118,28 +93,21 @@ GRUPOS:
 #### **O Timer em Tempo Real:**
 
 ```javascript
-┌─────────────────────────────────────────────────────────┐
-│  CADA EQUIPA VÊ NA TOOLBAR DA ROOM:                     │
-│                                                          │
-│  [Team Name] [Join] ⏱️ 47m 33s [Leaderboard] [Next]    │
-│                                                          │
-│  O timer DESATUALIZA em CADA EQUIPA:                    │
-│  - Começa em 50m 00s                                    │
-│  - Vai descendo: 49m 59s, 49m 58s, ...                │
-│  - Tudo sincronizado com o Firebase                    │
-│  - Cor muda automaticamente:                            │
-│    🟢 50:00 a 16:40 (verde - relaxado)                │
-│    🟡 16:40 a 05:00 (amarelo - aviso!)                │
-│    🔴 05:00 a 00:00 (vermelho - APRESSA-TE!)          │
-└─────────────────────────────────────────────────────────┘
+⏱️ CADA EQUIPA VÊ A ROOM COM O OBJETIVO NO TOPO:
+   E NÃO VÊ timer (timer só é visível no Game Hub)
+   - Foco total no desafio
+   - Sem distrações de tempo
 
-⏲️ NO DASHBOARD, O FACILITADOR VÊ:
+⏲️ NO GAME HUB (DASHBOARD), O FACILITADOR VÊ:
 ┌─────────────────────────────────────────────────────────┐
 │  🎮 VISUAL ESCAPE ROOM                                  │
-│  ▶️ Start Game (50 min)  🔄 Reset                       │
+│  ▶️ Start Game  🔄 Reset                                │
 │  ✅ Game started! Teams can now join rooms.             │
 │                                                          │
 │  ⏱️ 47m 33s (timer com cor dinâmica)                   │
+│     🟢 50:00 a 16:40 (verde - na boa)                 │
+│     🟡 16:40 a 05:00 (amarelo - aviso!)               │
+│     🔴 05:00 a 00:00 (vermelho - APRESSA-TE!)         │
 │                                                          │
 │  🏆 LEADERBOARD                                         │
 │  #1 🥇 Team Alpha      100 pts  🟢🟢🔘🔘              │
@@ -189,7 +157,7 @@ NOTA: Se dois grupos terminarem 4 rooms com mesmo score:
 
 ## 🎯 Objetivos Claros por Room
 
-Cada equipa vê isto no PREVIEW antes de entrar:
+Cada equipa vê isto no TOPO de cada Room assim que entra:
 
 | Room | Emoji | Objetivo | Dica | Tempo | Complexidade |
 |------|-------|----------|------|-------|--------------|
@@ -214,8 +182,8 @@ Cada equipa vê isto no PREVIEW antes de entrar:
 - ✅ Preparar QR codes ou lista de URLs
 - ✅ Garantir que Firestore está ativo (sem regras restritivas)
 
-### **2. DURING EVENTO** 
-- ✅ Mantém Dashboard aberto: `https://codefestrooms-81695626.web.app`
+### **2. DURANTE O EVENTO** 
+- ✅ Mantém Game Hub (Dashboard) aberto: `https://codefestrooms-81695626.web.app`
 - ✅ Monitora leaderboard em tempo real
 - ✅ Presta atenção em grupos "stuck":
   - Se alguém não consegue a Room 1 em 10 min → dar dica
@@ -236,13 +204,15 @@ Cada equipa vê isto no PREVIEW antes de entrar:
 
 ## 📊 Monitorização em Tempo Real
 
-### **O Que o Facilitador Vê no Dashboard**
+### **O Que o Facilitador Vê no Game Hub (Dashboard)**
 
 ```
 https://codefestrooms-81695626.web.app
 
 ┌────────────────────────────────────────────────┐
 │         🎮 VISUAL ESCAPE ROOM LEADERBOARD        │
+│                                                 │
+│  ⏱️ 42m 15s  (timer global, visível SÓ aqui)    │
 │                                                 │
 │  🏆 RANKING (atualizado a cada 3 segundos)      │
 │                                                 │
