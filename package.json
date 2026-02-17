@@ -5,6 +5,7 @@
     "rooms/*"
   ],
   "scripts": {
+    "start:all": "node start-all.js",
     "room1": "npm -w @escape/room1 test",
     "room2": "npm -w @escape/room2 test",
     "room3": "npm -w @escape/room3 test",

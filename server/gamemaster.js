@@ -11,9 +11,15 @@ const wss = new WebSocket.Server({ server });
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 
+// Load validation module (assuming validation.js is accessible from shared)
+// In production, this would be properly imported
+const ValidationModule = require('../shared/validation.js');
+const { RoomTransitionValidator } = ValidationModule;
+
 // In-memory game state
 const teams = new Map(); // teamId -> { name, currentRoom, score, completedRooms: [] }
 const rooms = ['room1-archaeology', 'room2-refactor-lab', 'room3-security-vault', 'final-modernisation'];
+const transitionValidator = new RoomTransitionValidator(); // Global transition validator instance
 
 // Broadcast to all connected WebSocket clients
 function broadcast(data) {
@@ -54,7 +60,7 @@ app.post('/api/team/login', (req, res) => {
 
 // REST API: Update team progress
 app.post('/api/team/progress', (req, res) => {
-  const { teamId, room, score, completed } = req.body;
+  const { teamId, room, score, completed, validationResult } = req.body;
   
   if (!teams.has(teamId)) {
     return res.status(404).json({ error: 'Team not found' });
@@ -63,16 +69,41 @@ app.post('/api/team/progress', (req, res) => {
   const team = teams.get(teamId);
   
   if (completed && !team.completedRooms.includes(room)) {
-    team.completedRooms.push(room);
-    team.score += score || 0;
+    // Validate room completion using transition validator
+    const completionStatus = transitionValidator.markRoomCompleted(teamId, room, validationResult || {
+      valid: true,
+      status: 'success'
+    });
+
+    if (completionStatus.success) {
+      team.completedRooms.push(room);
+      team.score += score || (validationResult?.metadata?.points || 0);
+      
+      broadcast({ 
+        type: 'team-update', 
+        teams: getLeaderboard(),
+        roomCompleted: room,
+        teamId: teamId
+      });
+
+      return res.json({ 
+        ok: true, 
+        team,
+        sessionMessage: completionStatus.message,
+        nextRoomHint: completionStatus.nextRoomHint
+      });
+    } else {
+      return res.status(400).json({ 
+        error: 'Room completion validation failed',
+        errors: completionStatus.errors
+      });
+    }
   }
 
-  broadcast({ type: 'team-update', teams: getLeaderboard() });
-  
   res.json({ ok: true, team });
 });
 
-// REST API: Navigate to next room
+// REST API: Navigate to next room (with validation)
 app.post('/api/team/navigate', (req, res) => {
   const { teamId, targetRoom } = req.body;
   
@@ -80,12 +111,68 @@ app.post('/api/team/navigate', (req, res) => {
     return res.status(404).json({ error: 'Team not found' });
   }
 
+  // Validate if team can progress to target room
+  const progressCheck = transitionValidator.canProgressToRoom(teamId, targetRoom);
+  
+  if (!progressCheck.canProgress) {
+    return res.status(403).json({ 
+      error: 'Cannot progress to this room',
+      ...progressCheck
+    });
+  }
+
   const team = teams.get(teamId);
   team.currentRoom = targetRoom;
 
-  broadcast({ type: 'team-update', teams: getLeaderboard() });
+  broadcast({ 
+    type: 'team-update', 
+    teams: getLeaderboard(),
+    navigationEvent: {
+      teamId: teamId,
+      movedTo: targetRoom,
+      message: progressCheck.message
+    }
+  });
   
-  res.json({ ok: true, team });
+  res.json({ 
+    ok: true, 
+    team,
+    message: progressCheck.message,
+    nextRoomHint: transitionValidator.getNextRoomHint(teamId, targetRoom)
+  });
+});
+
+// REST API: Get team progress
+app.get('/api/team/:teamId/progress', (req, res) => {
+  const { teamId } = req.params;
+
+  if (!teams.has(teamId)) {
+    return res.status(404).json({ error: 'Team not found' });
+  }
+
+  const team = teams.get(teamId);
+  const progress = transitionValidator.getTeamProgress(teamId);
+  const isComplete = transitionValidator.isGameComplete(teamId);
+
+  res.json({
+    ok: true,
+    teamId,
+    teamName: team.name,
+    score: team.score,
+    progress,
+    isComplete,
+    gameStatus: isComplete ? 'completed' : 'in-progress'
+  });
+});
+
+// REST API: Get all room objectives
+app.get('/api/rooms/objectives', (req, res) => {
+  const objectives = transitionValidator.getAllRoomObjectives();
+  res.json({
+    ok: true,
+    objectives,
+    totalRooms: objectives.length
+  });
 });
 
 // REST API: Get leaderboard

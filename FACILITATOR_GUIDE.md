@@ -174,6 +174,192 @@ Cada equipa vê isto no TOPO de cada Room assim que entra:
 
 ---
 
+## ✅ Sistema de Validação Automática
+
+Cada room tem **validação automática** antes de permitir completação. Se o objetivo não foi cumprido, o botão "Mark Complete" mostra erro e bloqueia avanço.
+
+### **Room 1: Arqueologia (IVA Bug - Automática)**
+
+```
+VALIDAÇÃO EXECUTADA AO CLICAR "MARK COMPLETE":
+┌────────────────────────────────────────────────────┐
+│ Executar fatura e verificar:                        │
+│                                                     │
+│ ✅ SUCESSO se:                                     │
+│   • Base de imposto = 2250 EUR (exato)             │
+│   • Imposto calculado = 517.50 EUR (23%)           │
+│   • Total com imposto = 2767.50 EUR                │
+│   • Bug FIXO: desconto e shipping não afetam taxa  │
+│                                                     │
+│ ❌ FALHA se:                                       │
+│   • Base = 1800 (bug original: 2000-200=1800)     │
+│   • Base = 2250+450 = 2700 (outro bug)            │
+│   • Imposto ≠ 517.50                              │
+│   • Código não foi modificado                       │
+└────────────────────────────────────────────────────┘
+
+FEEDBACK AO GRUPO:
+┌────────────────────────────────────────────────────┐
+│ ❌ Validação Falhou!                                │
+│                                                     │
+│ Base de imposto: 1800 EUR (esperado: 2250 EUR)    │
+│                                                     │
+│ 💡 Dica: O desconto e shipping estão a afetar      │
+│    a base de cálculo! Revê a lógica.               │
+│                                                     │
+│ [← Voltar] [Tentar Novamente]                      │
+└────────────────────────────────────────────────────┘
+```
+
+### **Room 2: Refactor Lab (Complexity - Automática)**
+
+```
+VALIDAÇÃO EXECUTADA AO CLICAR "MARK COMPLETE":
+┌────────────────────────────────────────────────────┐
+│ Rodar ESLint + Complexity Check:                    │
+│                                                     │
+│ ✅ SUCESSO se:                                     │
+│   • Complexity Score ≤ 10 (medido por ESLint)      │
+│   • Sem erros ESLint críticos                      │
+│   • Código refatorizado (não é original)           │
+│                                                     │
+│ ❌ FALHA se:                                       │
+│   • Complexity > 10                                 │
+│   • Há erros ESLint não resolvidos                 │
+│   • Código não foi modificado                       │
+│   • Faltam comentários explicativos                │
+└────────────────────────────────────────────────────┘
+
+FEEDBACK AO GRUPO:
+┌────────────────────────────────────────────────────┐
+│ ❌ Validação Falhou!                                │
+│                                                     │
+│ 📊 Complexity: 12 (limite: 10)                     │
+│ 🔴 ESLint errors: 3                                │
+│                                                     │
+│ 💡 Próximos passos:                                │
+│   1. Roda: npm run lint --fix                      │
+│   2. Refatora funções longas em funções menores    │
+│   3. Tenta novamente!                              │
+│                                                     │
+│ [← Voltar] [Tentar Novamente]                      │
+└────────────────────────────────────────────────────┘
+```
+
+### **Room 3: Security Vault (Vulnerabilidades - Automática)**
+
+```
+VALIDAÇÃO EXECUTADA AO CLICAR "MARK COMPLETE":
+┌────────────────────────────────────────────────────┐
+│ Rodar Security Scan:                                │
+│                                                     │
+│ ✅ SUCESSO se:                                     │
+│   • SEM vulnerabilidades XSS (inputs sanitizados) │
+│   • SEM SQL Injection (usar parameterized queries) │
+│   • SEM hardcoded secrets                          │
+│   • Headers de segurança presentes                 │
+│   • CSRF tokens implementados                      │
+│                                                     │
+│ ❌ FALHA se:                                       │
+│   • innerHTML() usado com dados não sanitizados   │
+│   • Queries SQL construídas com concatenação      │
+│   • API keys/passwords em código                  │
+│   • Headers de segurança faltam                    │
+└────────────────────────────────────────────────────┘
+
+FEEDBACK AO GRUPO:
+┌────────────────────────────────────────────────────┐
+│ ❌ Validação Falhou!                                │
+│                                                     │
+│ 🔐 Vulnerabilidades encontradas:                   │
+│   • XSS: linha 42 - innerHTML não sanitizado       │
+│   • SQL Injection: linha 67 - string concatenation │
+│                                                     │
+│ 🛠️ Correções:                                      │
+│   1. Usa textContent em vez de innerHTML           │
+│   2. Usa prepared statements (?)                   │
+│   3. Valida TUDO que vem do user                   │
+│                                                     │
+│ [← Voltar] [Tentar Novamente]                      │
+└────────────────────────────────────────────────────┘
+```
+
+### **Final: Modernisation (Architecture - Semi-Automática)**
+
+```
+VALIDAÇÃO EXECUTADA AO CLICAR "MARK COMPLETE":
+┌────────────────────────────────────────────────────┐
+│ Verificar Arquitetura:                              │
+│                                                     │
+│ ✅ SUCESSO se:                                     │
+│   • Dockerfile presente (e não vazio)              │
+│   • docker-compose.yml presente                    │
+│   • .github/workflows/ com CI/CD pipeline          │
+│   • Diagrama de arquitetura (README ou file)       │
+│   • REST API documentado (swagger/comments)        │
+│   • Tests presentes (>5 test cases)                │
+│                                                     │
+│ ❌ FALHA se:                                       │
+│   • Ficheiro Dockerfile falta ou está vazio        │
+│   • Sem docker-compose                             │
+│   • Sem CI/CD workflow                             │
+│   • Sem documentação de arquitetura                │
+└────────────────────────────────────────────────────┘
+
+FEEDBACK AO GRUPO:
+┌────────────────────────────────────────────────────┐
+│ ❌ Validação Falhou!                                │
+│                                                     │
+│ ✅ Tem:                                            │
+│   • Dockerfile                                     │
+│   • docker-compose.yml                             │
+│   • 12 tests                                       │
+│                                                     │
+│ ❌ Falta:                                          │
+│   • .github/workflows/ (CI/CD)                     │
+│   • Diagrama de arquitetura no README              │
+│                                                     │
+│ 🎯 Ação: Cria workflow GitHub Actions ou escreve  │
+│    diagrama ASCII no README                        │
+│                                                     │
+│ [← Voltar] [Tentar Novamente]                      │
+└────────────────────────────────────────────────────┘
+```
+
+---
+
+## 🔧 Como Funciona Tecnicamente (Para Devs)
+
+Cada room tem folder `validation/` com scripts:
+
+```
+/rooms/room1-archaeology/
+  /src/
+  /test/
+  /validation/
+    validate.js        ← Script de validação
+    checkIVA.js        ← Lógica específica IVA
+```
+
+Quando grupo clica "Mark Complete":
+1. Frontend chama: `await validateRoom(roomId, code)`
+2. Backend executa arquivo `/validation/validate.js`
+3. Retorna: `{ valid: true/false, message: "", errors: [] }`
+4. Frontend mostra resultado (OK ou lista de erros)
+5. Se valid=true: Envia para Firestore `teams/{teamId}/completedRooms`
+6. Leaderboard atualiza automaticamente
+
+**Firestore Regra:**
+```javascript
+// Não deixa atualizar scores manualmente - só via validação
+match /teams/{teamId}/completedRooms {
+  allow write: if request.auth != null && 
+               request.resource.data.validatedAt != null;
+}
+```
+
+---
+
 ## 🎮 O Papel do Facilitador
 
 ### **1. PRÉ-EVENTO**
