@@ -1,23 +1,34 @@
 /**
  * Visual Escape Room - Configuration
  * 
- * Deteta automaticamente entre desenvolvimento local e produção Firebase.
+ * Deteta automaticamente entre desenvolvimento local/IDX e produção Firebase.
  */
 
-// Detect if running locally
-const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+const HOSTNAME = location.hostname;
+const IDX_MATCH = HOSTNAME.match(/^(\d+)-(.+)$/);
+const IDX_BASE = IDX_MATCH ? IDX_MATCH[2] : null;
+const isLocal = HOSTNAME === 'localhost' || HOSTNAME === '127.0.0.1';
+const isIdx = Boolean(IDX_BASE) && HOSTNAME.endsWith('.cloudworkstations.dev');
+const isDev = isLocal || isIdx;
+const protocol = location.protocol;
+const wsProtocol = protocol === 'https:' ? 'wss:' : 'ws:';
+
+function hostForPort(port) {
+  if (isIdx) return `${port}-${IDX_BASE}`;
+  return `${HOSTNAME}:${port}`;
+}
 
 window.ESCAPE_ROOM_CONFIG = {
-  MODE: isLocal ? 'development' : 'production',
+  MODE: isDev ? 'development' : 'production',
   FIREBASE_PROJECT_ID: 'codefestrooms-81695626',
   
-  // Local development URLs
-  LOCAL_URLS: {
-    gameHub: `${location.protocol}//${location.hostname}:4000`,
-    room1: `${location.protocol}//${location.hostname}:3000`,
-    room2: `${location.protocol}//${location.hostname}:3002`,
-    room3: `${location.protocol}//${location.hostname}:3003`,
-    final: `${location.protocol}//${location.hostname}:8080`
+  // Dev URLs (localhost or Google IDX previews)
+  DEV_URLS: {
+    gameHub: `${protocol}//${hostForPort(4000)}`,
+    room1: `${protocol}//${hostForPort(3000)}`,
+    room2: `${protocol}//${hostForPort(3002)}`,
+    room3: `${protocol}//${hostForPort(3003)}`,
+    final: `${protocol}//${hostForPort(8080)}`
   },
   
   // Production Firebase URLs
@@ -30,16 +41,15 @@ window.ESCAPE_ROOM_CONFIG = {
   },
   
   getUrl: function(target) {
-    const urls = isLocal ? this.LOCAL_URLS : this.PRODUCTION_URLS;
+    const urls = isDev ? this.DEV_URLS : this.PRODUCTION_URLS;
     return urls[target] || urls.gameHub;
   },
   
   getWebSocketUrl: function() {
-    const hubUrl = this.getUrl('gameHub');
-    if (isLocal) {
-      return hubUrl.replace('http://', 'ws://').replace('https://', 'wss://');
+    if (isDev) {
+      return `${wsProtocol}//${hostForPort(4000)}`;
     }
-    return hubUrl.replace('https://', 'wss://');
+    return 'wss://codefestrooms-81695626.web.app';
   },
   
   getRoomUrl: function(roomId) {
