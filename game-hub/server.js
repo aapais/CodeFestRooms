@@ -14,6 +14,14 @@ const PORT = process.env.HUB_PORT || 4000;
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Serve shared config files
+app.get('/timingConfig.js', (req, res) => {
+  res.sendFile(path.join(__dirname, '../shared/timingConfig.js'));
+});
+app.get('/config.js', (req, res) => {
+  res.sendFile(path.join(__dirname, '../shared/config.js'));
+});
+
 // Simple CORS for cross-port calls from room previews
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');

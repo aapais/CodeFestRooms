@@ -1,12 +1,26 @@
 /**
- * Visual Escape Room - Firebase Hosting Configuration
+ * Visual Escape Room - Configuration
  * 
- * Configuracao unica para producao em Firebase Hosting.
+ * Deteta automaticamente entre desenvolvimento local e produção Firebase.
  */
 
+// Detect if running locally
+const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+
 window.ESCAPE_ROOM_CONFIG = {
-  MODE: 'production',
+  MODE: isLocal ? 'development' : 'production',
   FIREBASE_PROJECT_ID: 'codefestrooms-81695626',
+  
+  // Local development URLs
+  LOCAL_URLS: {
+    gameHub: `${location.protocol}//${location.hostname}:4000`,
+    room1: `${location.protocol}//${location.hostname}:3000`,
+    room2: `${location.protocol}//${location.hostname}:3002`,
+    room3: `${location.protocol}//${location.hostname}:3003`,
+    final: `${location.protocol}//${location.hostname}:8080`
+  },
+  
+  // Production Firebase URLs
   PRODUCTION_URLS: {
     gameHub: 'https://codefestrooms-81695626.web.app',
     room1: 'https://codefest-room1.web.app',
@@ -14,13 +28,20 @@ window.ESCAPE_ROOM_CONFIG = {
     room3: 'https://codefest-room3.web.app',
     final: 'https://codefest-final.web.app'
   },
+  
   getUrl: function(target) {
-    return this.PRODUCTION_URLS[target] || this.PRODUCTION_URLS.gameHub;
+    const urls = isLocal ? this.LOCAL_URLS : this.PRODUCTION_URLS;
+    return urls[target] || urls.gameHub;
   },
+  
   getWebSocketUrl: function() {
     const hubUrl = this.getUrl('gameHub');
+    if (isLocal) {
+      return hubUrl.replace('http://', 'ws://').replace('https://', 'wss://');
+    }
     return hubUrl.replace('https://', 'wss://');
   },
+  
   getRoomUrl: function(roomId) {
     const map = {
       room1: this.getUrl('room1'),
