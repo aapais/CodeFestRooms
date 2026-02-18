@@ -1,12 +1,37 @@
 /**
- * Visual Escape Room - Firebase Hosting Configuration
+ * Visual Escape Room - Configuration
  * 
- * Configuracao unica para producao em Firebase Hosting.
+ * Deteta automaticamente entre desenvolvimento local/IDX e produção Firebase.
  */
 
+const HOSTNAME = location.hostname;
+const IDX_MATCH = HOSTNAME.match(/^(\d+)-(.+)$/);
+const IDX_BASE = IDX_MATCH ? IDX_MATCH[2] : null;
+const isLocal = HOSTNAME === 'localhost' || HOSTNAME === '127.0.0.1';
+const isIdx = Boolean(IDX_BASE) && HOSTNAME.endsWith('.cloudworkstations.dev');
+const isDev = isLocal || isIdx;
+const protocol = location.protocol;
+const wsProtocol = protocol === 'https:' ? 'wss:' : 'ws:';
+
+function hostForPort(port) {
+  if (isIdx) return `${port}-${IDX_BASE}`;
+  return `${HOSTNAME}:${port}`;
+}
+
 window.ESCAPE_ROOM_CONFIG = {
-  MODE: 'production',
+  MODE: isDev ? 'development' : 'production',
   FIREBASE_PROJECT_ID: 'codefestrooms-81695626',
+  
+  // Dev URLs (localhost or Google IDX previews)
+  DEV_URLS: {
+    gameHub: `${protocol}//${hostForPort(4000)}`,
+    room1: `${protocol}//${hostForPort(3000)}`,
+    room2: `${protocol}//${hostForPort(3002)}`,
+    room3: `${protocol}//${hostForPort(3003)}`,
+    final: `${protocol}//${hostForPort(8080)}`
+  },
+  
+  // Production Firebase URLs
   PRODUCTION_URLS: {
     gameHub: 'https://codefestrooms-81695626.web.app',
     gameHubAPI: 'https://us-central1-codefestrooms-81695626.cloudfunctions.net/api',
@@ -15,16 +40,21 @@ window.ESCAPE_ROOM_CONFIG = {
     room3: 'https://codefest-room3.web.app',
     final: 'https://codefest-final.web.app'
   },
+  
   getUrl: function(target) {
-    return this.PRODUCTION_URLS[target] || this.PRODUCTION_URLS.gameHub;
+    const urls = isDev ? this.DEV_URLS : this.PRODUCTION_URLS;
+    return urls[target] || urls.gameHub;
   },
   getApiUrl: function() {
     return this.PRODUCTION_URLS.gameHubAPI;
   },
   getWebSocketUrl: function() {
-    const hubUrl = this.getUrl('gameHub');
-    return hubUrl.replace('https://', 'wss://');
+    if (isDev) {
+      return `${wsProtocol}//${hostForPort(4000)}`;
+    }
+    return 'wss://codefestrooms-81695626.web.app';
   },
+  
   getRoomUrl: function(roomId) {
     const map = {
       room1: this.getUrl('room1'),

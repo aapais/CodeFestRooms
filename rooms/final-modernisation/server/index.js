@@ -9,6 +9,14 @@ const PORT = process.env.PORT || 3000;
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 
+// Serve shared config files
+app.get('/timingConfig.js', (req, res) => {
+  res.sendFile(path.join(__dirname, '../../shared/timingConfig.js'));
+});
+app.get('/config.js', (req, res) => {
+  res.sendFile(path.join(__dirname, '../../shared/config.js'));
+});
+
 // Legacy monolith I/O logic simulation
 const { calcScore } = require('../../src/monolith');
 

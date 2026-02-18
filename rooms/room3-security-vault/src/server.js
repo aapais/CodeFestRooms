@@ -6,6 +6,14 @@ const app = express();
 app.use(express.static(path.join(__dirname, '../public')));
 app.use(express.urlencoded({ extended: true })); // For form post
 
+// Serve shared config files
+app.get('/timingConfig.js', (req, res) => {
+  res.sendFile(path.join(__dirname, '../../shared/timingConfig.js'));
+});
+app.get('/config.js', (req, res) => {
+  res.sendFile(path.join(__dirname, '../../shared/config.js'));
+});
+
 app.post('/api/login', async (req, res) => {
   const { username, password } = req.body;
   try {

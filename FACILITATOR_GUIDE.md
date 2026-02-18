@@ -3,10 +3,10 @@
 ## ⏱️ Configuração: 50 Minutos
 
 A workshop tem **exatamente 50 minutos**. Todo o sistema está sincronizado em Firebase:
-- ⏱️ Timer global começa no Dashboard
-- 📊 Cada equipa vê o tempo restante na sua room
+- ⏱️ Timer global começa no Game Hub (Dashboard)
+- 📊 Timer visível APENAS no Game Hub
 - 🏆 Tempo é factor de desempate (quem termina mais rápido ganha)
-- 🎯 Cada room tem objetivo claro em preview antes de começar
+- 🎯 Objetivo de cada room aparece no topo da room
 
 ---
 
@@ -54,10 +54,10 @@ A workshop tem **exatamente 50 minutos**. Todo o sistema está sincronizado em F
 
 2. Partilhar URLs com os grupos via email/Slack/QR Code
 
-3. Preparar Dashboard (manter aberto durante o evento)
+3. Preparar Game Hub (Dashboard) (manter aberto durante o evento)
    Abrir no browser: https://codefestrooms-81695626.web.app
    
-   ⚠️ IMPORTANTE NO DASHBOARD:
+   ⚠️ IMPORTANTE NO GAME HUB (DASHBOARD):
    - Botão "▶️ Start Game (50 min)" para começar
    - Timer mostra tempo RESTANTE
    - Leaderboard com ranking ao vivo
@@ -76,7 +76,7 @@ FACILITADOR:
 ✓ Divide público em grupos (2-4 pessoas cada)
 ✓ Partilha URLs ou mostra QR code no slide
 
-👉 AÇÃO CRÍTICA: Clica em "▶️ Start Game" no Dashboard
+👉 AÇÃO CRÍTICA: Clica em "▶️ Start Game" no Game Hub (Dashboard)
    - Isto INICIA o timer global de 50 minutos
    - Todos as rooms começam a contar tempo simultaneamente
    - Sem isto, o jogo não começa!
@@ -84,33 +84,8 @@ FACILITADOR:
 GRUPOS:
 → Abrem: https://codefestrooms-81695626.web.app (Game Hub)
 → Clicam botão da Room 1
-→ VÊM PREVIEW com objetivo claro (Screenshot abaixo)
-→ Clicam "Começar Desafio"
-→ Entram na Room 1
-```
-
-### **Preview que Cada Equipa Vê**
-
-```
-┌────────────────────────────────────────────────┐
-│                     🏚️                          │
-│       Arqueologia de Código                     │
-│            Easy 🟢 Room 1 de 4                  │
-│                                                 │
-│  📋 OBJETIVO:                                   │
-│  O bug está no cálculo de IVA. Encontra e      │
-│  explica.                                       │
-│                                                 │
-│  💡 DICA:                                       │
-│  O desconto e o shipping estão a afetar a      │
-│  base de imposto incorretamente.                │
-│                                                 │
-│  ⏱️ INFORMAÇÃO:                                 │
-│  Tempo estimado: 8-12 min                       │
-│  Tempo restante: 50m 00s ⏳                    │
-│                                                 │
-│  [← Voltar]  [Começar Desafio →]               │
-└────────────────────────────────────────────────┘
+→ VÊEM o objetivo no topo da Room 1
+→ Começam o desafio
 ```
 
 ### **Fase 2: Grupos Navegam & Timer Conta (2-48 min)**
@@ -118,28 +93,21 @@ GRUPOS:
 #### **O Timer em Tempo Real:**
 
 ```javascript
-┌─────────────────────────────────────────────────────────┐
-│  CADA EQUIPA VÊ NA TOOLBAR DA ROOM:                     │
-│                                                          │
-│  [Team Name] [Join] ⏱️ 47m 33s [Leaderboard] [Next]    │
-│                                                          │
-│  O timer DESATUALIZA em CADA EQUIPA:                    │
-│  - Começa em 50m 00s                                    │
-│  - Vai descendo: 49m 59s, 49m 58s, ...                │
-│  - Tudo sincronizado com o Firebase                    │
-│  - Cor muda automaticamente:                            │
-│    🟢 50:00 a 16:40 (verde - relaxado)                │
-│    🟡 16:40 a 05:00 (amarelo - aviso!)                │
-│    🔴 05:00 a 00:00 (vermelho - APRESSA-TE!)          │
-└─────────────────────────────────────────────────────────┘
+⏱️ CADA EQUIPA VÊ A ROOM COM O OBJETIVO NO TOPO:
+   E NÃO VÊ timer (timer só é visível no Game Hub)
+   - Foco total no desafio
+   - Sem distrações de tempo
 
-⏲️ NO DASHBOARD, O FACILITADOR VÊ:
+⏲️ NO GAME HUB (DASHBOARD), O FACILITADOR VÊ:
 ┌─────────────────────────────────────────────────────────┐
 │  🎮 VISUAL ESCAPE ROOM                                  │
-│  ▶️ Start Game (50 min)  🔄 Reset                       │
+│  ▶️ Start Game  🔄 Reset                                │
 │  ✅ Game started! Teams can now join rooms.             │
 │                                                          │
 │  ⏱️ 47m 33s (timer com cor dinâmica)                   │
+│     🟢 50:00 a 16:40 (verde - na boa)                 │
+│     🟡 16:40 a 05:00 (amarelo - aviso!)               │
+│     🔴 05:00 a 00:00 (vermelho - APRESSA-TE!)         │
 │                                                          │
 │  🏆 LEADERBOARD                                         │
 │  #1 🥇 Team Alpha      100 pts  🟢🟢🔘🔘              │
@@ -189,7 +157,7 @@ NOTA: Se dois grupos terminarem 4 rooms com mesmo score:
 
 ## 🎯 Objetivos Claros por Room
 
-Cada equipa vê isto no PREVIEW antes de entrar:
+Cada equipa vê isto no TOPO de cada Room assim que entra:
 
 | Room | Emoji | Objetivo | Dica | Tempo | Complexidade |
 |------|-------|----------|------|-------|--------------|
@@ -206,6 +174,192 @@ Cada equipa vê isto no PREVIEW antes de entrar:
 
 ---
 
+## ✅ Sistema de Validação Automática
+
+Cada room tem **validação automática** antes de permitir completação. Se o objetivo não foi cumprido, o botão "Mark Complete" mostra erro e bloqueia avanço.
+
+### **Room 1: Arqueologia (IVA Bug - Automática)**
+
+```
+VALIDAÇÃO EXECUTADA AO CLICAR "MARK COMPLETE":
+┌────────────────────────────────────────────────────┐
+│ Executar fatura e verificar:                        │
+│                                                     │
+│ ✅ SUCESSO se:                                     │
+│   • Base de imposto = 2250 EUR (exato)             │
+│   • Imposto calculado = 517.50 EUR (23%)           │
+│   • Total com imposto = 2767.50 EUR                │
+│   • Bug FIXO: desconto e shipping não afetam taxa  │
+│                                                     │
+│ ❌ FALHA se:                                       │
+│   • Base = 1800 (bug original: 2000-200=1800)     │
+│   • Base = 2250+450 = 2700 (outro bug)            │
+│   • Imposto ≠ 517.50                              │
+│   • Código não foi modificado                       │
+└────────────────────────────────────────────────────┘
+
+FEEDBACK AO GRUPO:
+┌────────────────────────────────────────────────────┐
+│ ❌ Validação Falhou!                                │
+│                                                     │
+│ Base de imposto: 1800 EUR (esperado: 2250 EUR)    │
+│                                                     │
+│ 💡 Dica: O desconto e shipping estão a afetar      │
+│    a base de cálculo! Revê a lógica.               │
+│                                                     │
+│ [← Voltar] [Tentar Novamente]                      │
+└────────────────────────────────────────────────────┘
+```
+
+### **Room 2: Refactor Lab (Complexity - Automática)**
+
+```
+VALIDAÇÃO EXECUTADA AO CLICAR "MARK COMPLETE":
+┌────────────────────────────────────────────────────┐
+│ Rodar ESLint + Complexity Check:                    │
+│                                                     │
+│ ✅ SUCESSO se:                                     │
+│   • Complexity Score ≤ 10 (medido por ESLint)      │
+│   • Sem erros ESLint críticos                      │
+│   • Código refatorizado (não é original)           │
+│                                                     │
+│ ❌ FALHA se:                                       │
+│   • Complexity > 10                                 │
+│   • Há erros ESLint não resolvidos                 │
+│   • Código não foi modificado                       │
+│   • Faltam comentários explicativos                │
+└────────────────────────────────────────────────────┘
+
+FEEDBACK AO GRUPO:
+┌────────────────────────────────────────────────────┐
+│ ❌ Validação Falhou!                                │
+│                                                     │
+│ 📊 Complexity: 12 (limite: 10)                     │
+│ 🔴 ESLint errors: 3                                │
+│                                                     │
+│ 💡 Próximos passos:                                │
+│   1. Roda: npm run lint --fix                      │
+│   2. Refatora funções longas em funções menores    │
+│   3. Tenta novamente!                              │
+│                                                     │
+│ [← Voltar] [Tentar Novamente]                      │
+└────────────────────────────────────────────────────┘
+```
+
+### **Room 3: Security Vault (Vulnerabilidades - Automática)**
+
+```
+VALIDAÇÃO EXECUTADA AO CLICAR "MARK COMPLETE":
+┌────────────────────────────────────────────────────┐
+│ Rodar Security Scan:                                │
+│                                                     │
+│ ✅ SUCESSO se:                                     │
+│   • SEM vulnerabilidades XSS (inputs sanitizados) │
+│   • SEM SQL Injection (usar parameterized queries) │
+│   • SEM hardcoded secrets                          │
+│   • Headers de segurança presentes                 │
+│   • CSRF tokens implementados                      │
+│                                                     │
+│ ❌ FALHA se:                                       │
+│   • innerHTML() usado com dados não sanitizados   │
+│   • Queries SQL construídas com concatenação      │
+│   • API keys/passwords em código                  │
+│   • Headers de segurança faltam                    │
+└────────────────────────────────────────────────────┘
+
+FEEDBACK AO GRUPO:
+┌────────────────────────────────────────────────────┐
+│ ❌ Validação Falhou!                                │
+│                                                     │
+│ 🔐 Vulnerabilidades encontradas:                   │
+│   • XSS: linha 42 - innerHTML não sanitizado       │
+│   • SQL Injection: linha 67 - string concatenation │
+│                                                     │
+│ 🛠️ Correções:                                      │
+│   1. Usa textContent em vez de innerHTML           │
+│   2. Usa prepared statements (?)                   │
+│   3. Valida TUDO que vem do user                   │
+│                                                     │
+│ [← Voltar] [Tentar Novamente]                      │
+└────────────────────────────────────────────────────┘
+```
+
+### **Final: Modernisation (Architecture - Semi-Automática)**
+
+```
+VALIDAÇÃO EXECUTADA AO CLICAR "MARK COMPLETE":
+┌────────────────────────────────────────────────────┐
+│ Verificar Arquitetura:                              │
+│                                                     │
+│ ✅ SUCESSO se:                                     │
+│   • Dockerfile presente (e não vazio)              │
+│   • docker-compose.yml presente                    │
+│   • .github/workflows/ com CI/CD pipeline          │
+│   • Diagrama de arquitetura (README ou file)       │
+│   • REST API documentado (swagger/comments)        │
+│   • Tests presentes (>5 test cases)                │
+│                                                     │
+│ ❌ FALHA se:                                       │
+│   • Ficheiro Dockerfile falta ou está vazio        │
+│   • Sem docker-compose                             │
+│   • Sem CI/CD workflow                             │
+│   • Sem documentação de arquitetura                │
+└────────────────────────────────────────────────────┘
+
+FEEDBACK AO GRUPO:
+┌────────────────────────────────────────────────────┐
+│ ❌ Validação Falhou!                                │
+│                                                     │
+│ ✅ Tem:                                            │
+│   • Dockerfile                                     │
+│   • docker-compose.yml                             │
+│   • 12 tests                                       │
+│                                                     │
+│ ❌ Falta:                                          │
+│   • .github/workflows/ (CI/CD)                     │
+│   • Diagrama de arquitetura no README              │
+│                                                     │
+│ 🎯 Ação: Cria workflow GitHub Actions ou escreve  │
+│    diagrama ASCII no README                        │
+│                                                     │
+│ [← Voltar] [Tentar Novamente]                      │
+└────────────────────────────────────────────────────┘
+```
+
+---
+
+## 🔧 Como Funciona Tecnicamente (Para Devs)
+
+Cada room tem folder `validation/` com scripts:
+
+```
+/rooms/room1-archaeology/
+  /src/
+  /test/
+  /validation/
+    validate.js        ← Script de validação
+    checkIVA.js        ← Lógica específica IVA
+```
+
+Quando grupo clica "Mark Complete":
+1. Frontend chama: `await validateRoom(roomId, code)`
+2. Backend executa arquivo `/validation/validate.js`
+3. Retorna: `{ valid: true/false, message: "", errors: [] }`
+4. Frontend mostra resultado (OK ou lista de erros)
+5. Se valid=true: Envia para Firestore `teams/{teamId}/completedRooms`
+6. Leaderboard atualiza automaticamente
+
+**Firestore Regra:**
+```javascript
+// Não deixa atualizar scores manualmente - só via validação
+match /teams/{teamId}/completedRooms {
+  allow write: if request.auth != null && 
+               request.resource.data.validatedAt != null;
+}
+```
+
+---
+
 ## 🎮 O Papel do Facilitador
 
 ### **1. PRÉ-EVENTO**
@@ -214,8 +368,8 @@ Cada equipa vê isto no PREVIEW antes de entrar:
 - ✅ Preparar QR codes ou lista de URLs
 - ✅ Garantir que Firestore está ativo (sem regras restritivas)
 
-### **2. DURING EVENTO** 
-- ✅ Mantém Dashboard aberto: `https://codefestrooms-81695626.web.app`
+### **2. DURANTE O EVENTO** 
+- ✅ Mantém Game Hub (Dashboard) aberto: `https://codefestrooms-81695626.web.app`
 - ✅ Monitora leaderboard em tempo real
 - ✅ Presta atenção em grupos "stuck":
   - Se alguém não consegue a Room 1 em 10 min → dar dica
@@ -236,13 +390,15 @@ Cada equipa vê isto no PREVIEW antes de entrar:
 
 ## 📊 Monitorização em Tempo Real
 
-### **O Que o Facilitador Vê no Dashboard**
+### **O Que o Facilitador Vê no Game Hub (Dashboard)**
 
 ```
 https://codefestrooms-81695626.web.app
 
 ┌────────────────────────────────────────────────┐
 │         🎮 VISUAL ESCAPE ROOM LEADERBOARD        │
+│                                                 │
+│  ⏱️ 42m 15s  (timer global, visível SÓ aqui)    │
 │                                                 │
 │  🏆 RANKING (atualizado a cada 3 segundos)      │
 │                                                 │
