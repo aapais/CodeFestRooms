@@ -1,0 +1,41 @@
+{
+  "name": "legacy-escape-room",
+  "private": true,
+  "workspaces": [
+    "rooms/*"
+  ],
+  "scripts": {
+    "start:all": "node start-all.js",
+    "room1": "npm -w @escape/room1 test",
+    "room2": "npm -w @escape/room2 test",
+    "room3": "npm -w @escape/room3 test",
+    "final": "npm -w @escape/final test",
+    "start:room1": "npm -w @escape/room1 start",
+    "start:room2": "npm -w @escape/room2 start",
+    "start:room3": "npm -w @escape/room3 start",
+    "start:final": "npm -w @escape/final start",
+    "start:hub": "node game-hub/server.js",
+    "firebase:deploy": "firebase deploy",
+    "firebase:deploy:hub": "firebase deploy --only hosting:game-hub",
+    "firebase:deploy:room1": "firebase deploy --only hosting:room1",
+    "firebase:deploy:room2": "firebase deploy --only hosting:room2",
+    "firebase:deploy:room3": "firebase deploy --only hosting:room3",
+    "firebase:deploy:final": "firebase deploy --only hosting:final",
+    "firebase:deploy:all": "firebase deploy --only hosting",
+    "score": "node scripts/score.js",
+    "score:strict": "node scripts/score.js --fail-on-incomplete",
+    "leaderboard": "node scripts/leaderboard.js",
+    "ingest": "node scripts/ingest-scores.js",
+    "pack": "node scripts/pack.js",
+    "test": "npm -ws test"
+  },
+  "devDependencies": {
+    "express": "^5.2.1",
+    "ws": "^8.17.1"
+  },
+  "dependencies": {
+    "firebase": "^10.8.0",
+    "firebase-admin": "^12.0.0",
+    "serve": "^14.2.1"
+  }
+}

@@ -52,8 +52,10 @@
     <script>
         const CURRENT_ROOM = 'room2';
         const CFG = window.GAME_CONFIG || {};
+        const ESCAPE_CFG = window.ESCAPE_ROOM_CONFIG || {};
         CFG.CURRENT_ROOM = CURRENT_ROOM;
         const HUB_BASE = CFG.GAME_HUB_URL || `${location.protocol}//${location.hostname}:4000`;
+        const API_BASE_URL = ESCAPE_CFG.getApiUrl ? ESCAPE_CFG.getApiUrl() : HUB_BASE;
         const ROOM_ORDER = ['room1', 'room2', 'room3', 'final'];
         const ROOM_PORTS = { room1: 3000, room2: 3002, room3: 3003, final: 8080 };
 
@@ -71,7 +73,7 @@
 
         async function fetchTeamState() {
             try {
-                const res = await fetch(`${HUB_BASE}/api/state`);
+                const res = await fetch(`${API_BASE_URL}/state`);
                 const data = await res.json();
                 if (data.ok && data.teams) {
                     const me = data.teams.find(t => t.name === getTeamName());
@@ -98,7 +100,7 @@
             const name = document.getElementById('teamName').value.trim();
             if (!name) return alert('Enter a team name');
             setTeamName(name);
-            await fetch(`${HUB_BASE}/api/team/login`, {
+            await fetch(`${API_BASE_URL}/team/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name })
@@ -111,7 +113,7 @@
         async function updateTeam(payload) {
             const name = getTeamName();
             if (!name) return;
-            await fetch(`${HUB_BASE}/api/team/update`, {
+            await fetch(`${API_BASE_URL}/team/update`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name, ...payload })

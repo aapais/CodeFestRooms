@@ -9,6 +9,7 @@ window.ESCAPE_ROOM_CONFIG = {
   FIREBASE_PROJECT_ID: 'codefestrooms-81695626',
   PRODUCTION_URLS: {
     gameHub: 'https://codefestrooms-81695626.web.app',
+    gameHubAPI: 'https://us-central1-codefestrooms-81695626.cloudfunctions.net/api',
     room1: 'https://codefest-room1.web.app',
     room2: 'https://codefest-room2.web.app',
     room3: 'https://codefest-room3.web.app',
@@ -16,6 +17,9 @@ window.ESCAPE_ROOM_CONFIG = {
   },
   getUrl: function(target) {
     return this.PRODUCTION_URLS[target] || this.PRODUCTION_URLS.gameHub;
+  },
+  getApiUrl: function() {
+    return this.PRODUCTION_URLS.gameHubAPI;
   },
   getWebSocketUrl: function() {
     const hubUrl = this.getUrl('gameHub');
