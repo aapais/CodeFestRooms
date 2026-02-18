@@ -95,6 +95,30 @@ https://us-central1-codefestrooms-81695626.cloudfunctions.net/api
 - `POST /api/kickoff` - Iniciar timer (50 min)
 - `GET  /api/timer` - Ver tempo restante
 
+### Como Funciona a Configuração de API
+
+O sistema deteta automaticamente o ambiente e usa o endpoint correto:
+
+**Produção (Firebase Hosting)**:
+- Rooms HTML carregam `shared/config.js`
+- `ESCAPE_ROOM_CONFIG.getApiUrl()` retorna `https://us-central1-codefestrooms-81695626.cloudfunctions.net/api`
+- Todas as chamadas de API (`fetch`) usam `API_BASE_URL` que aponta para Firebase Functions
+
+**Desenvolvimento Local/IDX**:
+- `API_BASE_URL` aponta para `localhost:4000` ou porto do IDX
+- Permite testar sem deploy
+
+**Código nos Rooms**:
+```javascript
+// Em cada room HTML
+const ESCAPE_CFG = window.ESCAPE_ROOM_CONFIG || {};
+const API_BASE_URL = ESCAPE_CFG.getApiUrl ? ESCAPE_CFG.getApiUrl() : HUB_URL;
+
+// Agora todas as chamadas usam o endpoint correto
+await fetch(`${API_BASE_URL}/team/login`, { ... });
+await fetch(`${API_BASE_URL}/state`, { ... });
+```
+
 ---
 
 ## 🎮 Como Correr o Workshop
