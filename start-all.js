@@ -1,44 +1,46 @@
 #!/usr/bin/env node
 const { spawn, execSync } = require('child_process');
-const fs = require('fs');
-const path = require('path');
 
-const logDir = path.join(__dirname, 'logs');
-if (!fs.existsSync(logDir)) fs.mkdirSync(logDir);
+// Portos internos para as salas (escondidos atrás do Hub)
+const HUB_PORT = 4000;
+const ROOM_PORTS = [3001, 3002, 3003, 3004];
 
-const PORTS = [4000, 3000, 3002, 3003, 8080];
-
-console.log('🧹 LIMPEZA DE PORTAS...');
-PORTS.forEach(port => {
-  try { execSync(`fuser -k ${port}/tcp 2>/dev/null || true`); } catch (e) {}
+console.log('🧹 LIMPEZA DE SEGURANÇA: Matando processos antigos...');
+[HUB_PORT, ...ROOM_PORTS].forEach(port => {
+  try {
+    execSync(`fuser -k ${port}/tcp 2>/dev/null || true`);
+  } catch (e) {}
 });
 
 function start(name, cmd, args, port) {
-  const logFile = path.join(logDir, `${name.toLowerCase().replace(' ', '')}.log`);
-  const out = fs.openSync(logFile, 'a');
-  
-  console.log(`🚀 [${name}] -> A iniciar em background (Porta ${port}). Logs em /logs`);
-  
+  console.log(`🚀 [${name}] a iniciar no porto ${port}...`);
   const env = { ...process.env, PORT: port };
+  // Remove a variável global do IDX para evitar conflitos internos
+  delete env.MONOSPACE_PORT;
+  
   const proc = spawn(cmd, args, { 
     cwd: __dirname, 
-    detached: true, 
-    stdio: ['ignore', out, out], 
+    stdio: 'inherit', // Mostra os logs aqui no terminal
     shell: true, 
     env 
   });
-  
-  proc.unref(); // Liberta o processo do loop do pai
+
+  proc.on('error', (err) => console.error(`❌ [${name}] Falhou:`, err));
 }
 
-console.log('\n🎮 SISTEMA ESCAPE ROOM: MODO BACKGROUND ATIVADO\n');
+console.log('\n🎮 SISTEMA ESCAPE ROOM: INICIANDO TODOS OS SERVIDORES\n');
+console.log('💡 DICA: Abre um novo terminal tab no IDX para continuares a escrever comandos.');
 
-start('HUB', 'npm', ['run', 'start:hub'], '4000');
-setTimeout(() => start('ROOM 1', 'npm', ['run', 'start:room1'], '3000'), 2000);
-setTimeout(() => start('ROOM 2', 'npm', ['run', 'start:room2'], '3002'), 4000);
-setTimeout(() => start('ROOM 3', 'npm', ['run', 'start:room3'], '3003'), 6000);
-setTimeout(() => start('FINAL', 'npm', ['run', 'start:final'], '8080'), 8000);
+// 1. Iniciar o Hub (Proxy + API)
+start('HUB', 'npm', ['run', 'start:hub'], HUB_PORT);
 
-console.log('\n✅ Todos os sistemas foram lançados com sucesso.');
-console.log('💡 Podes continuar a usar este terminal.');
-process.exit(0);
+// 2. Iniciar as salas com pequenos delays para não sobrecarregar o CPU
+setTimeout(() => start('ROOM 1', 'npm', ['run', 'start:room1'], 3001), 2000);
+setTimeout(() => start('ROOM 2', 'npm', ['run', 'start:room2'], 3002), 4000);
+setTimeout(() => start('ROOM 3', 'npm', ['run', 'start:room3'], 3003), 6000);
+setTimeout(() => start('FINAL', 'npm', ['run', 'start:final'], 3004), 8000);
+
+process.on('SIGINT', () => {
+  console.log('\n🛑 A desligar todos os sistemas...');
+  process.exit(0);
+});

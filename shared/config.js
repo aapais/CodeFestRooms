@@ -1,17 +1,15 @@
 /**
  * Visual Escape Room - Configuration
- * Global Sync Version
+ * Unified Origin Architecture for maximum compatibility
  */
 
 const HOSTNAME = location.hostname;
 const protocol = location.protocol;
 
+// Deteção IDX / Dev
 const isIdx = HOSTNAME.includes('.idx.google.com') || HOSTNAME.includes('.cloudworkstations.dev');
 const isLocal = HOSTNAME === 'localhost' || HOSTNAME === '127.0.0.1';
 const isDev = isIdx || isLocal;
-
-// URL Global do Firebase (Fonte da Verdade)
-const CLOUD_API = 'https://us-central1-codefestrooms-487913.cloudfunctions.net/api';
 
 window.ESCAPE_ROOM_CONFIG = {
   MODE: isDev ? 'development' : 'production',
@@ -29,42 +27,37 @@ window.ESCAPE_ROOM_CONFIG = {
       return prod[target] || prod.gameHub;
     }
 
-    const ports = { gameHub: 4000, room1: 3000, room2: 3002, room3: 3003, final: 8080 };
-    const targetPort = ports[target] || 4000;
-
-    if (isIdx) {
-      const parts = HOSTNAME.split('.');
-      const firstPart = parts[0];
-      const dashIndex = firstPart.indexOf('-');
-      if (dashIndex !== -1) {
-        const idxBase = firstPart.substring(dashIndex + 1) + '.' + parts.slice(1).join('.');
-        return `${protocol}//${targetPort}-${idxBase}`;
-      }
-    }
-    return `${protocol}//${HOSTNAME}:${targetPort}`;
+    // --- MODO DEV (IDX / LOCAL) ---
+    // Usamos caminhos relativos porque o Hub faz o proxy.
+    // Assim o browser fica sempre no mesmo porto e domínio.
+    const paths = { 
+      gameHub: '/', 
+      room1: '/room1/', 
+      room2: '/room2/', 
+      room3: '/room3/', 
+      final: '/final/' 
+    };
+    return paths[target] || '/';
   },
 
   getApiUrl: function() {
-    // Para registo de equipas e progresso, usamos o servidor local no IDX
-    // que depois faz o túnel para o Firebase.
     if (isDev) return '/api';
-    return CLOUD_API;
+    return 'https://us-central1-codefestrooms-487913.cloudfunctions.net/api';
   },
 
   getGlobalApiUrl: function() {
-    // SINAL GLOBAL: Sempre Firebase
-    return CLOUD_API;
+    return 'https://us-central1-codefestrooms-487913.cloudfunctions.net/api';
   },
 
   getRoomUrl: function(roomId) {
-    const url = this.getUrl(roomId);
+    const baseUrl = this.getUrl(roomId);
     const name = this.getTeamName();
     const token = this.getTeamToken();
     if (name && token && isDev) {
-      const sep = url.includes('?') ? '&' : '?';
-      return `${url}${sep}teamName=${encodeURIComponent(name)}&teamToken=${encodeURIComponent(token)}`;
+      const sep = baseUrl.includes('?') ? '&' : '?';
+      return `${baseUrl}${sep}teamName=${encodeURIComponent(name)}&teamToken=${encodeURIComponent(token)}`;
     }
-    return url;
+    return baseUrl;
   },
 
   getTeamName: () => localStorage.getItem('teamName') || new URLSearchParams(window.location.search).get('teamName'),
@@ -74,17 +67,14 @@ window.ESCAPE_ROOM_CONFIG = {
   
   checkGameStart: async function() {
     try {
-      // Pergunta diretamente à Cloud se o jogo começou
       const res = await fetch(this.getGlobalApiUrl() + '/timer');
       const data = await res.json();
-      if (data.ok && data.timer && data.timer.startTime) {
-        return true;
-      }
+      if (data.ok && data.timer && data.timer.startTime) return true;
       this.showLockOverlay();
       return false;
     } catch (e) {
-      console.error('Erro ao sincronizar com HQ');
-      return true; // Bypass em caso de erro de rede para não travar o workshop
+      console.error('HQ Sync Error');
+      return true; // Bypass on error to not block the workshop
     }
   },
 
@@ -97,7 +87,7 @@ window.ESCAPE_ROOM_CONFIG = {
       <h1 style="font-size:40px;margin-bottom:10px;">⚠️ ACCESS DENIED</h1>
       <p style="font-size:18px;color:#8b949e;">MISSION NOT STARTED BY HQ</p>
       <div style="margin-top:30px;padding:15px;border:1px solid #30363d;border-radius:8px;background:#0d1117;color:#58a6ff;">
-        A aguardar sinal de rádio do facilitador...<br>
+        Aguardando sinal de rádio do facilitador...<br>
         <span style="font-size:12px;color:#8b949e;">O sistema irá desbloquear automaticamente.</span>
       </div>
     `;
@@ -114,6 +104,6 @@ window.ESCAPE_ROOM_CONFIG = {
 
 window.GAME_CONFIG = {
   get GAME_HUB_URL() { return window.ESCAPE_ROOM_CONFIG.getUrl('gameHub'); },
-  get WS_URL() { return window.ESCAPE_ROOM_CONFIG.getUrl('gameHub').replace('http', 'ws'); },
+  get WS_URL() { return location.origin.replace('http', 'ws'); },
   getRoomUrl: (id) => window.ESCAPE_ROOM_CONFIG.getRoomUrl(id)
 };
