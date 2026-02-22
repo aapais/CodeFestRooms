@@ -1,25 +1,30 @@
 const { spawn, execSync } = require('child_process');
 
-console.log('🔥 MODO DE EMERGÊNCIA ATIVADO 🔥');
+console.log('=== EMERGENCY BOOT ACTIVATED ===');
 
-// 1. Matar tudo o que mexe nas portas antigas
+// 1. Clean up ports
 try {
-  console.log('💀 A limpar processos zombies...');
+  console.log('Cleaning up old processes...');
+  // Kill processes on ports 3000, 4000, 5000, 8080, 9000, 9002
   execSync('fuser -k 3000/tcp 4000/tcp 5000/tcp 8080/tcp 9000/tcp 9002/tcp 2>/dev/null || true');
-} catch (e) {}
+} catch (e) {
+  console.log('Port cleanup skipped or not needed.');
+}
 
-// 2. Lançar o servidor na porta 8080 (A mais segura do Google Cloud)
-console.log('🚀 A levantar servidor na porta 8080...');
-const env = { ...process.env, PORT: '8080' };
+// 2. Start server on 8080
+console.log('Starting server on port 8080...');
+const env = Object.assign({}, process.env, { PORT: '8080' });
 
 const proc = spawn('node', ['game-hub/server.js'], { 
   cwd: __dirname, 
   stdio: 'inherit', 
   shell: true,
-  env
+  env: env
 });
 
-console.log('
-✅ SERVIDOR NO AR!');
-console.log('👉 CLICA EM "OPEN BROWSER" OU NO GLOBO 🌐');
-console.log('👉 SE O PREVIEW NÃO ABRIR AUTOMATICAMENTE, PROCURA A PORTA 8080 NA ABA "PORTS"');
+console.log('SERVER STARTED SUCCESSFULLY');
+console.log('CLICK ON WEB PREVIEW (PORT 8080)');
+
+proc.on('error', (err) => {
+  console.error('Failed to start server:', err);
+});
