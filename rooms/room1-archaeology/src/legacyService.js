@@ -1,27 +1,16 @@
 /*
   LegacyService.js
   ----------------
-  Intencionalmente “legacy”:
-  - ficheiro grande
-  - mistura de responsabilidades
-  - nomes inconsistentes
-  - branches confusos
-  - algum dead code
-
-  Objetivo do jogo: pedir ao Copilot para explicar, documentar, encontrar dead code,
-  e fazer os testes passarem sem reescrever tudo.
+  Intencionalmente “legacy”
 */
 
 'use strict';
 
 const crypto = require('crypto');
 
-// “Config” hardcoded
 const DEFAULT_TZ = 'Europe/Lisbon';
 const DEFAULT_CURRENCY = 'EUR';
-const LEGACY_VERSION = '3.4.1';
 
-// Mini “db” em memória
 const _store = {
   users: new Map(),
   orders: new Map(),
@@ -37,8 +26,6 @@ function _pushAudit(eventType, payload) {
 }
 
 function _clone(obj) { return JSON.parse(JSON.stringify(obj)); }
-
-// ---- Public API ----
 
 function createUser(username, password, opts = {}) {
   if (!username || typeof username !== 'string') return { ok: false, error: 'INVALID_USERNAME' };
@@ -57,7 +44,6 @@ function createUser(username, password, opts = {}) {
   };
 
   _store.users.set(key, user);
-  _pushAudit('USER_CREATED', { userId: user.id, username: user.username });
   return { ok: true, user: _clone(user) };
 }
 
@@ -65,12 +51,10 @@ function authenticate(username, password) {
   const key = String(username || '').trim().toLowerCase();
   const user = _store.users.get(key);
   if (!user || _sha1(password) !== user.passwordHash) {
-    _pushAudit('AUTH_FAIL', { username });
     return { ok: false, error: 'INVALID_CREDENTIALS' };
   }
   const day = new Date().toISOString().slice(0, 10);
   const token = _sha1(user.id + ':' + day);
-  _pushAudit('AUTH_OK', { userId: user.id });
   return { ok: true, token, user: { id: user.id, username: user.username } };
 }
 
@@ -100,7 +84,7 @@ function placeOrder(token, orderRequest) {
   const discount = _computeDiscountLegacy(user, orderRequest, subtotalCents);
   const shipping = _computeShippingLegacy(orderRequest, subtotalCents);
   
-  // BUG REINTRODUCED: Missing shipping in tax base
+  // BUG: Missing shipping in tax base
   const tax = _computeTaxLegacy(orderRequest, subtotalCents - discount);
 
   const totalCents = subtotalCents - discount + shipping + tax;
@@ -137,8 +121,12 @@ function _computeTaxLegacy(orderRequest, taxableCents) {
 function _weirdDateParse(value) {
   if (!value) return null;
   const s = String(value).trim();
-  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return new Date(s + 'T00:00:00Z');
-  if (/^\d{2}\/\d{2}\/\d{4}$/.test(s)) {
+  // Safe Regex using constructor to avoid escaping issues in some environments
+  const re1 = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+  const re2 = new RegExp('^\\d{2}/\\d{2}/\\d{4}$');
+  
+  if (re1.test(s)) return new Date(s + 'T00:00:00Z');
+  if (re2.test(s)) {
     const [dd, mm, yyyy] = s.split('/').map(Number);
     return new Date(Date.UTC(yyyy, mm - 1, dd));
   }
