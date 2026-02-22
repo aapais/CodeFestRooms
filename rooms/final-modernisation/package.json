@@ -4,7 +4,7 @@
   "type": "commonjs",
   "scripts": {
     "test": "jest --runInBand",
-    "start": "node src/server.js"
+    "start": "nodemon src/server.js"
   },
   "devDependencies": {
     "jest": "^29.7.0"
