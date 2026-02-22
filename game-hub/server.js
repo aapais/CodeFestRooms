@@ -15,7 +15,7 @@ const PORT = process.env.PORT || process.env.HUB_PORT || 4000;
 
 // Configuração de Proxy para as Salas
 const setupRoomProxy = (path, targetPort) => {
-  const target = `http://127.0.0.1:${targetPort}`;
+  const target = `http://localhost:${targetPort}`;
   console.log(`[PROXY_SETUP] Mapping ${path} -> ${target}`);
   
   app.use(path, createProxyMiddleware({
@@ -24,17 +24,19 @@ const setupRoomProxy = (path, targetPort) => {
     pathRewrite: { [`^${path}`]: '' },
     ws: true,
     logLevel: 'debug',
+    proxyTimeout: 5000, // Wait up to 5s for the room to respond
+    timeout: 5000,
     onError: (err, req, res) => {
       console.error(`[PROXY_ERROR] Failed to reach Room at ${target}:`, err.message);
-      res.status(502).send(`Room at port ${targetPort} is not responding. Please wait a few seconds and try again.`);
+      res.status(502).send(`Room at port ${targetPort} is not responding yet. Please wait 5 seconds and refresh.`);
     }
   }));
 };
 
-setupRoomProxy('/room1', 3001);
-setupRoomProxy('/room2', 3002);
-setupRoomProxy('/room3', 3003);
-setupRoomProxy('/final', 3004);
+setupRoomProxy('/room1', 5001);
+setupRoomProxy('/room2', 5002);
+setupRoomProxy('/room3', 5003);
+setupRoomProxy('/final', 5004);
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));

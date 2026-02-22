@@ -41,19 +41,19 @@ console.log('🎮 Starting Visual Escape Room...\n');
 startProcess('Game Hub', 'npm', ['run', 'start:hub'], '4000');
 
 setTimeout(() => {
-  startProcess('Room 1', 'npm', ['run', 'start:room1'], '3001');
+  startProcess('Room 1', 'npm', ['run', 'start:room1'], '5001');
 }, 2000);
 
 setTimeout(() => {
-  startProcess('Room 2', 'npm', ['run', 'start:room2'], '3002');
+  startProcess('Room 2', 'npm', ['run', 'start:room2'], '5002');
 }, 4000);
 
 setTimeout(() => {
-  startProcess('Room 3', 'npm', ['run', 'start:room3'], '3003');
+  startProcess('Room 3', 'npm', ['run', 'start:room3'], '5003');
 }, 6000);
 
 setTimeout(() => {
-  startProcess('Final Room', 'npm', ['run', 'start:final'], '3004');
+  startProcess('Final Room', 'npm', ['run', 'start:final'], '5004');
 }, 8000);
 
 // Handle shutdown
