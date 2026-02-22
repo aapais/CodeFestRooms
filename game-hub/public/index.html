@@ -119,12 +119,14 @@
     const CFG = window.ESCAPE_ROOM_CONFIG || {};
     const TIMING = window.GAME_TIMING || {};
     const API_BASE_URL = CFG.getApiUrl ? CFG.getApiUrl() : '/api';
+    const GLOBAL_API = CFG.getGlobalApiUrl(); // SINAL CLOUD
     const btn = document.getElementById('submitBtn');
     const status = document.getElementById('status');
 
     async function checkGameStatus() {
       try {
-        const res = await fetch(`${API_BASE_URL}/timer`);
+        // PERGUNTA À CLOUD
+        const res = await fetch(`${GLOBAL_API}/timer`);
         const data = await res.json();
         
         if (data.ok && data.timer && data.timer.startTime) {
@@ -132,8 +134,8 @@
           btn.style.background = 'var(--accent)';
           btn.style.cursor = 'pointer';
           btn.textContent = "Initialize Mission";
-          status.style.color = 'var(--success)';
-          status.textContent = ">>> STATUS: AUTHORIZED. You may proceed.";
+          status.style.color = '#3fb950';
+          status.textContent = ">>> STATUS: AUTHORIZED. HQ signal detected.";
           return true;
         } else {
           btn.disabled = true;
@@ -141,11 +143,11 @@
           btn.style.cursor = 'not-allowed';
           btn.textContent = "Waiting for HQ...";
           status.style.color = 'var(--warning)';
-          status.textContent = ">>> STATUS: LOCKED. Waiting for Mission Start signal.";
+          status.textContent = ">>> STATUS: LOCKED. Waiting for facilitator...";
           return false;
         }
       } catch (e) {
-        console.warn('Unable to sync with HQ timer.');
+        console.warn('Syncing with HQ...');
         return false;
       }
     }
