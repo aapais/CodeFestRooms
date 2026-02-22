@@ -5,7 +5,7 @@
   "scripts": {
     "test": "jest --runInBand",
     "scan": "node scripts/securityScan.js",
-    "start": "nodemon src/server.js"
+    "start": "npx nodemon src/server.js"
   },
   "devDependencies": {
     "jest": "^29.7.0"
