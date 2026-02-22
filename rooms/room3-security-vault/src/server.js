@@ -2,8 +2,14 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const repo = require('./userRepo');
+const { createProxyMiddleware } = require('http-proxy-middleware');
 
 const app = express();
+
+// Proxy API requests to the Central Hub (port 4000)
+app.use('/api/team', createProxyMiddleware({ target: 'http://localhost:4000', changeOrigin: true }));
+app.use('/api/state', createProxyMiddleware({ target: 'http://localhost:4000', changeOrigin: true }));
+
 app.use(express.static(path.join(__dirname, '../public')));
 app.use(express.json()); // Support JSON bodies
 app.use(express.urlencoded({ extended: true }));

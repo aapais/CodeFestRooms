@@ -5,9 +5,14 @@ const bodyParser = require('body-parser');
 const path = require('path');
 const fs = require('fs');
 const legacyService = require('./legacyService');
+const { createProxyMiddleware } = require('http-proxy-middleware');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Proxy API requests to the Central Hub (port 4000)
+app.use('/api/team', createProxyMiddleware({ target: 'http://localhost:4000', changeOrigin: true }));
+app.use('/api/state', createProxyMiddleware({ target: 'http://localhost:4000', changeOrigin: true }));
 
 app.use(express.static(path.join(__dirname, '../public')));
 app.use(bodyParser.json());

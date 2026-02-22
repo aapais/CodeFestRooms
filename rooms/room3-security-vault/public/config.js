@@ -1,6 +1,6 @@
 /**
  * Visual Escape Room - Configuration
- * Single-Port Architecture for Google IDX
+ * Distributed Architecture for Google IDX
  */
 
 const HOSTNAME = location.hostname;
@@ -10,6 +10,17 @@ const protocol = location.protocol;
 const isIdx = HOSTNAME.includes('.idx.google.com') || HOSTNAME.includes('.cloudworkstations.dev');
 const isLocal = HOSTNAME === 'localhost' || HOSTNAME === '127.0.0.1';
 const isDev = isIdx || isLocal;
+
+// Extrair base do workspace para gerar URLs de portas diferentes
+let idxBase = null;
+if (isIdx) {
+  const parts = HOSTNAME.split('.');
+  const firstPart = parts[0];
+  const dashIndex = firstPart.indexOf('-');
+  if (dashIndex !== -1) {
+    idxBase = firstPart.substring(dashIndex + 1) + '.' + parts.slice(1).join('.');
+  }
+}
 
 window.ESCAPE_ROOM_CONFIG = {
   MODE: isDev ? 'development' : 'production',
@@ -27,25 +38,32 @@ window.ESCAPE_ROOM_CONFIG = {
       return prod[target] || prod.gameHub;
     }
 
-    // No IDX, usamos sempre o mesmo host e mudamos apenas o caminho
-    const paths = { gameHub: '/', room1: '/room1/', room2: '/room2/', room3: '/room3/', final: '/final/' };
-    return paths[target] || '/';
+    // No IDX, cada sala tem a sua própria URL oficial do Google
+    const ports = { gameHub: 4000, room1: 3000, room2: 3002, room3: 3003, final: 8080 };
+    const targetPort = ports[target] || 4000;
+
+    if (isIdx && idxBase) {
+      return `${protocol}//${targetPort}-${idxBase}`;
+    }
+    return `${protocol}//${HOSTNAME}:${targetPort}`;
   },
 
   getApiUrl: function() {
-    // API é sempre relativa ao Hub
-    return isDev ? '/api' : 'https://us-central1-codefestrooms-487913.cloudfunctions.net/api';
+    // SEGREDO: No IDX, fazemos chamadas relativas à PORTA ATUAL.
+    // Cada servidor de sala (3000, 3002...) tem um proxy interno para o Hub (4000).
+    if (isDev) return '/api';
+    return 'https://us-central1-codefestrooms-487913.cloudfunctions.net/api';
   },
 
   getRoomUrl: function(roomId) {
-    const baseUrl = this.getUrl(roomId);
+    const url = this.getUrl(roomId);
     const name = this.getTeamName();
     const token = this.getTeamToken();
     if (name && token && isDev) {
-      const sep = baseUrl.includes('?') ? '&' : '?';
-      return `${baseUrl}${sep}teamName=${encodeURIComponent(name)}&teamToken=${encodeURIComponent(token)}`;
+      const sep = url.includes('?') ? '&' : '?';
+      return `${url}${sep}teamName=${encodeURIComponent(name)}&teamToken=${encodeURIComponent(token)}`;
     }
-    return baseUrl;
+    return url;
   },
 
   getTeamName: () => localStorage.getItem('teamName') || new URLSearchParams(window.location.search).get('teamName'),
@@ -55,12 +73,12 @@ window.ESCAPE_ROOM_CONFIG = {
   logout: () => {
     localStorage.removeItem('teamName');
     localStorage.removeItem('teamToken');
-    window.location.href = '/';
+    window.location.href = window.ESCAPE_ROOM_CONFIG.getUrl('gameHub');
   }
 };
 
 window.GAME_CONFIG = {
   get GAME_HUB_URL() { return window.ESCAPE_ROOM_CONFIG.getUrl('gameHub'); },
-  get WS_URL() { return location.origin.replace('http', 'ws'); },
+  get WS_URL() { return window.ESCAPE_ROOM_CONFIG.getUrl('gameHub').replace('http', 'ws'); },
   getRoomUrl: (id) => window.ESCAPE_ROOM_CONFIG.getRoomUrl(id)
 };
