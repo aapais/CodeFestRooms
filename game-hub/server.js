@@ -66,16 +66,10 @@ app.post('/api/team/update', (req, res) => {
   res.json({ ok: true });
 });
 
-// --- API DA ROOM 1 (Login da Loja) ---
+// --- API DA ROOM 1 (Login da Loja - SIMPLIFICADO) ---
 app.post('/room1/api/login', (req, res) => {
-  const { username, password } = req.body;
-  console.log(`[ROOM1] Login attempt: ${username} / ${password}`);
-  // Bypassing hashing for 100% reliability during workshop
-  if (username === 'Alice' && password === 'secret123') {
-    res.json({ ok: true, token: 'fake-token-alice', user: { username: 'Alice' } });
-  } else {
-    res.json({ ok: false, error: 'INVALID_CREDENTIALS' });
-  }
+  // Aceita tudo para não travar o workshop
+  res.json({ ok: true, token: 'idx-fake-token', user: { username: req.body.username || 'Operative' } });
 });
 
 app.post('/room1/api/checkout', (req, res) => {
