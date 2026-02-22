@@ -280,8 +280,8 @@
       try {
         const u = document.getElementById('username').value;
         const p = document.getElementById('password').value;
-        // Caminho relativo para bater no servidor da própria sala (proxied by Hub)
-        const res = await fetch('api/login', {
+        console.log('>>> AUTH ATTEMPT:', u);
+        const res = await fetch('/room1/api/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ username: u, password: p })
@@ -292,16 +292,17 @@
           document.getElementById('login-msg').innerHTML = `<span style="color:var(--success)">AUTH OK. Token valid.</span>`;
           document.getElementById('shop-section').style.display = 'block';
           document.getElementById('shop-section').style.opacity = '1';
+        } else {
+          document.getElementById('login-msg').innerHTML = `<span style="color:var(--danger)">Login Failed: ${data.error}</span>`;
         }
-      } catch (e) { alert('Authentication Error: Local server not responding.'); }
+      } catch (e) { console.error('Auth Error:', e); alert('Authentication Error: Local server not responding.'); }
     }
 
     async function doCheckout() {
       try {
         if (!token) return;
         const discount = document.getElementById('discount').value;
-        // Caminho relativo
-        const res = await fetch('api/checkout', {
+        const res = await fetch('/room1/api/checkout', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ token, items: [{ sku: 'MysteryBox', qty: 2, priceCents: 100000 }], discountCode: discount, shippingAddress: { country: 'PT' } })
@@ -317,10 +318,8 @@
     async function markComplete() {
       try {
         const name = CFG.getTeamName();
-        // Caminho relativo para obter o código
-        const sourceRes = await fetch('api/source');
+        const sourceRes = await fetch('/room1/api/source');
         const sourceData = await sourceRes.json();
-        // Enviar para o HUB via API_BASE_URL (absoluto /api)
         const res = await fetch(`${API_BASE_URL}/team/update`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

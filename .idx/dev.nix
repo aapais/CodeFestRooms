@@ -10,6 +10,7 @@
       enable = true;
       previews = {
         web = {
+          # Um único comando, um único porto.
           command = ["node" "game-hub/server.js"];
           manager = "web";
           env = { PORT = "$PORT"; };
