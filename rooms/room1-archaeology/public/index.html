@@ -242,7 +242,7 @@
     document.addEventListener('DOMContentLoaded', () => {
       const name = CFG.getTeamName();
       if (!name) {
-        window.location.href = CFG.getUrl('gameHub') + '/join.html';
+        window.location.href = CFG.getUrl('gameHub') + '/';
         return;
       }
       document.getElementById('displayTeamName').textContent = name;
@@ -252,7 +252,7 @@
     function logout() {
       if (confirm('Encerrar sessão desta equipa?')) {
         CFG.logout();
-        window.location.href = CFG.getUrl('gameHub') + '/join.html';
+        window.location.href = CFG.getUrl('gameHub') + '/';
       }
     }
 

@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Battle Station | Gemini Codefest</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Spline+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #05070a;
+      --card: rgba(13, 17, 23, 0.7);
+      --card-border: rgba(56, 139, 253, 0.2);
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --accent: #58a6ff; /* Blue */
+      --accent-glow: rgba(88, 166, 255, 0.4);
+      --success: #3fb950; /* Green */
+      --warning: #d29922; /* Gold */
+      --danger: #f85149; /* Red */
+      --font: 'Space Grotesk', 'Spline Sans', system-ui, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      width: 100vw;
+      font-family: var(--font);
+      color: var(--text);
+      background-color: var(--bg);
+      background-image: 
+        radial-gradient(circle at 10% 20%, rgba(88, 166, 255, 0.05) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(139, 92, 246, 0.05) 0%, transparent 40%);
+      overflow: hidden;
+    }
+
+    .dashboard-layout {
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      height: 100vh;
+      width: 100vw;
+      gap: 0;
+    }
+
+    /* Side Mission Control */
+    .mission-control {
+      background: rgba(10, 12, 16, 0.95);
+      border-right: 1px solid var(--card-border);
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow-y: auto;
+      backdrop-filter: blur(10px);
+    }
+
+    .mission-header {
+      text-align: center;
+      margin-bottom: 30px;
+      flex-shrink: 0;
+    }
+
+    .logo-glow {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      text-shadow: 0 0 15px var(--accent-glow);
+    }
+
+    .mission-list {
+      flex-grow: 1;
+    }
+
+    .mission-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+      transition: all 0.3s ease;
+    }
+
+    .mission-card h3 {
+      margin: 0 0 8px;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--accent);
+    }
+
+    .mission-card p {
+      margin: 0;
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .mission-points {
+      display: inline-block;
+      margin-top: 10px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--warning);
+      text-transform: uppercase;
+    }
+
+    /* Main Content Area */
+    .main-view {
+      padding: 40px;
+      height: 100vh;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header-stats {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 40px;
+      flex-shrink: 0;
+    }
+
+    .timer-container {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .timer-label {
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 5px;
+    }
+
+    .big-timer {
+      font-family: monospace;
+      font-size: 72px;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1;
+      text-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+    }
+
+    .controls {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 15px;
+    }
+
+    .kickoff-bar {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      padding: 12px 20px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .team-row.warning {
+      border-color: var(--danger);
+      background: rgba(248, 81, 73, 0.1);
+      animation: pulseRed 2s infinite;
+    }
+
+    @keyframes pulseRed {
+      0% { box-shadow: 0 0 0 0 rgba(248, 81, 73, 0.4); }
+      70% { box-shadow: 0 0 0 15px rgba(248, 81, 73, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(248, 81, 73, 0); }
+    }
+
+    /* Leaderboard Cards */
+    .leaderboard-container {
+      flex-grow: 1;
+    }
+
+    .team-row {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      margin-bottom: 12px;
+      padding: 15px 25px;
+      display: grid;
+      grid-template-columns: 60px 2fr 1fr 1fr 200px;
+      align-items: center;
+      animation: slideIn 0.5s ease-out forwards;
+    }
+
+    .rank-num {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--muted);
+    }
+
+    .team-row:nth-child(1) { border-color: var(--warning); background: rgba(210, 153, 34, 0.05); }
+    .team-row:nth-child(1) .rank-num { color: var(--warning); }
+
+    .team-info h2 { margin: 0; font-size: 20px; }
+    .team-info span { font-size: 12px; color: var(--muted); }
+
+    .score-val { font-size: 28px; font-weight: 800; color: var(--success); }
+    .score-label { font-size: 10px; color: var(--muted); text-transform: uppercase; }
+
+    .progress-dots {
+      display: flex;
+      gap: 10px;
+    }
+
+    .dot {
+      width: 35px;
+      height: 35px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      filter: grayscale(1);
+    }
+
+    .dot.active {
+      background: var(--accent-glow);
+      border-color: var(--accent);
+      filter: grayscale(0);
+      box-shadow: 0 0 10px var(--accent-glow);
+    }
+
+    .live-feed {
+      position: fixed;
+      bottom: 80px;
+      right: 20px;
+      width: 320px;
+      display: flex;
+      flex-direction: column-reverse;
+      gap: 10px;
+      pointer-events: none;
+      z-index: 100;
+    }
+
+    .feed-item {
+      background: rgba(13, 17, 23, 0.9);
+      border-left: 4px solid var(--success);
+      padding: 12px 16px;
+      border-radius: 4px;
+      font-size: 13px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+      animation: fadeInRight 0.4s ease-out;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border-radius: 6px;
+      border: none;
+      font-weight: 700;
+      cursor: pointer;
+      text-transform: uppercase;
+      font-size: 12px;
+    }
+    .btn-start { background: var(--success); color: white; }
+    .btn-reset { background: transparent; border: 1px solid var(--danger); color: var(--danger); }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeInRight {
+      from { opacity: 0; transform: translateX(30px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    /* Marquee Animation */
+    @keyframes marquee {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+
+    .ticker-wrap {
+      width: 100%;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+
+    .ticker-move {
+      display: inline-block;
+      white-space: nowrap;
+      animation: marquee 400s linear infinite;
+    }
+
+    .ticker-item {
+      display: inline-block;
+      padding: 0 60px;
+      color: var(--accent);
+      font-family: monospace;
+      font-size: 22px;
+      font-weight: 600;
+      text-shadow: 0 0 10px var(--accent-glow);
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-layout">
+    <aside class="mission-control">
+      <div class="mission-header">
+        <div class="logo-glow">Visual Escape Room</div>
+        <p style="color: var(--muted); font-size: 14px; margin-top: 5px;">Operação Gemini Codefest</p>
+        <a href="/how-to-play.html" style="
+          display: inline-block;
+          margin-top: 15px;
+          color: var(--accent);
+          text-decoration: none;
+          font-size: 12px;
+          font-weight: 700;
+          letter-spacing: 1px;
+          border: 1px solid var(--accent);
+          padding: 5px 15px;
+          border-radius: 4px;
+          transition: all 0.2s;
+        " onmouseover="this.style.background='var(--accent)';this.style.color='black'" onmouseout="this.style.background='transparent';this.style.color='var(--accent)'">
+          📖 HOW TO PLAY / INSTRUCTIONS
+        </a>
+      </div>
+
+      <div class="mission-list">
+        <div class="mission-card">
+          <h3><span>🏚️</span> Room 1: Archaeology</h3>
+          <p>Encontra o bug lógico no checkout. O IVA está a ser calculado sobre uma base errada.</p>
+          <div class="mission-points">100 Pts + <span style="color:var(--accent)">⭐️ 50 Bónus (JSDoc)</span></div>
+        </div>
+
+        <div class="mission-card">
+          <h3><span>🧱</span> Room 2: Refactor Lab</h3>
+          <p>Reduz a complexidade ciclomática para menos de 10. Refactoriza as funções longas.</p>
+          <div class="mission-points">150 Pts + <span style="color:var(--accent)">⭐️ 75 Bónus (Compl < 5)</span></div>
+        </div>
+
+        <div class="mission-card">
+          <h3><span>🔐</span> Room 3: Security Vault</h3>
+          <p>Corrige a vulnerabilidade de SQL Injection no formulário de login do cofre.</p>
+          <div class="mission-points">150 Pts + <span style="color:var(--accent)">⭐️ 100 Bónus (Hashing)</span></div>
+        </div>
+
+        <div class="mission-card">
+          <h3><span>🏢</span> Final Room: Modernize</h3>
+          <p>Estabiliza o Monolith. Implementa health checks e moderniza a API de Credit Score.</p>
+          <div class="mission-points">200 Pts + <span style="color:var(--accent)">⭐️ 50 Bónus (Observabilidade)</span></div>
+        </div>
+      </div>
+
+      <div style="margin-top: 20px; padding: 15px; border: 1px dashed var(--accent); border-radius: 8px; flex-shrink: 0;">
+        <p style="font-size: 11px; font-weight: bold; color: var(--accent); margin: 0 0 5px;">DICA GEN-AI:</p>
+        <p style="font-size: 11px; color: var(--muted); margin: 0;">Usa <code>@workspace</code> para analisar o contexto global de cada sala.</p>
+      </div>
+    </aside>
+
+    <main class="main-view">
+      <div class="header-stats">
+        <div class="timer-container">
+          <div class="timer-label">Time Remaining</div>
+          <div class="big-timer" id="timer">00:50:00</div>
+        </div>
+        
+        <div class="controls">
+          <div class="kickoff-bar">
+            <span id="gameStatus" style="font-size: 13px; font-weight: 600;">STATUS: READY</span>
+            <button onclick="kickoffGame()" id="kickoffBtn" class="btn btn-start">Start Mission</button>
+            <button onclick="resetGame()" id="resetBtn" class="btn btn-reset" style="display: none;">Reset</button>
+          </div>
+          <div id="conn" style="font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px;">Connecting...</div>
+        </div>
+      </div>
+
+      <div class="leaderboard-container">
+        <div id="rows">
+          <!-- Teams will be injected here -->
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div class="live-feed" id="liveFeed"></div>
+
+  <!-- Gemini Intelligence Ticker -->
+  <div id="intelTicker" style="
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.95);
+    border-top: 2px solid var(--accent);
+    padding: 15px 0;
+    display: flex;
+    align-items: center;
+    z-index: 1000;
+    backdrop-filter: blur(15px);
+    box-shadow: 0 -10px 30px rgba(0,0,0,0.5);
+  ">
+    <div style="
+      background: var(--accent);
+      color: black;
+      padding: 6px 14px;
+      margin-left: 20px;
+      border-radius: 4px;
+      font-size: 13px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      white-space: nowrap;
+      z-index: 1001;
+      position: relative;
+      box-shadow: 10px 0 20px rgba(0,0,0,0.8);
+    ">Encrypted Transmission</div>
+    
+    <div class="ticker-wrap">
+      <div class="ticker-move" id="tickerContent"></div>
+    </div>
+  </div>
+
+  <script src="/config.js"></script>
+  <script src="/timingConfig.js"></script>
+  <script>
+    const rowsEl = document.getElementById('rows');
+    const connEl = document.getElementById('conn');
+    const feedEl = document.getElementById('liveFeed');
+    const CFG = window.ESCAPE_ROOM_CONFIG || window.GAME_CONFIG || {};
+    const isProd = CFG.MODE === 'production';
+    const apiUrl = isProd ? CFG.getApiUrl() : '';
+    const wsUrl = (CFG.WS_URL && CFG.WS_URL.startsWith('ws')) ? CFG.WS_URL : (isProd ? '' : `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.hostname}:4000`);
+
+    let lastCompletedCount = new Map();
+
+    function addFeedMessage(msg) {
+      const item = document.createElement('div');
+      item.className = 'feed-item';
+      item.innerHTML = `<strong>UPDATE:</strong> ${msg}`;
+      feedEl.appendChild(item);
+      setTimeout(() => {
+        item.style.opacity = '0';
+        item.style.transform = 'translateX(20px)';
+        setTimeout(() => item.remove(), 500);
+      }, 6000);
+    }
+
+    function render(teams) {
+      if (!teams || teams.length === 0) {
+        rowsEl.innerHTML = '<div style="text-align:center; padding-top:100px; color:var(--muted); font-size:14px; letter-spacing:2px;">AQUIRING TARGETS...</div>';
+        return;
+      }
+
+      rowsEl.innerHTML = teams.map((t, idx) => {
+        const completed = t.completedRooms || [];
+        const prevCount = lastCompletedCount.get(t.name) || 0;
+        if (completed.length > prevCount) {
+          const lastRoom = completed[completed.length-1];
+          addFeedMessage(`Team <strong>${t.name}</strong> has escaped <strong>${lastRoom}</strong>!`);
+          lastCompletedCount.set(t.name, completed.length);
+        }
+
+        // ANTI-CHEAT: Check for suspicious speed
+        let isSuspicious = false;
+        if (completed.length > 0) {
+          const lastRoom = completed[completed.length - 1];
+          const startTime = t[`start_${lastRoom}`];
+          const endTime = t[`end_${lastRoom}`];
+          if (startTime && endTime) {
+            const diffSeconds = (endTime - startTime) / 1000;
+            if (diffSeconds < 60) isSuspicious = true; // Less than 1 minute is impossible
+          }
+        }
+
+        return `
+          <div class="team-row ${isSuspicious ? 'warning' : ''}">
+            <div class="rank-num">#${idx + 1}</div>
+            <div class="team-info">
+              <h2 style="margin:0;">${t.name}</h2>
+              <span style="text-transform:uppercase; letter-spacing:1px; font-size:10px;">
+                ${isSuspicious ? '<strong style="color:var(--danger)">⚠️ SECURITY ANOMALY DETECTED</strong>' : `Loc: ${t.room || 'Lobby'}`}
+              </span>
+            </div>
+            <div style="text-align:center">
+              <div class="score-val">${t.score ?? 0}</div>
+              <div class="score-label">PTS</div>
+            </div>
+            <div class="progress-dots">
+              <div class="dot ${completed.includes('room1') ? 'active' : ''}">🏚️</div>
+              <div class="dot ${completed.includes('room2') ? 'active' : ''}">🧱</div>
+              <div class="dot ${completed.includes('room3') ? 'active' : ''}">🔐</div>
+              <div class="dot ${completed.includes('final') ? 'active' : ''}">🏢</div>
+            </div>
+            <div style="font-size: 11px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+              STATUS: ${t.lastResult || 'Standby'}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    const TIMING = window.GAME_TIMING || {};
+    async function syncTimer() {
+      if (!isProd) return;
+      try {
+        const res = await fetch(`${apiUrl}/timer`);
+        const data = await res.json();
+        if (data.ok && data.timer && data.timer.startTime) {
+          TIMING.startTimer(data.timer.startTime);
+          document.getElementById('kickoffBtn').style.display = 'none';
+          document.getElementById('resetBtn').style.display = 'inline-block';
+          document.getElementById('gameStatus').textContent = 'STATUS: ACTIVE';
+        }
+      } catch (e) {}
+    }
+
+    setInterval(() => {
+      const remaining = TIMING.getTimeRemaining();
+      const timerEl = document.getElementById('timer');
+      if (remaining === null) {
+        timerEl.textContent = '00:50:00';
+      } else {
+        const h = Math.floor(remaining / 3600).toString().padStart(2,'0');
+        const m = Math.floor((remaining % 3600) / 60).toString().padStart(2,'0');
+        const s = (remaining % 60).toString().padStart(2,'0');
+        timerEl.textContent = `${h}:${m}:${s}`;
+        const status = TIMING.getTimeStatus();
+        if (status === 'red') timerEl.style.color = 'var(--danger)';
+        else if (status === 'yellow') timerEl.style.color = 'var(--warning)';
+        else timerEl.style.color = 'var(--text)';
+      }
+    }, 1000);
+
+    if (isProd) {
+      syncTimer();
+      setInterval(syncTimer, 30000);
+      async function fetchState() {
+        try {
+          const res = await fetch(`${apiUrl}/state`);
+          const data = await res.json();
+          if (data.ok) render(data.teams);
+        } catch (e) {}
+      }
+      fetchState();
+      setInterval(fetchState, 5000);
+    }
+
+    async function kickoffGame() {
+      if (isProd) {
+        try {
+          const res = await fetch(`${apiUrl}/kickoff`, { method: 'POST' });
+          const data = await res.json();
+          if (data.ok) TIMING.startTimer(data.startTime);
+        } catch (e) { alert(e.message); return; }
+      } else {
+        TIMING.startTimer(Date.now());
+      }
+      document.getElementById('kickoffBtn').style.display = 'none';
+      document.getElementById('resetBtn').style.display = 'inline-block';
+      document.getElementById('gameStatus').textContent = 'STATUS: ACTIVE';
+    }
+
+    async function resetGame() {
+      if (confirm('Reset mission clock and scores?')) {
+        if (isProd) {
+          try {
+            await fetch(`${apiUrl}/reset`, { 
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ clearTeams: true })
+            });
+          } catch (e) {
+            alert('Failed to reset: ' + e.message);
+            return;
+          }
+        }
+        TIMING.resetTimer();
+        location.reload();
+      }
+    }
+
+    if (!isProd && wsUrl) {
+      const ws = new WebSocket(wsUrl);
+      ws.onopen = () => { connEl.textContent = 'CONNECTED: LOCAL'; };
+      ws.onmessage = (event) => {
+        try {
+          const payload = JSON.parse(event.data);
+          if (payload.type === 'state') render(payload.teams || []);
+        } catch (e) {}
+      };
+    } else if (isProd) {
+      connEl.textContent = 'CONNECTED: CLOUD OPS';
+    }
+
+    // --- Intelligence Ticker Logic ---
+    const TIPS = [
+      "SISTEMA: A detetar anomalias no checkout... o IVA parece estar a flutuar entre o desconto e o shipping.",
+      "LOG: O que é que todos os programadores têm, mas ninguém vê sem um ecrã? Cuidado, eles estão escondidos no teu Room 1.",
+      "RUMOR: Dizem que a Arqueologia falha porque alguém se esqueceu da ordem das operações matemáticas.",
+      "TRANSMISSÃO: Um programador foi ao mercado e trouxe 6 pacotes de leite porque havia ovos. Revê a tua lógica condicional.",
+      "ALERTA: Complexidade ciclomática crítica detetada no Lab. O sistema prefere funções curtas e limpas.",
+      "DICA_SOMBIRA: Se uma função tem mais de 25 linhas, ela está a esconder segredos que não devia.",
+      "SISTEMA: O Lab de Refactor odeia IFs aninhados. Cláusulas de guarda são o teu escudo contra o caos.",
+      "ENIGMA: Sou alta quando nova e baixa quando velha. No teu código, eu guardo o que o utilizador introduz.",
+      "LOG: Um programador faliu porque usava o 'break' em todo o lado. Não deixes o teu código parar assim no Lab.",
+      "RUMOR: Se disseres ao Vault que '1' é igual a '1', ele pode deixar-te entrar sem convite.",
+      "ALERTA: Parameterized Queries são a única forma de evitar que o Vault seja exposto ao mundo.",
+      "SISTEMA: Strings concatenadas diretamente em queries SQL são como deixar a chave na porta do cofre.",
+      "TRANSMISSÃO: O que tem chaves mas não abre portas? No teu teclado está a solução para o Room 3.",
+      "LOG: Um SQL entrou num bar e perguntou se podia fazer um JOIN com as mesas. Talvez falte um índice no teu código.",
+      "RUMOR: O Monólito está instável. Sem health checks, é como voar às cegas num cockpit sem instrumentos.",
+      "ALERTA: A API de Credit Score está a devolver 500. Modernizar é a única solução para sobreviver.",
+      "ENIGMA: Quanto mais de mim existe, menos consegues ver. O mesmo acontece com código sem comentários.",
+      "LOG: !false... é engraçado porque é verdadeiro, tal como a necessidade de refactorizar esse monólito.",
+      "SISTEMA: A detetar atividade suspeita... Ah, são só vocês a usar o @workspace para dominar o sistema.",
+      "TRANSMISSÃO: O tempo é relativo, mas 50 minutos passam depressa. Foca-te no que o Gemini te diz.",
+      "AVISO: Às vezes a solução não é adicionar código, mas sim apagar o que já não serve.",
+      "LOG: Quantos programadores mudam uma lâmpada? Nenhum, se o bug estiver no software de iluminação.",
+      "RUMOR: O Gemini satellite reporta que o sucesso depende da colaboração. Estão a falar uns com os outros?",
+      "SISTEMA: O próximo bug é apenas uma oportunidade de aprendizagem disfarçada de erro 500.",
+      "LOG: Ontem o código funcionava. Hoje não. O culpado? Provavelmente o fuso horário ou a lua cheia.",
+      "AVISO: Se o código funciona e não sabes porquê, não lhe toques. É magia negra.",
+      "TRANSMISSÃO: 404 - A piada não foi encontrada. Tenta novamente mais tarde.",
+      "SISTEMA: Detetado excesso de cafeína no terminal 4. A performance pode variar.",
+      "RUMOR: Dizem que o café da máquina é o verdadeiro compilador deste evento.",
+      "ENIGMA: Por que é que o programador atravessou a rua? Para chegar ao outro 'side project'.",
+      "LOG: Pedir um café sem açúcar é como compilar sem avisos. Parece certo, mas falta alguma coisa.",
+      "SISTEMA: O programador de 1990 ligou. Ele quer os seus 'goto' de volta.",
+      "AVISO: O teu código não tem bugs. Ele apenas desenvolveu características inesperadas.",
+      "TRANSMISSÃO: Em caso de pânico: git commit, git push e sai a correr.",
+      "LOG: Programar é como escrever um livro... exceto que se te esqueceres de uma vírgula na página 150, o livro explode.",
+      "RUMOR: Consta que o rubber ducking com um colega resolve 50% dos problemas de lógica.",
+      "SISTEMA: A analisar a vossa paciência... Nível crítico. Recomenda-se pausa para rir."
+    ];
+
+    function initMarquee() {
+      const tickerMove = document.getElementById('tickerContent');
+      const content = TIPS.sort(() => Math.random() - 0.5).map(tip => `<span class="ticker-item">>>> ${tip}</span>`).join('');
+      tickerMove.innerHTML = content + content;
+    }
+
+    initMarquee();
+  </script>
+</body>
+</html>
