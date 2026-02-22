@@ -36,25 +36,26 @@ function startProcess(name, command, args = [], port) {
 }
 
 // Start all services
-console.log('🎮 Starting Visual Escape Room...\n');
+console.log('🎮 Starting Visual Escape Room Systems...\n');
 
 startProcess('Game Hub', 'npm', ['run', 'start:hub'], '4000');
 
 setTimeout(() => {
+  console.log('⏳ Hub initialized. Starting rooms...');
   startProcess('Room 1', 'npm', ['run', 'start:room1'], '5001');
-}, 2000);
+}, 5000); // 5s delay for Hub
 
 setTimeout(() => {
   startProcess('Room 2', 'npm', ['run', 'start:room2'], '5002');
-}, 4000);
+}, 8000);
 
 setTimeout(() => {
   startProcess('Room 3', 'npm', ['run', 'start:room3'], '5003');
-}, 6000);
+}, 11000);
 
 setTimeout(() => {
   startProcess('Final Room', 'npm', ['run', 'start:final'], '5004');
-}, 8000);
+}, 14000);
 
 // Handle shutdown
 process.on('SIGINT', () => {

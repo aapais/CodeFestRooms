@@ -13,9 +13,15 @@ const wss = new WebSocketServer({ server });
 
 const PORT = process.env.PORT || process.env.HUB_PORT || 4000;
 
+// Logging Middleware
+app.use((req, res, next) => {
+  console.log(`[HUB_LOG] ${req.method} ${req.url}`);
+  next();
+});
+
 // Configuração de Proxy para as Salas
 const setupRoomProxy = (path, targetPort) => {
-  const target = `http://localhost:${targetPort}`;
+  const target = `http://127.0.0.1:${targetPort}`;
   console.log(`[PROXY_SETUP] Mapping ${path} -> ${target}`);
   
   app.use(path, createProxyMiddleware({
@@ -24,11 +30,11 @@ const setupRoomProxy = (path, targetPort) => {
     pathRewrite: { [`^${path}`]: '' },
     ws: true,
     logLevel: 'debug',
-    proxyTimeout: 5000, // Wait up to 5s for the room to respond
-    timeout: 5000,
+    proxyTimeout: 10000, // Increase to 10s
+    timeout: 10000,
     onError: (err, req, res) => {
-      console.error(`[PROXY_ERROR] Failed to reach Room at ${target}:`, err.message);
-      res.status(502).send(`Room at port ${targetPort} is not responding yet. Please wait 5 seconds and refresh.`);
+      console.error(`[PROXY_ERROR] Failed to reach Room at ${target} for path ${req.url}:`, err.message);
+      res.status(502).send(`Room logic at port ${targetPort} is starting up. Please wait 10 seconds and refresh page.`);
     }
   }));
 };

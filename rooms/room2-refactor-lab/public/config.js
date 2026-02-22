@@ -24,11 +24,11 @@ window.ESCAPE_ROOM_CONFIG = {
   
   // Dev URLs (localhost or Google IDX previews)
   DEV_URLS: {
-    gameHub: `${protocol}//${HOSTNAME}`, // No IDX, o HOSTNAME já tem a porta assignada
-    room1: '/room1',
-    room2: '/room2',
-    room3: '/room3',
-    final: '/final'
+    gameHub: '/', 
+    room1: '/room1/',
+    room2: '/room2/',
+    room3: '/room3/',
+    final: '/final/'
   },
   
   // Production Firebase URLs
@@ -43,12 +43,7 @@ window.ESCAPE_ROOM_CONFIG = {
   
   getUrl: function(target) {
     const urls = isDev ? this.DEV_URLS : this.PRODUCTION_URLS;
-    const url = urls[target] || urls.gameHub;
-    // No IDX, se for um caminho relativo (/room1), garantimos o host completo
-    if (isIdx && url.startsWith('/')) {
-      return `${protocol}//${HOSTNAME}${url}`;
-    }
-    return url;
+    return urls[target] || urls.gameHub;
   },
   getApiUrl: function() {
     return this.PRODUCTION_URLS.gameHubAPI;
