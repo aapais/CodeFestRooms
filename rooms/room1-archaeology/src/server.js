@@ -3,6 +3,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const path = require('path');
+const fs = require('fs');
 const legacyService = require('./legacyService');
 
 const app = express();
@@ -15,11 +16,6 @@ app.use(bodyParser.json());
 if (process.env.NODE_ENV !== 'test') {
   legacyService.createUser('Alice', 'secret123', { isAdmin: true });
 }
-
-const fs = require('fs');
-const path = require('path');
-
-// ... (existing imports)
 
 app.get('/api/source', (req, res) => {
   try {
@@ -50,7 +46,6 @@ app.post('/api/checkout', (req, res) => {
 if (require.main === module) {
   app.listen(PORT, () => {
     console.log(`Room 1 Server running on http://localhost:${PORT}`);
-    console.log(`Open Browser to see the Legacy Shop!`);
   });
 }
 
