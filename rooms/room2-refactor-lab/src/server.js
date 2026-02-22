@@ -9,8 +9,8 @@ const fs = require('fs');
 const app = express();
 
 // Proxy API requests to the Central Hub (port 4000)
-app.use('/api/team', createProxyMiddleware({ target: 'http://localhost:4000', changeOrigin: true }));
-app.use('/api/state', createProxyMiddleware({ target: 'http://localhost:4000', changeOrigin: true }));
+app.use('/api/team', createProxyMiddleware({ target: 'http://127.0.0.1:4000', changeOrigin: true }));
+app.use('/api/state', createProxyMiddleware({ target: 'http://127.0.0.1:4000', changeOrigin: true }));
 
 app.use(express.static(path.join(__dirname, '../public')));
 app.use(express.json());

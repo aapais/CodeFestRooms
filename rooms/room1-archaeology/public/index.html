@@ -296,12 +296,14 @@
       try {
         const u = document.getElementById('username').value;
         const p = document.getElementById('password').value;
+        console.log(`[DEBUG] Attempting login for user: ${u}`);
         const res = await fetch('/api/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ username: u, password: p })
         });
         const data = await res.json();
+        console.log(`[DEBUG] Login response:`, data);
         if (data.ok) {
           token = data.token;
           document.getElementById('login-msg').innerHTML = `<span style="color:var(--success)">AUTH OK. Token valid.</span>`;
@@ -309,20 +311,27 @@
           document.getElementById('shop-section').style.opacity = '1';
         }
       } catch (e) {
+        console.error(`[DEBUG] Login error:`, e);
         alert('Authentication Error: Ensure you are running the local server in IDX.');
       }
     }
 
     async function doCheckout() {
       try {
-        if (!token) return;
+        console.log(`[DEBUG] doCheckout called. Token: ${token}`);
+        if (!token) {
+          alert('Auth Token missing! Please login first.');
+          return;
+        }
         const discount = document.getElementById('discount').value;
+        console.log(`[DEBUG] Sending checkout request with discount: ${discount}`);
         const res = await fetch('/api/checkout', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ token, discountCode: discount, shippingAddress: { country: 'PT' }, items: [{ sku: 'MysteryBox', qty: 2, priceCents: 100000 }] })
         });
         const data = await res.json();
+        console.log(`[DEBUG] Checkout response:`, data);
         if (data.ok) {
           const amt = data.order.amounts;
           document.getElementById('invoice-result').innerText = 
@@ -336,6 +345,7 @@
             `TOTAL:    ${(amt.totalCents/100).toFixed(2)} EUR`;
         }
       } catch (e) {
+        console.error(`[DEBUG] Checkout error:`, e);
         alert('Checkout Error: Local logic server not responding.');
       }
     }

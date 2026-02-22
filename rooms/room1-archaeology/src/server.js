@@ -1,7 +1,6 @@
 'use strict';
 
 const express = require('express');
-const bodyParser = require('body-parser');
 const path = require('path');
 const fs = require('fs');
 const legacyService = require('./legacyService');
@@ -10,12 +9,20 @@ const { createProxyMiddleware } = require('http-proxy-middleware');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Logging for debug
+app.use((req, res, next) => {
+  console.log(`[ROOM1_LOG] ${req.method} ${req.url}`);
+  next();
+});
+
 // Proxy API requests to the Central Hub (port 4000)
-app.use('/api/team', createProxyMiddleware({ target: 'http://localhost:4000', changeOrigin: true }));
-app.use('/api/state', createProxyMiddleware({ target: 'http://localhost:4000', changeOrigin: true }));
+// Must be BEFORE any body parsers
+app.use('/api/team', createProxyMiddleware({ target: 'http://127.0.0.1:4000', changeOrigin: true }));
+app.use('/api/state', createProxyMiddleware({ target: 'http://127.0.0.1:4000', changeOrigin: true }));
+app.use('/api/timer', createProxyMiddleware({ target: 'http://127.0.0.1:4000', changeOrigin: true }));
 
 app.use(express.static(path.join(__dirname, '../public')));
-app.use(bodyParser.json());
+app.use(express.json());
 
 // Initialize store with some data
 if (process.env.NODE_ENV !== 'test') {
@@ -38,19 +45,24 @@ app.post('/api/login', (req, res) => {
 });
 
 app.post('/api/checkout', (req, res) => {
-  const { token, cart, shippingAddress, discountCode } = req.body;
-  const result = legacyService.placeOrder(token, {
-    items: cart,
-    shippingAddress,
-    discountCode,
-    currency: 'EUR'
-  });
-  res.json(result);
+  try {
+    const { token, items, shippingAddress, discountCode } = req.body;
+    const result = legacyService.placeOrder(token, {
+      items,
+      shippingAddress,
+      discountCode,
+      currency: 'EUR'
+    });
+    res.json(result);
+  } catch (e) {
+    console.error('[ROOM1_ERR] Checkout failed:', e);
+    res.status(500).json({ ok: false, error: e.message });
+  }
 });
 
 if (require.main === module) {
   app.listen(PORT, () => {
-    console.log(`Room 1 Server running on http://localhost:${PORT}`);
+    console.log(`Room 1 Server running on port ${PORT}`);
   });
 }
 
