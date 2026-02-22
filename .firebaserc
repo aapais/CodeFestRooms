@@ -1,12 +1,31 @@
 {
   "projects": {
-    "default": "codefestrooms-81695626"
+    "default": "codefestrooms"
   },
   "targets": {
-    "codefestrooms-81695626": {
+    "codefestrooms": {
       "hosting": {
         "game-hub": [
-          "codefestrooms-81695626"
+          "codefestrooms-487913"
+        ],
+        "room1": [
+          "codefest-room1"
+        ],
+        "room2": [
+          "codefest-room2"
+        ],
+        "room3": [
+          "codefest-room3"
+        ],
+        "final": [
+          "codefest-final"
+        ]
+      }
+    },
+    "codefestrooms-487913": {
+      "hosting": {
+        "game-hub": [
+          "codefestrooms-487913"
         ],
         "room1": [
           "codefest-room1"
@@ -22,5 +41,6 @@
         ]
       }
     }
-  }
+  },
+  "etags": {}
 }

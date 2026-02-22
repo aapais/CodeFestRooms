@@ -24,26 +24,31 @@ window.ESCAPE_ROOM_CONFIG = {
   
   // Dev URLs (localhost or Google IDX previews)
   DEV_URLS: {
-    gameHub: `${protocol}//${hostForPort(4000)}`,
-    room1: `${protocol}//${hostForPort(3000)}`,
-    room2: `${protocol}//${hostForPort(3002)}`,
-    room3: `${protocol}//${hostForPort(3003)}`,
-    final: `${protocol}//${hostForPort(8080)}`
+    gameHub: `${protocol}//${HOSTNAME}`, // No IDX, o HOSTNAME já tem a porta assignada
+    room1: '/room1',
+    room2: '/room2',
+    room3: '/room3',
+    final: '/final'
   },
   
   // Production Firebase URLs
   PRODUCTION_URLS: {
     gameHub: 'https://codefestrooms-487913.web.app',
     gameHubAPI: 'https://us-central1-codefestrooms-487913.cloudfunctions.net/api',
-    room1: 'https://codefestrooms-487913.web.app/rooms/room1-archaeology',
-    room2: 'https://codefestrooms-487913.web.app/rooms/room2-refactor-lab',
-    room3: 'https://codefestrooms-487913.web.app/rooms/room3-security-vault',
-    final: 'https://codefestrooms-487913.web.app/rooms/final-modernisation'
+    room1: 'https://codefest-room1.web.app',
+    room2: 'https://codefest-room2.web.app',
+    room3: 'https://codefest-room3.web.app',
+    final: 'https://codefest-final.web.app'
   },
   
   getUrl: function(target) {
     const urls = isDev ? this.DEV_URLS : this.PRODUCTION_URLS;
-    return urls[target] || urls.gameHub;
+    const url = urls[target] || urls.gameHub;
+    // No IDX, se for um caminho relativo (/room1), garantimos o host completo
+    if (isIdx && url.startsWith('/')) {
+      return `${protocol}//${HOSTNAME}${url}`;
+    }
+    return url;
   },
   getApiUrl: function() {
     return this.PRODUCTION_URLS.gameHubAPI;

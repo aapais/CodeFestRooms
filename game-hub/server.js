@@ -5,11 +5,29 @@ const http = require('http');
 const path = require('path');
 const { WebSocketServer } = require('ws');
 
+const { createProxyMiddleware } = require('http-proxy-middleware');
+
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
 
 const PORT = process.env.PORT || process.env.HUB_PORT || 4000;
+
+// Configuração de Proxy para as Salas
+const setupRoomProxy = (path, targetPort) => {
+  app.use(path, createProxyMiddleware({
+    target: `http://127.0.0.1:${targetPort}`,
+    changeOrigin: true,
+    pathRewrite: { [`^${path}`]: '' }, // Remove o prefixo ao mandar para a sala
+    ws: true, // Support websockets if needed
+    logLevel: 'error'
+  }));
+};
+
+setupRoomProxy('/room1', 3000);
+setupRoomProxy('/room2', 3002);
+setupRoomProxy('/room3', 3003);
+setupRoomProxy('/final', 8080);
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
