@@ -6,7 +6,7 @@
     "test": "npm run lint && jest --runInBand",
     "lint": "eslint .",
     "complexity": "eslint . --max-warnings=0",
-    "start": "npx nodemon src/server.js"
+    "start": "node src/server.js"
   },
   "devDependencies": {
     "eslint": "^9.19.0",

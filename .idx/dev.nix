@@ -4,7 +4,6 @@
 
   packages = [
     pkgs.nodejs_20
-    pkgs.nodePackages.nodemon
   ];
 
   idx = {
@@ -16,28 +15,19 @@
 
     workspace = {
       onCreate = {
-        # Instala dependências automaticamente na criação
         npm-install = "npm install && npm install --workspaces";
-      };
-      onStart = {
-        # Sempre que o workspace abre, garante que as dependências estão lá
-        # e avisa o utilizador para iniciar o jogo
-        welcome-msg = "echo '🚀 BEM-VINDO AO GEMINI ESCAPE ROOM! Escreve: npm run start:all para iniciar os sistemas.'";
       };
     };
 
     previews = {
       enable = true;
       previews = {
-        web = {
-          # Não corremos o comando aqui para evitar loops de 502/Proxy
-          # O utilizador corre o comando no terminal e o IDX deteta a porta
-          command = ["npm" "run" "start:hub"]; 
-          manager = "web";
-          env = {
-            PORT = "$PORT"; 
-          };
-        };
+        # Definimos todas as portas para que o IDX as exponha corretamente
+        hub = { command = ["npm" "run" "start:hub"]; manager = "web"; id = "web"; env = { PORT = "4000"; }; };
+        room1 = { command = ["npm" "run" "start:room1"]; manager = "web"; env = { PORT = "3000"; }; };
+        room2 = { command = ["npm" "run" "start:room2"]; manager = "web"; env = { PORT = "3002"; }; };
+        room3 = { command = ["npm" "run" "start:room3"]; manager = "web"; env = { PORT = "3003"; }; };
+        final = { command = ["npm" "run" "start:final"]; manager = "web"; env = { PORT = "8080"; }; };
       };
     };
   };
