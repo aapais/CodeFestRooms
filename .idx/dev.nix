@@ -23,7 +23,6 @@
       enable = true;
       previews = {
         web = {
-          # INICIAR TUDO AUTOMATICAMENTE: Hub + 4 Rooms
           command = ["node" "start-all.js"];
           manager = "web";
           env = {

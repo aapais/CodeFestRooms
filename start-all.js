@@ -5,12 +5,13 @@ const path = require('path');
 
 const processes = [];
 
-function startProcess(name, command, args = []) {
+function startProcess(name, command, args = [], envOverrides = {}) {
   console.log(`🚀 Starting ${name}...`);
   const proc = spawn(command, args, {
     cwd: __dirname,
     stdio: 'inherit',
-    shell: true
+    shell: true,
+    env: { ...process.env, ...envOverrides }
   });
   
   proc.on('error', (err) => {
@@ -27,19 +28,19 @@ console.log('🎮 Starting Visual Escape Room...\n');
 startProcess('Game Hub', 'npm', ['run', 'start:hub']);
 
 setTimeout(() => {
-  startProcess('Room 1', 'npm', ['run', 'start:room1']);
+  startProcess('Room 1', 'npm', ['run', 'start:room1'], { PORT: '3000' });
 }, 2000);
 
 setTimeout(() => {
-  startProcess('Room 2', 'npm', ['run', 'start:room2']);
+  startProcess('Room 2', 'npm', ['run', 'start:room2'], { PORT: '3002' });
 }, 4000);
 
 setTimeout(() => {
-  startProcess('Room 3', 'npm', ['run', 'start:room3']);
+  startProcess('Room 3', 'npm', ['run', 'start:room3'], { PORT: '3003' });
 }, 6000);
 
 setTimeout(() => {
-  startProcess('Final Room', 'npm', ['run', 'start:final']);
+  startProcess('Final Room', 'npm', ['run', 'start:final'], { PORT: '8080' });
 }, 8000);
 
 // Handle shutdown
