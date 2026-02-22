@@ -1,13 +1,13 @@
 /**
- * Visual Escape Room - Configuration (SIMPLIFIED)
+ * Visual Escape Room - Configuration (ULTRA-SIMPLIFIED)
+ * No more port guessing, no more hostname manipulation.
  */
-const HOSTNAME = location.hostname;
-const isDev = HOSTNAME.includes('localhost') || HOSTNAME.includes('idx.google.com') || HOSTNAME.includes('cloudworkstations.dev');
+const isDev = location.hostname.includes('localhost') || location.hostname.includes('idx.google.com') || location.hostname.includes('cloudworkstations.dev');
 
 window.ESCAPE_ROOM_CONFIG = {
   MODE: isDev ? 'development' : 'production',
   
-  // No IDX, tudo corre na mesma porta agora (Túnel Único)
+  // No IDX, usamos apenas caminhos relativos na mesma origem
   getUrl: function(target) {
     if (!isDev) {
       const prod = {
@@ -19,30 +19,32 @@ window.ESCAPE_ROOM_CONFIG = {
       };
       return prod[target] || prod.gameHub;
     }
-    // MODO SIMPLES: Apenas caminhos na mesma porta
+    // MODO IDX: Fica sempre no mesmo link, muda apenas a pasta
     const paths = { gameHub: '/', room1: '/room1/', room2: '/room2/', room3: '/room3/', final: '/final/' };
     return paths[target] || '/';
   },
 
+  // A API aponta sempre para a Cloud para o progresso global
   getApiUrl: () => 'https://us-central1-codefestrooms-487913.cloudfunctions.net/api',
   getGlobalApiUrl: () => 'https://us-central1-codefestrooms-487913.cloudfunctions.net/api',
 
   getRoomUrl: function(roomId) {
-    const url = this.getUrl(roomId);
+    const baseUrl = this.getUrl(roomId);
     const name = this.getTeamName();
     const token = this.getTeamToken();
     if (name && token && isDev) {
-      const sep = url.includes('?') ? '&' : '?';
-      return `${url}${sep}teamName=${encodeURIComponent(name)}&teamToken=${encodeURIComponent(token)}`;
+      const sep = baseUrl.includes('?') ? '&' : '?';
+      return `${baseUrl}${sep}teamName=${encodeURIComponent(name)}&teamToken=${encodeURIComponent(token)}`;
     }
-    return url;
+    return baseUrl;
   },
 
   getTeamName: () => localStorage.getItem('teamName') || new URLSearchParams(window.location.search).get('teamName'),
   setTeamName: (name) => localStorage.setItem('teamName', name),
   getTeamToken: () => localStorage.getItem('teamToken') || new URLSearchParams(window.location.search).get('teamToken'),
-  setTeamToken: (token) => localStorage.setItem('teamToken', token),
+  setTeamToken: (token) => localStorage.setItem('token', token),
   
+  // Bloqueio simplificado sem auto-refresh para evitar crashes
   checkGameStart: async function() {
     try {
       const res = await fetch(this.getGlobalApiUrl() + '/timer');
@@ -52,8 +54,7 @@ window.ESCAPE_ROOM_CONFIG = {
   },
 
   logout: () => {
-    localStorage.removeItem('teamName');
-    localStorage.removeItem('teamToken');
+    localStorage.clear();
     window.location.href = '/';
   }
 };
