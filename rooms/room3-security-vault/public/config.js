@@ -1,94 +1,75 @@
 /**
  * Visual Escape Room - Configuration
- * 
- * Deteta automaticamente entre desenvolvimento local/IDX e produção Firebase.
+ * Robust IDX detection and URL mapping
  */
 
 const HOSTNAME = location.hostname;
-const IDX_MATCH = HOSTNAME.match(/^(\d+)-(.+)$/);
-const IDX_BASE = IDX_MATCH ? IDX_MATCH[2] : null;
-const isLocal = HOSTNAME === 'localhost' || HOSTNAME === '127.0.0.1';
-const isIdx = Boolean(IDX_BASE) && (HOSTNAME.endsWith('.cloudworkstations.dev') || HOSTNAME.endsWith('.idx.google.com'));
-const isDev = isLocal || isIdx;
 const protocol = location.protocol;
 const wsProtocol = protocol === 'https:' ? 'wss:' : 'ws:';
 
-function hostForPort(port) {
-  if (isIdx) return `${port}-${IDX_BASE}`;
-  return `${HOSTNAME}:${port}`;
+// Deteção IDX
+const isIdx = HOSTNAME.includes('.idx.google.com') || HOSTNAME.includes('.cloudworkstations.dev');
+const isLocal = HOSTNAME === 'localhost' || HOSTNAME === '127.0.0.1';
+const isDev = isIdx || isLocal;
+
+// Extrair base do workspace (ex: 4000-xxxx.idx.google.com -> xxxx.idx.google.com)
+let idxBase = null;
+if (isIdx) {
+  const parts = HOSTNAME.split('.');
+  const firstPart = parts[0]; // 4000-xxxxx
+  const dashIndex = firstPart.indexOf('-');
+  if (dashIndex !== -1) {
+    idxBase = firstPart.substring(dashIndex + 1) + '.' + parts.slice(1).join('.');
+  } else {
+    idxBase = HOSTNAME; // Fallback
+  }
 }
 
 window.ESCAPE_ROOM_CONFIG = {
   MODE: isDev ? 'development' : 'production',
   FIREBASE_PROJECT_ID: 'codefestrooms-487913',
   
-  // Dev URLs (localhost or Google IDX previews)
-  DEV_URLS: {
-    gameHub: '/', 
-    room1: '/room1/',
-    room2: '/room2/',
-    room3: '/room3/',
-    final: '/final/'
-  },
-  
-  // Production Firebase URLs
-  PRODUCTION_URLS: {
-    gameHub: 'https://codefestrooms-487913.web.app',
-    gameHubAPI: 'https://us-central1-codefestrooms-487913.cloudfunctions.net/api',
-    room1: 'https://codefest-room1.web.app',
-    room2: 'https://codefest-room2.web.app',
-    room3: 'https://codefest-room3.web.app',
-    final: 'https://codefest-final.web.app'
-  },
-  
   getUrl: function(target) {
-    const urls = isDev ? this.DEV_URLS : this.PRODUCTION_URLS;
-    return urls[target] || urls.gameHub;
-  },
-  getApiUrl: function() {
-    return this.PRODUCTION_URLS.gameHubAPI;
-  },
-  getWebSocketUrl: function() {
-    if (isDev) {
-      return `${wsProtocol}//${hostForPort(4000)}`;
+    if (!isDev) {
+      const prodUrls = {
+        gameHub: 'https://codefestrooms-487913.web.app',
+        room1: 'https://codefest-room1.web.app',
+        room2: 'https://codefest-room2.web.app',
+        room3: 'https://codefest-room3.web.app',
+        final: 'https://codefest-final.web.app'
+      };
+      return prodUrls[target] || prodUrls.gameHub;
     }
-    return 'wss://codefestrooms-81695626.web.app';
+
+    // Ambiente IDX / Local
+    const ports = { gameHub: 4000, room1: 3000, room2: 3002, room3: 3003, final: 8080 };
+    const port = ports[target] || 4000;
+
+    if (isIdx && idxBase) {
+      return `${protocol}//${port}-${idxBase}`;
+    }
+    return `${protocol}//${HOSTNAME}:${port}`;
   },
-  
+
+  getApiUrl: function() {
+    if (!isDev) return 'https://us-central1-codefestrooms-487913.cloudfunctions.net/api';
+    return this.getUrl('gameHub') + '/api';
+  },
+
   getRoomUrl: function(roomId) {
-    const map = {
-      room1: this.getUrl('room1'),
-      room2: this.getUrl('room2'),
-      room3: this.getUrl('room3'),
-      final: this.getUrl('final'),
-      hub: this.getUrl('gameHub')
-    };
-    const baseUrl = map[roomId] || this.getUrl('gameHub');
-    
-    // Propagate credentials via URL if they exist
+    const url = this.getUrl(roomId);
     const name = this.getTeamName();
     const token = this.getTeamToken();
     if (name && token) {
-      const sep = baseUrl.includes('?') ? '&' : '?';
-      return `${baseUrl}${sep}teamName=${encodeURIComponent(name)}&teamToken=${encodeURIComponent(token)}`;
+      const sep = url.includes('?') ? '&' : '?';
+      return `${url}${sep}teamName=${encodeURIComponent(name)}&teamToken=${encodeURIComponent(token)}`;
     }
-    return baseUrl;
+    return url;
   },
-  
-  // Team Management Helpers
-  getTeamName: function() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const name = urlParams.get('teamName') || localStorage.getItem('teamName');
-    if (name) localStorage.setItem('teamName', name);
-    return name;
-  },
+
+  getTeamName: () => localStorage.getItem('teamName') || new URLSearchParams(window.location.search).get('teamName'),
   setTeamName: (name) => localStorage.setItem('teamName', name),
-  getTeamToken: function() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const token = urlParams.get('teamToken') || localStorage.getItem('teamToken');
-    if (token) localStorage.setItem('teamToken', token);
-    return token;
-  },
+  getTeamToken: () => localStorage.getItem('teamToken') || new URLSearchParams(window.location.search).get('teamToken'),
   setTeamToken: (token) => localStorage.setItem('teamToken', token),
   logout: () => {
     localStorage.removeItem('teamName');
@@ -96,19 +77,12 @@ window.ESCAPE_ROOM_CONFIG = {
   }
 };
 
-// Aliases para compatibilidade com código legado
+// Aliases
 window.GAME_CONFIG = {
   get GAME_HUB_URL() { return window.ESCAPE_ROOM_CONFIG.getUrl('gameHub'); },
-  get ROOM1_URL() { return window.ESCAPE_ROOM_CONFIG.getUrl('room1'); },
-  get ROOM2_URL() { return window.ESCAPE_ROOM_CONFIG.getUrl('room2'); },
-  get ROOM3_URL() { return window.ESCAPE_ROOM_CONFIG.getUrl('room3'); },
-  get FINAL_URL() { return window.ESCAPE_ROOM_CONFIG.getUrl('final'); },
-  get WS_URL() { return window.ESCAPE_ROOM_CONFIG.getWebSocketUrl(); },
-  getRoomUrl: function(roomId) { return window.ESCAPE_ROOM_CONFIG.getRoomUrl(roomId); }
+  get WS_URL() { 
+    const url = window.ESCAPE_ROOM_CONFIG.getUrl('gameHub');
+    return url.replace('http', 'ws');
+  },
+  getRoomUrl: (id) => window.ESCAPE_ROOM_CONFIG.getRoomUrl(id)
 };
-
-console.log('🔧 Escape Room Config Loaded:', {
-  mode: window.ESCAPE_ROOM_CONFIG.MODE,
-  gameHub: window.ESCAPE_ROOM_CONFIG.getUrl('gameHub'),
-  websocket: window.ESCAPE_ROOM_CONFIG.getWebSocketUrl()
-});
