@@ -1,15 +1,17 @@
 /**
  * Visual Escape Room - Configuration
- * Unified Origin Architecture for maximum compatibility
+ * Direct-to-Cloud Architecture
  */
 
 const HOSTNAME = location.hostname;
 const protocol = location.protocol;
 
-// Deteção IDX / Dev
 const isIdx = HOSTNAME.includes('.idx.google.com') || HOSTNAME.includes('.cloudworkstations.dev');
 const isLocal = HOSTNAME === 'localhost' || HOSTNAME === '127.0.0.1';
 const isDev = isIdx || isLocal;
+
+// FONTE DA VERDADE ÚNICA
+const CLOUD_API = 'https://us-central1-codefestrooms-487913.cloudfunctions.net/api';
 
 window.ESCAPE_ROOM_CONFIG = {
   MODE: isDev ? 'development' : 'production',
@@ -27,37 +29,39 @@ window.ESCAPE_ROOM_CONFIG = {
       return prod[target] || prod.gameHub;
     }
 
-    // --- MODO DEV (IDX / LOCAL) ---
-    // Usamos caminhos relativos porque o Hub faz o proxy.
-    // Assim o browser fica sempre no mesmo porto e domínio.
-    const paths = { 
-      gameHub: '/', 
-      room1: '/room1/', 
-      room2: '/room2/', 
-      room3: '/room3/', 
-      final: '/final/' 
-    };
-    return paths[target] || '/';
+    const ports = { gameHub: 4000, room1: 3000, room2: 3002, room3: 3003, final: 8080 };
+    const targetPort = ports[target] || 4000;
+
+    if (isIdx) {
+      const parts = HOSTNAME.split('.');
+      const firstPart = parts[0];
+      const dashIndex = firstPart.indexOf('-');
+      if (dashIndex !== -1) {
+        const idxBase = firstPart.substring(dashIndex + 1) + '.' + parts.slice(1).join('.');
+        return `${protocol}//${targetPort}-${idxBase}`;
+      }
+    }
+    return `${protocol}//${HOSTNAME}:${targetPort}`;
   },
 
   getApiUrl: function() {
-    if (isDev) return '/api';
-    return 'https://us-central1-codefestrooms-487913.cloudfunctions.net/api';
+    // SEMPRE CLOUD: Evita erros de proxy local no IDX
+    return CLOUD_API;
   },
 
   getGlobalApiUrl: function() {
-    return 'https://us-central1-codefestrooms-487913.cloudfunctions.net/api';
+    return CLOUD_API;
   },
 
   getRoomUrl: function(roomId) {
-    const baseUrl = this.getUrl(roomId);
+    const url = this.getUrl(roomId);
     const name = this.getTeamName();
     const token = this.getTeamToken();
     if (name && token && isDev) {
-      const sep = baseUrl.includes('?') ? '&' : '?';
-      return `${baseUrl}${sep}teamName=${encodeURIComponent(name)}&teamToken=${encodeURIComponent(token)}`;
+      const sep = url.includes('?') ? '&' : '?';
+      return `${url}${sep}teamName=${encodeURIComponent(name)}&teamToken=${encodeURIComponent(token)}`;
     }
-    return baseUrl;
+    return url;
   },
 
   getTeamName: () => localStorage.getItem('teamName') || new URLSearchParams(window.location.search).get('teamName'),
@@ -73,8 +77,7 @@ window.ESCAPE_ROOM_CONFIG = {
       this.showLockOverlay();
       return false;
     } catch (e) {
-      console.error('HQ Sync Error');
-      return true; // Bypass on error to not block the workshop
+      return true; // Failsafe
     }
   },
 
@@ -83,14 +86,7 @@ window.ESCAPE_ROOM_CONFIG = {
     const overlay = document.createElement('div');
     overlay.id = 'hq-lock-overlay';
     overlay.style = 'position:fixed;top:0;left:0;width:100%;height:100%;background:#05070a;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#f85149;font-family:monospace;text-align:center;padding:20px;';
-    overlay.innerHTML = `
-      <h1 style="font-size:40px;margin-bottom:10px;">⚠️ ACCESS DENIED</h1>
-      <p style="font-size:18px;color:#8b949e;">MISSION NOT STARTED BY HQ</p>
-      <div style="margin-top:30px;padding:15px;border:1px solid #30363d;border-radius:8px;background:#0d1117;color:#58a6ff;">
-        Aguardando sinal de rádio do facilitador...<br>
-        <span style="font-size:12px;color:#8b949e;">O sistema irá desbloquear automaticamente.</span>
-      </div>
-    `;
+    overlay.innerHTML = `<h1>⚠️ ACCESS DENIED</h1><p>MISSION NOT STARTED BY HQ</p>`;
     document.body.appendChild(overlay);
     setTimeout(() => window.location.reload(), 5000);
   },
@@ -98,7 +94,7 @@ window.ESCAPE_ROOM_CONFIG = {
   logout: () => {
     localStorage.removeItem('teamName');
     localStorage.removeItem('teamToken');
-    window.location.href = '/';
+    window.location.href = window.ESCAPE_ROOM_CONFIG.getUrl('gameHub');
   }
 };
 
