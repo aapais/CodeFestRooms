@@ -3,9 +3,20 @@ const path = require('path');
 const { exec } = require('child_process');
 const { InvoiceEngine } = require('./invoiceEngine');
 
+const fs = require('fs');
+
 const app = express();
 app.use(express.static(path.join(__dirname, '../public')));
 app.use(express.json());
+
+app.get('/api/source', (req, res) => {
+  try {
+    const source = fs.readFileSync(path.join(__dirname, 'invoiceEngine.js'), 'utf8');
+    res.json({ ok: true, source });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
 
 app.post('/api/invoice', (req, res) => {
   const startTime = Date.now();

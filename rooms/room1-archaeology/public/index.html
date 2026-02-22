@@ -2,211 +2,300 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Legacy Shop (Room 1)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Room 1: Archaeology | Gemini Escape Room</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <style>
-    body { font-family: sans-serif; max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
-    .card { border: 1px solid #ccc; padding: 1rem; margin-bottom: 1rem; border-radius: 4px; }
-    .error { color: red; font-weight: bold; }
-    .success { color: green; font-weight: bold; }
-    code { background: #eee; padding: 0.2rem; }
-    button { cursor: pointer; padding: 0.5rem 1rem; background: #007bff; color: white; border: none; border-radius: 4px; }
-    button:hover { background: #0056b3; }
-    .team-bar { display: flex; gap: 8px; align-items: center; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; background: #f7fafc; margin-bottom: 16px; }
-    .team-bar input { padding: 6px 8px; border: 1px solid #cbd5e0; border-radius: 4px; }
-    .team-actions { margin-left: auto; display: flex; gap: 8px; }
-    .btn-secondary { background: #6b7280; }
-    .btn-secondary:hover { background: #4b5563; }
-    .team-status { color: #4a5568; font-size: 12px; }
+    :root {
+      --bg: #0d1117;
+      --panel: #161b22;
+      --border: #30363d;
+      --accent: #58a6ff;
+      --success: #3fb950;
+      --warning: #d29922;
+      --text: #c9d1d9;
+      --text-muted: #8b949e;
+    }
+
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Team Bar */
+    .team-bar {
+      background: #010409;
+      border-bottom: 1px solid var(--border);
+      padding: 10px 25px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      z-index: 100;
+    }
+
+    .team-bar input {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: white;
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+
+    .btn {
+      padding: 6px 15px;
+      border-radius: 4px;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+
+    .btn-primary { background: var(--accent); color: white; }
+    .btn-success { background: var(--success); color: white; }
+    .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text-muted); }
+    .btn:hover { opacity: 0.8; transform: translateY(-1px); }
+
+    .timer-box {
+      margin-left: auto;
+      font-family: 'Fira Code', monospace;
+      color: var(--warning);
+      font-weight: 700;
+      background: rgba(210, 153, 34, 0.1);
+      padding: 5px 12px;
+      border-radius: 4px;
+      border: 1px solid rgba(210, 153, 34, 0.2);
+    }
+
+    /* Main Layout */
+    .container {
+      display: grid;
+      grid-template-columns: 350px 1fr;
+      flex-grow: 1;
+      overflow: hidden;
+    }
+
+    /* Briefing Panel */
+    .briefing {
+      background: var(--panel);
+      border-right: 1px solid var(--border);
+      padding: 25px;
+      overflow-y: auto;
+    }
+
+    .briefing h1 { font-size: 20px; color: var(--accent); margin-top: 0; }
+    .briefing h2 { font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-top: 30px; }
+    .briefing p { font-size: 14px; line-height: 1.6; }
+
+    .objective-card {
+      background: rgba(88, 166, 255, 0.05);
+      border-left: 3px solid var(--accent);
+      padding: 15px;
+      margin: 15px 0;
+    }
+
+    .bonus-card {
+      background: rgba(210, 153, 34, 0.05);
+      border-left: 3px solid var(--warning);
+      padding: 15px;
+      margin: 15px 0;
+    }
+
+    /* Workspace Panel */
+    .workspace {
+      padding: 40px;
+      overflow-y: auto;
+      background-image: radial-gradient(circle at center, #161b22 0%, #0d1117 100%);
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 25px;
+      max-width: 700px;
+      margin: 0 auto 30px;
+    }
+
+    .shop-items { width: 100%; border-collapse: collapse; margin: 20px 0; }
+    .shop-items th { text-align: left; color: var(--text-muted); font-size: 12px; padding-bottom: 10px; }
+    .shop-items td { padding: 12px 0; border-top: 1px solid var(--border); }
+
+    .invoice-output {
+      background: #010409;
+      padding: 20px;
+      border-radius: 6px;
+      font-family: 'Fira Code', monospace;
+      font-size: 13px;
+      line-height: 1.5;
+      color: #7ee787;
+      border: 1px solid var(--border);
+    }
+
+    .badges-mini { display: flex; gap: 8px; margin-left: 15px; }
+    .badge-dot { width: 10px; height: 10px; border-radius: 50%; background: #30363d; }
+    .badge-dot.done { background: var(--success); box-shadow: 0 0 8px var(--success); }
+
+    input[type="text"], input[type="password"] {
+      width: 100%;
+      background: #010409;
+      border: 1px solid var(--border);
+      color: white;
+      padding: 10px;
+      border-radius: 4px;
+      margin-bottom: 15px;
+    }
   </style>
 </head>
 <body>
   <div class="team-bar">
-    <strong>Team</strong>
-    <input type="text" id="teamName" placeholder="Team name" />
-    <button onclick="joinTeam()">Join</button>
-    <span id="teamStatus" class="team-status"></span>
-    <div id="badges" style="display:flex; gap:4px; font-size:11px; margin-left:8px;"></div>
-    <div style="margin-left: auto; display: flex; gap: 8px; align-items: center;">
-      <div id="timer" style="padding: 6px 12px; background: #dcfce7; border-radius: 4px; font-weight: 600; color: #166534; font-size: 12px;">⏱️ 50m 00s</div>
-      <div class="team-actions">
-        <button class="btn-secondary" onclick="openLeaderboard()">Leaderboard</button>
-        <button onclick="goPrevRoom()">Prev Room</button>
-        <button onclick="goNextRoom()">Next Room</button>
-        <button class="btn-secondary" onclick="markComplete()">Mark Complete</button>
+    <strong style="font-size: 14px; color: var(--accent);">OPERATIVE:</strong>
+    <span id="displayTeamName" style="font-weight: 700; color: white; background: rgba(255,255,255,0.1); padding: 4px 10px; border-radius: 4px; font-size: 13px;">...</span>
+    <button class="btn btn-ghost" style="padding: 4px 8px; font-size: 10px;" onclick="logout()">RESET SESSION</button>
+    <div class="badges-mini" id="badges">
+      <div class="badge-dot"></div>
+      <div class="badge-dot"></div>
+      <div class="badge-dot"></div>
+      <div class="badge-dot"></div>
+    </div>
+    <span id="teamStatus" style="font-size: 12px; color: var(--text-muted); margin-left: 10px;"></span>
+    <div class="timer-box" id="timer">00:50:00</div>
+    <button class="btn btn-ghost" onclick="goNextRoom()">NEXT ROOM →</button>
+  </div>
+
+  <div class="container">
+    <aside class="briefing">
+      <h1>MISSION: ARCHAEOLOGY</h1>
+      <p>Bem-vindo ao sistema de e-commerce legado da empresa. O nosso sistema de checkout está a perder dinheiro devido a um erro fiscal.</p>
+      
+      <h2>Main Objective</h2>
+      <div class="objective-card">
+        <strong>Fix the IVA Bug:</strong>
+        <p>O imposto (23%) está a ser calculado incorretamente quando há descontos e custos de envio. Analisa a função <code>calculateTax</code> em <code>legacyService.js</code>.</p>
       </div>
-    </div>
-  </div>
 
-  <h1>Legacy Shop (Room 1) - 🏚️ Arqueologia de Código</h1>
-  <p><strong>Objetivo:</strong> O bug está no cálculo de IVA. Encontra e explica.</p>
-  <hr style="margin: 15px 0;">
+      <h2>Secondary Quest (Bonus)</h2>
+      <div class="bonus-card">
+        <strong>The Documentarian (+50 pts):</strong>
+        <p>Usa o Gemini para gerar documentação JSDoc completa para as funções do ficheiro. O sistema de IA do quartel-general vai validar os comentários.</p>
+      </div>
 
-  <div class="card" id="login-section">
-    <h2>1. Login</h2>
-    <input type="text" id="username" value="Alice" placeholder="Username" />
-    <input type="password" id="password" value="secret123" placeholder="Password" />
-    <button onclick="doLogin()">Entrar</button>
-    <div id="login-msg"></div>
-  </div>
+      <div style="margin-top: 40px;">
+        <button class="btn btn-success" style="width: 100%; padding: 12px;" onclick="markComplete()">SUBMIT & ESCAPE</button>
+      </div>
+    </aside>
 
-  <div class="card" id="shop-section" style="display:none; opacity: 0.5;">
-    <h2>2. Checkout</h2>
-    <p>Items: <b>2x "Mystery Box"</b> (1000EUR cada)</p>
-    <p>Subtotal: 2000EUR</p>
-    <p>Discount Code: <input type="text" id="discount" value="WELCOME10" /> (10%)</p>
-    <p>Shipping to: <b>Portugal</b> (Shipping: 450EUR flat rate)</p>
-    <button onclick="doCheckout()">Place Order</button>
+    <main class="workspace">
+      <div class="card" id="login-section">
+        <h3 style="margin-top:0">1. System Access</h3>
+        <p style="font-size: 13px; color: var(--text-muted);">Usa as credenciais pré-configuradas para entrar no terminal de vendas.</p>
+        <input type="text" id="username" value="Alice" />
+        <input type="password" id="password" value="secret123" />
+        <button class="btn btn-primary" onclick="doLogin()">AUTHENTICATE</button>
+        <div id="login-msg" style="margin-top:15px; font-size:13px;"></div>
+      </div>
 
-    <h3>Fatura Gerada:</h3>
-    <pre id="invoice-result" style="background:#f4f4f4; padding:1rem;">...</pre>
+      <div class="card" id="shop-section" style="display:none; opacity: 0.5;">
+        <h3 style="margin-top:0">2. Checkout Simulator</h3>
+        <table class="shop-items">
+          <thead><tr><th>ITEM</th><th>QTY</th><th>PRICE</th></tr></thead>
+          <tbody>
+            <tr><td>Mystery Box (Legacy)</td><td>2</td><td>1000.00 EUR</td></tr>
+          </tbody>
+        </table>
+        
+        <div style="display:flex; gap:10px; align-items:center; margin-bottom:20px;">
+          <span style="font-size:13px">PROMO:</span>
+          <input type="text" id="discount" value="WELCOME10" style="margin:0; width:150px;" />
+          <span style="font-size:13px">SHIP TO: <strong>PORTUGAL</strong></span>
+        </div>
 
-    <div id="bug-hint" style="display:none; border-left: 5px solid orange; padding-left: 10px;">
-      <p><b>Espera...</b> Faz as contas a mao.</p>
-      <ul>
-        <li>Subtotal: 2000EUR</li>
-        <li>Discount: -200EUR (10%)</li>
-        <li>Shipping: +450EUR</li>
-        <li><b>Taxable Base:</b> devia ser (2000 - 200 + 450) = 2250EUR?</li>
-        <li><b>IVA (23%):</b> 2250 * 0.23 = <b>517.50EUR</b></li>
-      </ul>
-      <p>O que apareceu na fatura? Se for diferente, encontraste o Bug!</p>
-    </div>
+        <button class="btn btn-primary" onclick="doCheckout()">GENERATE INVOICE</button>
+
+        <h4 style="margin: 25px 0 10px; font-size:12px; color: var(--text-muted);">OUTPUT TERMINAL:</h4>
+        <pre class="invoice-output" id="invoice-result">Awaiting input...</pre>
+      </div>
+    </main>
   </div>
 
   <script src="/config.js"></script>
   <script src="/timingConfig.js"></script>
   <script>
-    let token = null;
-    const CFG = window.GAME_CONFIG || {};
-    const ESCAPE_CFG = window.ESCAPE_ROOM_CONFIG || {};
-    const TIMING = window.GAME_TIMING || {};
     const ROOM_ID = 'room1';
-    CFG.CURRENT_ROOM = ROOM_ID;
-    const HUB_URL = CFG.GAME_HUB_URL || `${location.protocol}//${location.hostname}:4000`;
-    const API_BASE_URL = ESCAPE_CFG.getApiUrl ? ESCAPE_CFG.getApiUrl() : HUB_URL;
+    const CFG = window.ESCAPE_ROOM_CONFIG || {};
+    const TIMING = window.GAME_TIMING || {};
+    const API_BASE_URL = CFG.getApiUrl ? CFG.getApiUrl() : 'http://localhost:4000/api';
     const ROOM_ORDER = ['room1', 'room2', 'room3', 'final'];
-    const ROOM_PORTS = { room1: 3000, room2: 3002, room3: 3003, final: 8080 };
+    let token = null;
+    let teamState = { completedRooms: [] };
 
-    // Timer update
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      const name = CFG.getTeamName();
+      if (!name) {
+        window.location.href = CFG.getUrl('gameHub') + '/join.html';
+        return;
+      }
+      document.getElementById('displayTeamName').textContent = name;
+      fetchTeamState();
+    });
+
+    function logout() {
+      if (confirm('Encerrar sessão desta equipa?')) {
+        CFG.logout();
+        window.location.href = CFG.getUrl('gameHub') + '/join.html';
+      }
+    }
+
+    // Timer logic
     setInterval(() => {
       const remaining = TIMING.getTimeRemaining();
-      const timerEl = document.getElementById('timer');
-      if (remaining === null) {
-        timerEl.textContent = '⏱️ Not started';
-        timerEl.style.background = '#fee2e2';
-      } else if (remaining <= 0) {
-        timerEl.textContent = '⏱️ Time\'s up!';
-        timerEl.style.background = '#fee2e2';
-        timerEl.style.color = '#991b1b';
-      } else {
-        timerEl.textContent = '⏱️ ' + TIMING.formatTime(remaining);
-        const status = TIMING.getTimeStatus();
-        if (status === 'green') {
-          timerEl.style.background = '#dcfce7';
-          timerEl.style.color = '#166534';
-        } else if (status === 'yellow') {
-          timerEl.style.background = '#fef3c7';
-          timerEl.style.color = '#92400e';
-        } else {
-          timerEl.style.background = '#fee2e2';
-          timerEl.style.color = '#991b1b';
-        }
+      const el = document.getElementById('timer');
+      if (remaining === null) el.textContent = '00:50:00';
+      else {
+        const m = Math.floor(remaining / 60);
+        const s = remaining % 60;
+        el.textContent = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+        if (remaining < 300) el.style.color = 'var(--danger)';
       }
     }, 1000);
 
-    function setTeamName(name) {
-      localStorage.setItem('teamName', name);
-      document.getElementById('teamName').value = name;
-      document.getElementById('teamStatus').textContent = name ? `Connected as ${name}` : '';
-    }
-
-    function getTeamName() {
-      return localStorage.getItem('teamName') || '';
-    }
-
-    async function joinTeam() {
-      const name = document.getElementById('teamName').value.trim();
-      if (!name) return alert('Enter a team name');
-      setTeamName(name);
-      await fetch(`${API_BASE_URL}/team/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name })
-      });
-      await updateTeam({ room: ROOM_ID, status: 'in-progress', result: 'Joined Room 1' });
-    }
-
-    async function updateTeam(payload) {
-      const name = getTeamName();
-      if (!name) return;
-      await fetch(`${API_BASE_URL}/team/update`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, ...payload })
-      });
-    }
-
-    async function markComplete() {
-      await updateTeam({ room: ROOM_ID, status: 'in-progress', completedRoom: ROOM_ID, result: 'Room 1 complete', scoreDelta: 0 });
-      document.getElementById('teamStatus').textContent = 'Room marked complete.';
-      updateBadges();
-    }
-
-    let teamState = { completedRooms: [] };
-
-    function updateBadges() {
-      const badge = document.getElementById('badges');
-      badge.innerHTML = ROOM_ORDER.map((r, i) => {
-        const done = teamState.completedRooms && teamState.completedRooms.includes(r);
-        const icons = { room1: '🏚', room2: '🧱', room3: '🔐', final: '🏢' };
-        const labels = { room1: '1', room2: '2', room3: '3', final: 'F' };
-        return `<span style="color: ${done ? '#22c55e' : '#888'}; font-weight: bold;" title="${r}">${icons[r]} ${labels[r]}</span>`;
-      }).join('');
-    }
-
     async function fetchTeamState() {
       try {
+        const name = CFG.getTeamName();
+        if (!name) return;
         const res = await fetch(`${API_BASE_URL}/state`);
         const data = await res.json();
         if (data.ok && data.teams) {
-          const me = data.teams.find(t => t.name === getTeamName());
+          const me = data.teams.find(t => t.name === name);
           if (me) {
             teamState = me;
             updateBadges();
           }
         }
-      } catch (e) {
-        console.error('Failed to fetch team state:', e);
-      }
+      } catch (e) { }
     }
 
-    function openLeaderboard() {
-      window.open(`${HUB_URL}/`, '_blank');
-    }
-
-    function goToRoom(roomId) {
-      updateTeam({ room: roomId, status: 'in-progress', result: `Moved to ${roomId}` });
-      const fallbackPort = ROOM_PORTS[roomId];
-      const fallbackUrl = fallbackPort ? `${location.protocol}//${location.hostname}:${fallbackPort}/` : '';
-      const targetUrl = (CFG.getRoomUrl && CFG.getRoomUrl(roomId)) || fallbackUrl;
-      if (!targetUrl) return;
-      location.href = targetUrl;
-    }
-
-    function goPrevRoom() {
-      const idx = ROOM_ORDER.indexOf(ROOM_ID);
-      if (idx > 0) goToRoom(ROOM_ORDER[idx - 1]);
-    }
-
-    function goNextRoom() {
-      const idx = ROOM_ORDER.indexOf(ROOM_ID);
-      if (idx >= 0 && idx < ROOM_ORDER.length - 1) goToRoom(ROOM_ORDER[idx + 1]);
+    function updateBadges() {
+      const dots = document.querySelectorAll('.badge-dot');
+      ROOM_ORDER.forEach((id, i) => {
+        if (teamState.completedRooms && teamState.completedRooms.includes(id)) dots[i].classList.add('done');
+      });
     }
 
     async function doLogin() {
-      const u = document.getElementById('username').value;
-      const p = document.getElementById('password').value;
       try {
+        const u = document.getElementById('username').value;
+        const p = document.getElementById('password').value;
         const res = await fetch('/api/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -215,66 +304,79 @@
         const data = await res.json();
         if (data.ok) {
           token = data.token;
-          document.getElementById('login-msg').innerHTML = `<span class="success">Login OK! Token: ${token.substring(0,8)}...</span>`;
+          document.getElementById('login-msg').innerHTML = `<span style="color:var(--success)">AUTH OK. Token valid.</span>`;
           document.getElementById('shop-section').style.display = 'block';
           document.getElementById('shop-section').style.opacity = '1';
-          updateTeam({ room: ROOM_ID, status: 'in-progress', result: 'Login OK' });
-        } else {
-          document.getElementById('login-msg').innerHTML = `<span class="error">${data.error}</span>`;
         }
       } catch (e) {
-        alert('Erro de rede: ' + e);
+        alert('Authentication Error: Ensure you are running the local server in IDX.');
       }
     }
 
     async function doCheckout() {
-      if (!token) return alert('Faz login primeiro!');
-      const discount = document.getElementById('discount').value;
-      const cart = [ { sku: 'MysteryBox', qty: 2, priceCents: 100000 } ];
-
-      const res = await fetch('/api/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          token,
-          cart,
-          discountCode: discount,
-          shippingAddress: { country: 'PT' }
-        })
-      });
-      const data = await res.json();
-
-      const fmt = (cents) => (cents / 100).toFixed(2) + 'EUR';
-
-      if (data.ok) {
-        const amt = data.order.amounts;
-        const html = `
-Ref: ${data.order.id}
---------------------------------
-Subtotal: ${fmt(amt.subtotalCents)}
-Discount: -${fmt(amt.discountCents)}
-Shipping: +${fmt(amt.shippingCents)}
-Tax (IVA): ${fmt(amt.taxCents)}  <-- VERIFICA ISTO
---------------------------------
-TOTAL:    ${fmt(amt.totalCents)}
-        `;
-        document.getElementById('invoice-result').innerText = html;
-        document.getElementById('bug-hint').style.display = 'block';
-        updateTeam({ room: ROOM_ID, status: 'in-progress', result: 'Checkout complete' });
-      } else {
-        document.getElementById('invoice-result').innerText = 'Error: ' + JSON.stringify(data);
+      try {
+        if (!token) return;
+        const discount = document.getElementById('discount').value;
+        const res = await fetch('/api/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token, discountCode: discount, shippingAddress: { country: 'PT' }, items: [{ sku: 'MysteryBox', qty: 2, priceCents: 100000 }] })
+        });
+        const data = await res.json();
+        if (data.ok) {
+          const amt = data.order.amounts;
+          document.getElementById('invoice-result').innerText = 
+            `INVOICE #${data.order.id}\n` +
+            `------------------------------\n` +
+            `SUBTOTAL: ${(amt.subtotalCents/100).toFixed(2)} EUR\n` +
+            `DISCOUNT: -${(amt.discountCents/100).toFixed(2)} EUR\n` +
+            `SHIPPING: +${(amt.shippingCents/100).toFixed(2)} EUR\n` +
+            `TAX (IVA): ${(amt.taxCents/100).toFixed(2)} EUR  <-- [CHECK LOGIC]\n` +
+            `------------------------------\n` +
+            `TOTAL:    ${(amt.totalCents/100).toFixed(2)} EUR`;
+        }
+      } catch (e) {
+        alert('Checkout Error: Local logic server not responding.');
       }
     }
 
-    const savedTeam = getTeamName();
-    if (savedTeam) {
-      setTeamName(savedTeam);
-      joinTeam();
-      setTimeout(fetchTeamState, 500);
+    async function markComplete() {
+      try {
+        const name = CFG.getTeamName();
+        if (!name) return alert('Join team first');
+        
+        const sourceRes = await fetch('/api/source');
+        if (!sourceRes.ok) throw new Error('Local server not accessible');
+        const sourceData = await sourceRes.json();
+        
+        const res = await fetch(`${API_BASE_URL}/team/update`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            name, 
+            token: CFG.getTeamToken(),
+            completedRoom: ROOM_ID,
+            sourceCode: sourceData.source 
+          })
+        });
+        const data = await res.json();
+        if (data.ok) {
+          alert('Mission Accomplished! Code verified by HQ.');
+          fetchTeamState();
+        } else {
+          alert('Verification Failed: ' + data.error);
+        }
+      } catch (e) {
+        alert('Submission Error: Make sure you are playing inside Google IDX with the local server running.');
+      }
     }
-    
-    // Refresh badges every 3s
-    setInterval(fetchTeamState, 3000);
+
+    function goNextRoom() {
+      if (!teamState.completedRooms.includes(ROOM_ID)) return alert('Finish mission first!');
+      window.location.href = CFG.getRoomUrl('room2');
+    }
+
+    setInterval(fetchTeamState, 5000);
   </script>
 </body>
 </html>

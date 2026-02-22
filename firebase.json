@@ -4,7 +4,7 @@
     "predeploy": [
       "npm --prefix \"$RESOURCE_DIR\" run lint"
     ],
-    "runtime": "nodejs18"
+    "runtime": "nodejs20"
   },
   "firestore": {
     "rules": "firestore.rules",
@@ -21,6 +21,10 @@
       ],
       "rewrites": [
         {
+          "source": "/api/**",
+          "function": "api"
+        },
+        {
           "source": "**",
           "destination": "/index.html"
         }
@@ -35,6 +39,10 @@
         "**/node_modules/**"
       ],
       "rewrites": [
+        {
+          "source": "/api/**",
+          "function": "api"
+        },
         {
           "source": "**",
           "destination": "/index.html"
@@ -51,6 +59,10 @@
       ],
       "rewrites": [
         {
+          "source": "/api/**",
+          "function": "api"
+        },
+        {
           "source": "**",
           "destination": "/index.html"
         }
@@ -66,6 +78,10 @@
       ],
       "rewrites": [
         {
+          "source": "/api/**",
+          "function": "api"
+        },
+        {
           "source": "**",
           "destination": "/index.html"
         }
@@ -80,6 +96,10 @@
         "**/node_modules/**"
       ],
       "rewrites": [
+        {
+          "source": "/api/**",
+          "function": "api"
+        },
         {
           "source": "**",
           "destination": "/index.html"

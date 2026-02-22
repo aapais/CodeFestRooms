@@ -1,198 +1,368 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enterprise Monolith Status</title>
-    <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #222; color: #eee; padding: 40px; }
-        .team-bar { display: flex; gap: 8px; align-items: center; padding: 10px; border: 1px solid #444; border-radius: 6px; background: #1a202c; color: #e2e8f0; margin-bottom: 16px; }
-        .team-bar input { padding: 6px 8px; }
-        .team-bar .spacer { flex: 1; }
-        .team-bar button { padding: 6px 10px; border: none; border-radius: 4px; cursor: pointer; }
-        .team-status { font-size: 12px; color: #cbd5e0; margin-bottom: 16px; }
-        .dashboard { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .card { background: #333; padding: 20px; border-radius: 8px; }
-        h1 { color: #4fc3f7; border-bottom: 2px solid #4fc3f7; padding-bottom: 10px; }
-        
-        .status-box { text-align: center; font-size: 24px; padding: 40px; background: #444; border-radius: 4px; }
-        .online { color: #66bb6a; border: 2px solid #66bb6a; }
-        .offline { color: #ef5350; border: 2px solid #ef5350; }
-        
-        button { background: #0288d1; color: white; padding: 10px 20px; border: none; font-size: 16px; cursor: pointer; }
-        button:hover { background: #0277bd; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Final Mission: Modernize | Gemini Escape Room</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0d1117;
+      --panel: #161b22;
+      --border: #30363d;
+      --accent: #3fb950; /* Green for Final/Go */
+      --success: #3fb950;
+      --warning: #d29922;
+      --danger: #f85149;
+      --text: #c9d1d9;
+      --text-muted: #8b949e;
+    }
+
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Team Bar */
+    .team-bar {
+      background: #010409;
+      border-bottom: 1px solid var(--border);
+      padding: 10px 25px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      z-index: 100;
+    }
+
+    .team-bar input {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: white;
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+
+    .btn {
+      padding: 8px 18px;
+      border-radius: 4px;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+
+    .btn-primary { background: var(--accent); color: white; }
+    .btn-success { background: var(--success); color: white; }
+    .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text-muted); }
+    .btn:hover { opacity: 0.8; transform: translateY(-1px); }
+
+    .timer-box {
+      margin-left: auto;
+      font-family: 'Fira Code', monospace;
+      color: var(--warning);
+      font-weight: 700;
+      background: rgba(210, 153, 34, 0.1);
+      padding: 5px 12px;
+      border-radius: 4px;
+      border: 1px solid rgba(210, 153, 34, 0.2);
+    }
+
+    /* Main Layout */
+    .container {
+      display: grid;
+      grid-template-columns: 350px 1fr;
+      flex-grow: 1;
+      overflow: hidden;
+    }
+
+    /* Briefing Panel */
+    .briefing {
+      background: var(--panel);
+      border-right: 1px solid var(--border);
+      padding: 25px;
+      overflow-y: auto;
+    }
+
+    .briefing h1 { font-size: 20px; color: var(--accent); margin-top: 0; }
+    .briefing h2 { font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-top: 30px; }
+    
+    .objective-card {
+      background: rgba(63, 185, 80, 0.05);
+      border-left: 3px solid var(--accent);
+      padding: 15px;
+      margin: 15px 0;
+    }
+
+    .bonus-card {
+      background: rgba(210, 153, 34, 0.05);
+      border-left: 3px solid var(--warning);
+      padding: 15px;
+      margin: 15px 0;
+    }
+
+    /* Workspace Panel */
+    .workspace {
+      padding: 40px;
+      background-image: radial-gradient(circle at center, #162d1c 0%, #0d1117 100%);
+      overflow-y: auto;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 25px;
+      max-width: 800px;
+      margin: 0 auto 30px;
+    }
+
+    .status-monitor {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      padding: 30px;
+      background: #010409;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      margin-bottom: 30px;
+    }
+
+    .status-light {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--danger);
+      box-shadow: 0 0 10px var(--danger);
+    }
+    .status-light.online { background: var(--success); box-shadow: 0 0 15px var(--success); }
+
+    .badges-mini { display: flex; gap: 8px; margin-left: 15px; }
+    .badge-dot { width: 10px; height: 10px; border-radius: 50%; background: #30363d; }
+    .badge-dot.done { background: var(--success); box-shadow: 0 0 8px var(--success); }
+
+    textarea {
+      width: 100%;
+      background: #010409;
+      border: 1px solid var(--border);
+      color: #7ee787;
+      padding: 15px;
+      border-radius: 6px;
+      font-family: 'Fira Code', monospace;
+      font-size: 13px;
+      margin-bottom: 15px;
+    }
+  </style>
 </head>
 <body>
-    <div class="team-bar">
-        <strong>Team</strong>
-        <input type="text" id="teamName" placeholder="Team name" />
-        <button onclick="joinTeam()">Join</button>
-        <button onclick="markComplete()">Mark Room Complete</button>
-        <span class="spacer"></span>
-        <div id="badges" style="display:flex; gap:4px; font-size:11px;"></div>
-        <button onclick="goRoom('room1')">Room 1</button>
-        <button onclick="goRoom('room2')">Room 2</button>
-        <button onclick="goRoom('room3')">Room 3</button>
-        <button onclick="goRoom('final')">Final</button>
+  <div class="team-bar">
+    <strong style="font-size: 14px; color: var(--accent);">OP:</strong>
+    <input type="text" id="teamName" placeholder="Team Name" />
+    <button class="btn btn-primary" onclick="joinTeam()">INIT SESSION</button>
+    <div class="badges-mini" id="badges">
+      <div class="badge-dot"></div>
+      <div class="badge-dot"></div>
+      <div class="badge-dot"></div>
+      <div class="badge-dot"></div>
     </div>
-    <div class="team-status" id="teamStatus">Not connected</div>
+    <span id="teamStatus" style="font-size: 12px; color: var(--text-muted); margin-left: 10px;"></span>
+    <div class="timer-box" id="timer">00:50:00</div>
+    <button class="btn btn-ghost" onclick="goPrevRoom()">← PREV ROOM</button>
+  </div>
 
-    <h1>🏢 Legacy Enterprise Dashboard</h1>
-    <div class="dashboard">
-        <!-- Monitoring Panel -->
-        <div class="card">
-            <h2>System Status</h2>
-            <div id="statusBox" class="status-box offline">Checking connection...</div>
-            <p>Monitors <code>/status</code> (instável atualmente)</p>
-            <button onclick="checkHealth()">Refresh Status</button>
+  <div class="container">
+    <aside class="briefing">
+      <h1>MISSION: MODERNIZE</h1>
+      <p>Chegaste ao núcleo do Monólito. O sistema está instável e as APIs de cálculo de risco são opacas. É hora de modernizar a infraestrutura.</p>
+      
+      <h2>Main Objective</h2>
+      <div class="objective-card">
+        <strong>Stabilize & Verify:</strong>
+        <p>Garante que a API de Credit Score em <code>monolith.js</code> está a funcionar corretamente. Refactoriza para que o sistema seja resiliente.</p>
+      </div>
+
+      <h2>Secondary Quest (Bonus)</h2>
+      <div class="bonus-card">
+        <strong>Ops Master (+50 pts):</strong>
+        <p>Implementa um padrão de <strong>Health Check</strong>. O servidor HQ vai procurar por referências a <code>/health</code> ou status de uptime no teu código.</p>
+      </div>
+
+      <div style="margin-top: 40px;">
+        <button class="btn btn-success" style="width: 100%; padding: 15px; font-size: 16px;" onclick="markComplete()">FINISH MISSION</button>
+      </div>
+    </aside>
+
+    <main class="workspace">
+      <div class="card">
+        <h3 style="margin-top:0;">System Observability</h3>
+        <div class="status-monitor">
+          <div id="statusLight" class="status-light"></div>
+          <div id="statusText" style="font-family:'Fira Code', monospace;">STATUS: OFFLINE</div>
+          <button class="btn btn-ghost" onclick="checkHealth()" style="margin-left:auto;">PING SYSTEM</button>
         </div>
 
-        <!-- Scoring API Tester -->
-        <div class="card">
-            <h2>Credit Scoring API</h2>
-            <p>Testa o cálculo de risco do Monolith:</p>
-            <textarea id="payload" rows="5" style="width:100%;background:#222;color:#fff">{ "age": 30, "country": "PT", "spends": [100, 500] }</textarea>
-            <br><br>
-            <button onclick="calcScore()">Calcular Score</button>
-            <pre id="scoreResult">...</pre>
-        </div>
-    </div>
+        <h3>Credit Score API Tester</h3>
+        <p style="font-size: 13px; color: var(--text-muted);">Simula um pedido de análise de risco para validar o monólito.</p>
+        <textarea id="payload" rows="5">{
+  "age": 30,
+  "country": "PT",
+  "spends": [100, 500, 120]
+}</textarea>
+        <button class="btn btn-primary" onclick="calcScore()">CALCULATE RISK</button>
+        <pre id="scoreResult" style="background:#010409; padding:15px; border-radius:6px; margin-top:15px; font-family:'Fira Code', monospace; font-size:12px; color:#7ee787; border:1px solid var(--border);">Awaiting calculation...</pre>
+      </div>
+    </main>
+  </div>
 
-    <script src="/config.js"></script>
-    <script>
-        const CURRENT_ROOM = 'final';
-        const CFG = window.GAME_CONFIG || {};
-        const ESCAPE_CFG = window.ESCAPE_ROOM_CONFIG || {};
-        CFG.CURRENT_ROOM = CURRENT_ROOM;
-        const HUB_BASE = CFG.GAME_HUB_URL || `${location.protocol}//${location.hostname}:4000`;
-        const API_BASE_URL = ESCAPE_CFG.getApiUrl ? ESCAPE_CFG.getApiUrl() : HUB_BASE;
-        const ROOM_ORDER = ['room1', 'room2', 'room3', 'final'];
+  <script src="/config.js"></script>
+  <script src="/timingConfig.js"></script>
+  <script>
+    const ROOM_ID = 'final';
+    const CFG = window.ESCAPE_ROOM_CONFIG || {};
+    const TIMING = window.GAME_TIMING || {};
+    const API_BASE_URL = CFG.getApiUrl ? CFG.getApiUrl() : 'http://localhost:4000/api';
+    const ROOM_ORDER = ['room1', 'room2', 'room3', 'final'];
+    let teamState = { completedRooms: [] };
 
-        let teamState = { completedRooms: [] };
+    document.addEventListener('DOMContentLoaded', () => {
+      const savedName = CFG.getTeamName();
+      if (savedName) {
+        document.getElementById('teamName').value = savedName;
+        joinTeam();
+      }
+      checkHealth();
+    });
 
-        function updateBadges() {
-            const badge = document.getElementById('badges');
-            badge.innerHTML = ROOM_ORDER.map((r, i) => {
-                const done = teamState.completedRooms && teamState.completedRooms.includes(r);
-                const icons = { room1: '🏚', room2: '🧱', room3: '🔐', final: '🏢' };
-                const labels = { room1: '1', room2: '2', room3: '3', final: 'F' };
-                return `<span style="color: ${done ? '#22c55e' : '#888'}; font-weight: bold;" title="${r}">${icons[r]} ${labels[r]}</span>`;
-            }).join('');
+    setInterval(() => {
+      const remaining = TIMING.getTimeRemaining();
+      const el = document.getElementById('timer');
+      if (remaining === null) el.textContent = '00:50:00';
+      else {
+        const m = Math.floor(remaining / 60);
+        const s = remaining % 60;
+        el.textContent = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+      }
+    }, 1000);
+
+    async function joinTeam() {
+      try {
+        const name = document.getElementById('teamName').value.trim();
+        if (!name) return;
+        CFG.setTeamName(name);
+        const res = await fetch(`${API_BASE_URL}/team/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name })
+        });
+        const data = await res.json();
+        if (data.ok && data.team.token) CFG.setTeamToken(data.team.token);
+        fetchTeamState();
+      } catch (e) {
+        console.warn('HQ Uplink Offline.');
+      }
+    }
+
+    async function fetchTeamState() {
+      try {
+        const res = await fetch(`${API_BASE_URL}/state`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.ok && data.teams) {
+          const me = data.teams.find(t => t.name === CFG.getTeamName());
+          if (me) {
+            teamState = me;
+            updateBadges();
+          }
         }
+      } catch (e) {}
+    }
 
-        async function fetchTeamState() {
-            try {
-                const res = await fetch(`${API_BASE_URL}/state`);
-                const data = await res.json();
-                if (data.ok && data.teams) {
-                    const me = data.teams.find(t => t.name === getTeamName());
-                    if (me) {
-                        teamState = me;
-                        updateBadges();
-                    }
-                }
-            } catch (e) {
-                console.error('Failed to fetch team state:', e);
-            }
-        }
+    function updateBadges() {
+      const dots = document.querySelectorAll('.badge-dot');
+      ROOM_ORDER.forEach((id, i) => {
+        if (teamState.completedRooms && teamState.completedRooms.includes(id)) dots[i].classList.add('done');
+      });
+    }
 
-        function getTeamName() {
-            return localStorage.getItem('teamName') || '';
+    async function checkHealth() {
+      try {
+        const res = await fetch('/status');
+        const light = document.getElementById('statusLight');
+        const text = document.getElementById('statusText');
+        if (res.ok) {
+          const data = await res.json();
+          light.classList.add('online');
+          text.textContent = `STATUS: ONLINE (UPTIME: ${data.uptime.toFixed(0)}s)`;
+          text.style.color = 'var(--success)';
+        } else {
+          throw new Error();
         }
+      } catch (e) {
+        document.getElementById('statusLight').classList.remove('online');
+        document.getElementById('statusText').textContent = "STATUS: UNSTABLE / 503";
+        document.getElementById('statusText').style.color = 'var(--danger)';
+      }
+    }
 
-        function setTeamName(name) {
-            localStorage.setItem('teamName', name);
-            document.getElementById('teamName').value = name;
-        }
+    async function calcScore() {
+      try {
+        const payload = document.getElementById('payload').value;
+        const res = await fetch('/api/score', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: payload
+        });
+        const data = await res.json();
+        document.getElementById('scoreResult').innerText = JSON.stringify(data, null, 2);
+      } catch (e) {
+        document.getElementById('scoreResult').innerText = "API Error: Ensure local server is running.";
+      }
+    }
 
-        async function joinTeam() {
-            const name = document.getElementById('teamName').value.trim();
-            if (!name) return alert('Enter a team name');
-            setTeamName(name);
-            await fetch(`${API_BASE_URL}/team/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name })
-            });
-            await updateTeam({ room: CURRENT_ROOM, status: 'in-progress' });
-            document.getElementById('teamStatus').textContent = `Connected as ${name}`;
-            fetchTeamState();
+    async function markComplete() {
+      try {
+        const name = CFG.getTeamName();
+        if (!name) return alert('Join team first');
+        
+        const sourceRes = await fetch('/api/source');
+        if (!sourceRes.ok) throw new Error('Local source not found');
+        const sourceData = await sourceRes.json();
+        
+        const res = await fetch(`${API_BASE_URL}/team/update`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            name, 
+            token: CFG.getTeamToken(),
+            completedRoom: ROOM_ID,
+            sourceCode: sourceData.source 
+          })
+        });
+        const data = await res.json();
+        if (data.ok) {
+          alert('ALL MISSIONS COMPLETED! HQ analysis confirmed system modernization.');
+          fetchTeamState();
+        } else {
+          alert('Verification Failed: ' + data.error);
         }
+      } catch (e) {
+        alert('Mission Status Error: Check your IDX local server.');
+      }
+    }
 
-        async function updateTeam(payload) {
-            const name = getTeamName();
-            if (!name) return;
-            await fetch(`${API_BASE_URL}/team/update`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, ...payload })
-            });
-        }
+    function goPrevRoom() { window.location.href = CFG.getRoomUrl('room3'); }
 
-        async function markComplete() {
-            await updateTeam({ room: CURRENT_ROOM, status: 'in-progress', completedRoom: CURRENT_ROOM, result: 'Final room complete', scoreDelta: 0 });
-            document.getElementById('teamStatus').textContent = 'Room marked complete.';
-            fetchTeamState();
-        }
-        }
-
-        function goRoom(roomId) {
-            const ports = { room1: 3000, room2: 3002, room3: 3003, final: 8080 };
-            updateTeam({ room: roomId, status: 'in-progress' });
-            const fallbackPort = ports[roomId];
-            const fallbackUrl = fallbackPort ? `${location.protocol}//${location.hostname}:${fallbackPort}/` : '';
-            const targetUrl = (CFG.getRoomUrl && CFG.getRoomUrl(roomId)) || fallbackUrl;
-            if (!targetUrl) return;
-            window.location.href = targetUrl;
-        }
-        async function checkHealth() {
-            const box = document.getElementById('statusBox');
-            box.innerText = "Pinging...";
-            box.className = "status-box";
-            
-            try {
-                const res = await fetch('/status');
-                if (res.ok) {
-                    const data = await res.json();
-                    box.innerText = `ONLINE (Uptime: ${data.uptime.toFixed(1)}s)`;
-                    box.className = "status-box online";
-                } else {
-                    throw new Error(res.statusText);
-                }
-            } catch (e) {
-                box.innerText = "CONNECTION FAILED / 503";
-                box.className = "status-box offline";
-            }
-        }
-
-        async function calcScore() {
-            const payload = document.getElementById('payload').value;
-            try {
-                const res = await fetch('/api/score', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: payload
-                });
-                const data = await res.json();
-                document.getElementById('scoreResult').innerText = JSON.stringify(data, null, 2);
-            } catch (e) {
-                document.getElementById('scoreResult').innerText = "Erro: " + e.message;
-            }
-        }
-
-        // Auto check on load
-        checkHealth();
-
-        const savedTeam = getTeamName();
-        if (savedTeam) {
-            setTeamName(savedTeam);
-            joinTeam();
-            setTimeout(fetchTeamState, 500);
-        }
-
-        // Refresh badges every 3s
-        setInterval(fetchTeamState, 3000);
-    </script>
+    setInterval(fetchTeamState, 5000);
+  </script>
 </body>
 </html>

@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Operative Login | Gemini Escape Room</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #05070a;
+      --panel: #0d1117;
+      --border: #30363d;
+      --accent: #58a6ff;
+      --text: #e6edf3;
+      --muted: #8b949e;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: var(--bg);
+      font-family: 'Space Grotesk', sans-serif;
+      color: var(--text);
+      background-image: radial-gradient(circle at center, #111a2e 0%, #05070a 100%);
+    }
+
+    .login-container {
+      width: 100%;
+      max-width: 400px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 40px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+      text-align: center;
+    }
+
+    .logo {
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 10px;
+      text-shadow: 0 0 15px rgba(88, 166, 255, 0.4);
+    }
+
+    p { color: var(--muted); font-size: 14px; margin-bottom: 30px; }
+
+    label {
+      display: block;
+      text-align: left;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    input {
+      width: 100%;
+      background: #010409;
+      border: 1px solid var(--border);
+      color: white;
+      padding: 12px 15px;
+      border-radius: 8px;
+      font-size: 16px;
+      margin-bottom: 25px;
+      font-family: 'Fira Code', monospace;
+      box-sizing: border-box;
+    }
+
+    input:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.1); }
+
+    .btn-join {
+      width: 100%;
+      background: var(--accent);
+      color: black;
+      border: none;
+      padding: 14px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      transition: all 0.2s;
+    }
+
+    .btn-join:hover { transform: translateY(-2px); opacity: 0.9; }
+
+    .status-msg { margin-top: 20px; font-size: 13px; min-height: 20px; }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="logo">Visual Escape Room</div>
+    <p>Insere o nome da tua equipa para iniciar a missão.</p>
+    
+    <form id="joinForm">
+      <label for="teamName">Operative / Team Name</label>
+      <input type="text" id="teamName" placeholder="Ex: Team_Alpha" required maxlength="20" autocomplete="off" />
+      
+      <button type="submit" class="btn-join" id="submitBtn">Initialize Mission</button>
+    </form>
+
+    <div id="status" class="status-msg"></div>
+  </div>
+
+  <script src="/config.js"></script>
+  <script>
+    const CFG = window.ESCAPE_ROOM_CONFIG || {};
+    const API_BASE_URL = CFG.getApiUrl ? CFG.getApiUrl() : '/api';
+
+    document.getElementById('joinForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('submitBtn');
+      const status = document.getElementById('status');
+      const name = document.getElementById('teamName').value.trim();
+
+      if (!name) return;
+
+      btn.disabled = true;
+      btn.textContent = "ESTABLISHING UPLINK...";
+      status.style.color = 'var(--accent)';
+      status.textContent = ">>> Contacting Gemini HQ...";
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/team/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name })
+        });
+        
+        const data = await res.json();
+        
+        if (data.ok) {
+          // Guardar sessão global
+          CFG.setTeamName(data.team.name);
+          if (data.team.token) CFG.setTeamToken(data.team.token);
+          
+          status.style.color = '#3fb950';
+          status.textContent = ">>> ACCESS GRANTED. Redirecting to Room 1...";
+          
+          setTimeout(() => {
+            window.location.href = CFG.getRoomUrl('room1');
+          }, 1500);
+        } else {
+          throw new Error(data.error || 'Connection failed');
+        }
+      } catch (err) {
+        btn.disabled = false;
+        btn.textContent = "Initialize Mission";
+        status.style.color = '#f85149';
+        status.textContent = ">>> ERROR: " + err.message;
+      }
+    });
+
+    // Se já estiver logado, redirecionar automaticamente
+    if (CFG.getTeamName() && CFG.getTeamToken()) {
+      document.getElementById('status').textContent = "Sessão ativa detetada. A redirecionar...";
+      setTimeout(() => {
+        window.location.href = CFG.getRoomUrl('room1');
+      }, 1000);
+    }
+  </script>
+</body>
+</html>

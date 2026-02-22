@@ -8,7 +8,7 @@ const HOSTNAME = location.hostname;
 const IDX_MATCH = HOSTNAME.match(/^(\d+)-(.+)$/);
 const IDX_BASE = IDX_MATCH ? IDX_MATCH[2] : null;
 const isLocal = HOSTNAME === 'localhost' || HOSTNAME === '127.0.0.1';
-const isIdx = Boolean(IDX_BASE) && (HOSTNAME.endsWith('.cloudworkstations.dev') || HOSTNAME.endsWith('.idx.google.com'));
+const isIdx = Boolean(IDX_BASE) && HOSTNAME.endsWith('.cloudworkstations.dev');
 const isDev = isLocal || isIdx;
 const protocol = location.protocol;
 const wsProtocol = protocol === 'https:' ? 'wss:' : 'ws:';
@@ -35,10 +35,10 @@ window.ESCAPE_ROOM_CONFIG = {
   PRODUCTION_URLS: {
     gameHub: 'https://codefestrooms-487913.web.app',
     gameHubAPI: 'https://us-central1-codefestrooms-487913.cloudfunctions.net/api',
-    room1: 'https://codefestrooms-487913.web.app/rooms/room1-archaeology',
-    room2: 'https://codefestrooms-487913.web.app/rooms/room2-refactor-lab',
-    room3: 'https://codefestrooms-487913.web.app/rooms/room3-security-vault',
-    final: 'https://codefestrooms-487913.web.app/rooms/final-modernisation'
+    room1: 'https://codefest-room1.web.app',
+    room2: 'https://codefest-room2.web.app',
+    room3: 'https://codefest-room3.web.app',
+    final: 'https://codefest-final.web.app'
   },
   
   getUrl: function(target) {
@@ -52,7 +52,7 @@ window.ESCAPE_ROOM_CONFIG = {
     if (isDev) {
       return `${wsProtocol}//${hostForPort(4000)}`;
     }
-    return 'wss://codefestrooms-81695626.web.app';
+    return '';
   },
   
   getRoomUrl: function(roomId) {
@@ -63,36 +63,7 @@ window.ESCAPE_ROOM_CONFIG = {
       final: this.getUrl('final'),
       hub: this.getUrl('gameHub')
     };
-    const baseUrl = map[roomId] || this.getUrl('gameHub');
-    
-    // Propagate credentials via URL if they exist
-    const name = this.getTeamName();
-    const token = this.getTeamToken();
-    if (name && token) {
-      const sep = baseUrl.includes('?') ? '&' : '?';
-      return `${baseUrl}${sep}teamName=${encodeURIComponent(name)}&teamToken=${encodeURIComponent(token)}`;
-    }
-    return baseUrl;
-  },
-  
-  // Team Management Helpers
-  getTeamName: function() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const name = urlParams.get('teamName') || localStorage.getItem('teamName');
-    if (name) localStorage.setItem('teamName', name);
-    return name;
-  },
-  setTeamName: (name) => localStorage.setItem('teamName', name),
-  getTeamToken: function() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const token = urlParams.get('teamToken') || localStorage.getItem('teamToken');
-    if (token) localStorage.setItem('teamToken', token);
-    return token;
-  },
-  setTeamToken: (token) => localStorage.setItem('teamToken', token),
-  logout: () => {
-    localStorage.removeItem('teamName');
-    localStorage.removeItem('teamToken');
+    return map[roomId] || this.getUrl('gameHub');
   }
 };
 

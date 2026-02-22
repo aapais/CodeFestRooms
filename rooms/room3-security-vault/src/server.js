@@ -1,10 +1,21 @@
 const express = require('express');
 const path = require('path');
+const fs = require('fs');
 const repo = require('./userRepo');
 
 const app = express();
 app.use(express.static(path.join(__dirname, '../public')));
-app.use(express.urlencoded({ extended: true })); // For form post
+app.use(express.json()); // Support JSON bodies
+app.use(express.urlencoded({ extended: true }));
+
+app.get('/api/source', (req, res) => {
+  try {
+    const source = fs.readFileSync(path.join(__dirname, 'userRepo.js'), 'utf8');
+    res.json({ ok: true, source });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
 
 // Serve shared config files
 app.get('/timingConfig.js', (req, res) => {

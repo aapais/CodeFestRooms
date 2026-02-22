@@ -1,5 +1,6 @@
 const express = require('express');
 const path = require('path');
+const fs = require('fs');
 const { calcScore } = require('./monolith');
 
 const app = express();
@@ -7,6 +8,15 @@ const PORT = process.env.PORT || 8080;
 
 app.use(express.static(path.join(__dirname, '../public')));
 app.use(express.json());
+
+app.get('/api/source', (req, res) => {
+    try {
+        const source = fs.readFileSync(path.join(__dirname, 'monolith.js'), 'utf8');
+        res.json({ ok: true, source });
+    } catch (e) {
+        res.status(500).json({ ok: false, error: e.message });
+    }
+});
 
 // -------------------------------------------------------------
 // Esta é a API "instável" que os participantes têm de melhorar

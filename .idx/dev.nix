@@ -1,43 +1,33 @@
 # .idx/dev.nix - Environment Configuration
 { pkgs, ... }: {
-  # Which nixpkgs channel to use.
-  channel = "stable-23.11"; # or "unstable"
+  channel = "stable-23.11"; 
 
-  # Use https://search.nixos.org/packages to find packages
   packages = [
     pkgs.nodejs_20
   ];
 
-  # Sets environment variables in the workspace
-  env = {};
   idx = {
-    # Search for the extensions you want on https://open-vsx.org/ and use "publisher.id"
     extensions = [
       "dbaeumer.vscode-eslint"
       "esbenp.prettier-vscode"
+      "google.gemini-vscode"
     ];
+
     workspace = {
-      # Runs when a workspace is first created with this `dev.nix` file
       onCreate = {
-        npm-install = "npm ci && npm install --workspaces";
-        # Open editors for the READMEs
-        default.openFiles = [ "README.md" "rooms/room1-archaeology/README.md" ];
-      };
-      # Runs when a workspace is (re)started
-      onStart = {
-        # Ensure dependencies are up to date
-        npm-install = "npm install"; 
+        npm-install = "npm install && npm install --workspaces";
       };
     };
-    # Enable previews and customize configuration
+
     previews = {
       enable = true;
       previews = {
         web = {
-          command = ["npm" "run" "start:room1"];
+          # Abre a porta 4000 (Game Hub) por defeito na página de Join
+          command = ["npm" "run" "start:hub"];
           manager = "web";
           env = {
-            PORT = "$PORT";
+            PORT = "4000";
           };
         };
       };

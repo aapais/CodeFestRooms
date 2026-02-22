@@ -16,6 +16,20 @@ if (process.env.NODE_ENV !== 'test') {
   legacyService.createUser('Alice', 'secret123', { isAdmin: true });
 }
 
+const fs = require('fs');
+const path = require('path');
+
+// ... (existing imports)
+
+app.get('/api/source', (req, res) => {
+  try {
+    const source = fs.readFileSync(path.join(__dirname, 'legacyService.js'), 'utf8');
+    res.json({ ok: true, source });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
 app.post('/api/login', (req, res) => {
   const { username, password } = req.body;
   const result = legacyService.authenticate(username, password);

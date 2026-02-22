@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Legacy Shop (Room 1)</title>
+  <style>
+    body { font-family: sans-serif; max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
+    .card { border: 1px solid #ccc; padding: 1rem; margin-bottom: 1rem; border-radius: 4px; }
+    .error { color: red; font-weight: bold; }
+    .success { color: green; font-weight: bold; }
+    code { background: #eee; padding: 0.2rem; }
+    button { cursor: pointer; padding: 0.5rem 1rem; background: #007bff; color: white; border: none; border-radius: 4px; }
+    button:hover { background: #0056b3; }
+    .team-bar { display: flex; gap: 8px; align-items: center; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; background: #f7fafc; margin-bottom: 16px; }
+    .team-bar input { padding: 6px 8px; border: 1px solid #cbd5e0; border-radius: 4px; }
+    .team-actions { margin-left: auto; display: flex; gap: 8px; }
+    .btn-secondary { background: #6b7280; }
+    .btn-secondary:hover { background: #4b5563; }
+    .team-status { color: #4a5568; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="team-bar">
+    <strong>Team</strong>
+    <input type="text" id="teamName" placeholder="Team name" />
+    <button onclick="joinTeam()">Join</button>
+    <span id="teamStatus" class="team-status"></span>
+    <div id="badges" style="display:flex; gap:4px; font-size:11px; margin-left:8px;"></div>
+    <div style="margin-left: auto; display: flex; gap: 8px; align-items: center;">
+      <div id="timer" style="padding: 6px 12px; background: #dcfce7; border-radius: 4px; font-weight: 600; color: #166534; font-size: 12px;">⏱️ 50m 00s</div>
+      <div class="team-actions">
+        <button class="btn-secondary" onclick="openLeaderboard()">Leaderboard</button>
+        <button onclick="goPrevRoom()">Prev Room</button>
+        <button onclick="goNextRoom()">Next Room</button>
+        <button class="btn-secondary" onclick="markComplete()">Mark Complete</button>
+      </div>
+    </div>
+  </div>
+
+  <h1>Legacy Shop (Room 1) - 🏚️ Arqueologia de Código</h1>
+  <p><strong>Objetivo:</strong> O bug está no cálculo de IVA. Encontra e explica.</p>
+  <hr style="margin: 15px 0;">
+
+  <div class="card" id="login-section">
+    <h2>1. Login</h2>
+    <input type="text" id="username" value="Alice" placeholder="Username" />
+    <input type="password" id="password" value="secret123" placeholder="Password" />
+    <button onclick="doLogin()">Entrar</button>
+    <div id="login-msg"></div>
+  </div>
+
+  <div class="card" id="shop-section" style="display:none; opacity: 0.5;">
+    <h2>2. Checkout</h2>
+    <p>Items: <b>2x "Mystery Box"</b> (1000EUR cada)</p>
+    <p>Subtotal: 2000EUR</p>
+    <p>Discount Code: <input type="text" id="discount" value="WELCOME10" /> (10%)</p>
+    <p>Shipping to: <b>Portugal</b> (Shipping: 450EUR flat rate)</p>
+    <button onclick="doCheckout()">Place Order</button>
+
+    <h3>Fatura Gerada:</h3>
+    <pre id="invoice-result" style="background:#f4f4f4; padding:1rem;">...</pre>
+
+    <div id="bug-hint" style="display:none; border-left: 5px solid orange; padding-left: 10px;">
+      <p><b>Espera...</b> Faz as contas a mao.</p>
+      <ul>
+        <li>Subtotal: 2000EUR</li>
+        <li>Discount: -200EUR (10%)</li>
+        <li>Shipping: +450EUR</li>
+        <li><b>Taxable Base:</b> devia ser (2000 - 200 + 450) = 2250EUR?</li>
+        <li><b>IVA (23%):</b> 2250 * 0.23 = <b>517.50EUR</b></li>
+      </ul>
+      <p>O que apareceu na fatura? Se for diferente, encontraste o Bug!</p>
+    </div>
+  </div>
+
+  <script src="/config.js"></script>
+  <script src="/timingConfig.js"></script>
+  <script>
+    let token = null;
+    const CFG = window.GAME_CONFIG || {};
+    const ESCAPE_CFG = window.ESCAPE_ROOM_CONFIG || {};
+    const TIMING = window.GAME_TIMING || {};
+    const ROOM_ID = 'room1';
+    CFG.CURRENT_ROOM = ROOM_ID;
+    const HUB_URL = CFG.GAME_HUB_URL || `${location.protocol}//${location.hostname}:4000`;
+    const API_BASE_URL = ESCAPE_CFG.getApiUrl ? ESCAPE_CFG.getApiUrl() : HUB_URL;
+    const ROOM_ORDER = ['room1', 'room2', 'room3', 'final'];
+    const ROOM_PORTS = { room1: 3000, room2: 3002, room3: 3003, final: 8080 };
+
+    // Sync timer with Firebase every 5 seconds
+    setInterval(async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/timer`);
+        const data = await res.json();
+        if (data.ok && data.timer && data.timer.startTime) {
+          if (TIMING.startTime !== data.timer.startTime) {
+            TIMING.startTimer(data.timer.startTime);
+            console.log('⏱️ Timer synced from Firebase:', new Date(data.timer.startTime));
+          }
+        }
+      } catch (e) {
+        // Silent fail - timer endpoint may not be available in dev mode
+      }
+    }, 5000);
+
+    // Timer update
+    setInterval(() => {
+      const remaining = TIMING.getTimeRemaining();
+      const timerEl = document.getElementById('timer');
+      if (remaining === null) {
+        timerEl.textContent = '⏱️ Not started';
+        timerEl.style.background = '#fee2e2';
+      } else if (remaining <= 0) {
+        timerEl.textContent = '⏱️ Time\'s up!';
+        timerEl.style.background = '#fee2e2';
+        timerEl.style.color = '#991b1b';
+      } else {
+        timerEl.textContent = '⏱️ ' + TIMING.formatTime(remaining);
+        const status = TIMING.getTimeStatus();
+        if (status === 'green') {
+          timerEl.style.background = '#dcfce7';
+          timerEl.style.color = '#166534';
+        } else if (status === 'yellow') {
+          timerEl.style.background = '#fef3c7';
+          timerEl.style.color = '#92400e';
+        } else {
+          timerEl.style.background = '#fee2e2';
+          timerEl.style.color = '#991b1b';
+        }
+      }
+    }, 1000);
+
+    function setTeamName(name) {
+      localStorage.setItem('teamName', name);
+      document.getElementById('teamName').value = name;
+      document.getElementById('teamStatus').textContent = name ? `Connected as ${name}` : '';
+    }
+
+    function getTeamName() {
+      return localStorage.getItem('teamName') || '';
+    }
+
+    async function joinTeam() {
+      const name = document.getElementById('teamName').value.trim();
+      if (!name) return alert('Enter a team name');
+      setTeamName(name);
+      await fetch(`${API_BASE_URL}/team/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name })
+      });
+      await updateTeam({ room: ROOM_ID, status: 'in-progress', result: 'Joined Room 1' });
+    }
+
+    async function updateTeam(payload) {
+      const name = getTeamName();
+      if (!name) return;
+      await fetch(`${API_BASE_URL}/team/update`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, ...payload })
+      });
+    }
+
+    const isDevEnv = location.hostname === 'localhost'
+      || location.hostname === '127.0.0.1'
+      || location.hostname.endsWith('.cloudworkstations.dev');
+    let validationPassed = false;
+
+    async function markComplete() {
+      const name = getTeamName();
+      if (!name) return alert('Join team first');
+
+      if (isDevEnv && !validationPassed) {
+        try {
+          const res = await fetch('/api/validate-iva');
+          const data = await res.json();
+          if (!data.ok) {
+            return alert(`❌ Validacao falhou: ${data.message || 'Verifica o IVA'}`);
+          }
+          validationPassed = true;
+        } catch (e) {
+          return alert('❌ Validacao indisponivel. Tenta novamente.');
+        }
+      }
+      
+      // Mark room as complete in Firebase
+      await fetch(`${API_BASE_URL}/team/complete-room`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, roomId: ROOM_ID })
+      });
+      
+      // Update local state
+      document.getElementById('teamStatus').textContent = '✅ Room marked complete!';
+      if (!teamState.completedRooms) teamState.completedRooms = [];
+      if (!teamState.completedRooms.includes(ROOM_ID)) {
+        teamState.completedRooms.push(ROOM_ID);
+      }
+      updateBadges();
+    }
+
+    let teamState = { completedRooms: [] };
+
+    function updateBadges() {
+      const badge = document.getElementById('badges');
+      badge.innerHTML = ROOM_ORDER.map((r, i) => {
+        const done = teamState.completedRooms && teamState.completedRooms.includes(r);
+        const icons = { room1: '🏚', room2: '🧱', room3: '🔐', final: '🏢' };
+        const labels = { room1: '1', room2: '2', room3: '3', final: 'F' };
+        return `<span style="color: ${done ? '#22c55e' : '#888'}; font-weight: bold;" title="${r}">${icons[r]} ${labels[r]}</span>`;
+      }).join('');
+    }
+
+    async function fetchTeamState() {
+      try {
+        const res = await fetch(`${API_BASE_URL}/state`);
+        const data = await res.json();
+        if (data.ok && data.teams) {
+          const me = data.teams.find(t => t.name === getTeamName());
+          if (me) {
+            teamState = me;
+            updateBadges();
+          }
+        }
+      } catch (e) {
+        console.error('Failed to fetch team state:', e);
+      }
+    }
+
+    function openLeaderboard() {
+      window.open(`${HUB_URL}/`, '_blank');
+    }
+
+    function goToRoom(roomId) {
+      updateTeam({ room: roomId, status: 'in-progress', result: `Moved to ${roomId}` });
+      const fallbackPort = ROOM_PORTS[roomId];
+      const fallbackUrl = fallbackPort ? `${location.protocol}//${location.hostname}:${fallbackPort}/` : '';
+      const targetUrl = (CFG.getRoomUrl && CFG.getRoomUrl(roomId)) || fallbackUrl;
+      if (!targetUrl) return;
+      location.href = targetUrl;
+    }
+
+    function goPrevRoom() {
+      const idx = ROOM_ORDER.indexOf(ROOM_ID);
+      if (idx > 0) goToRoom(ROOM_ORDER[idx - 1]);
+    }
+
+    async function goNextRoom() {
+      const idx = ROOM_ORDER.indexOf(ROOM_ID);
+      if (idx < 0 || idx >= ROOM_ORDER.length - 1) return;
+      
+      const nextRoomId = ROOM_ORDER[idx + 1];
+      const currentRoomId = ROOM_ID;
+      
+      // Check if current room is completed
+      if (!teamState.completedRooms || !teamState.completedRooms.includes(currentRoomId)) {
+        alert(`❌ Completa a sala atual (${currentRoomId}) primeiro!\n\nClica 'Mark Complete' quando acabares.`);
+        return;
+      }
+      
+      // Allowed - go to next room
+      goToRoom(nextRoomId);
+    }
+
+    async function doLogin() {
+      const u = document.getElementById('username').value;
+      const p = document.getElementById('password').value;
+      try {
+        const res = await fetch(`${API_BASE_URL}/room1/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: u, password: p })
+        });
+        const data = await res.json();
+        if (data.ok) {
+          token = data.token;
+          document.getElementById('login-msg').innerHTML = `<span class="success">Login OK! Token: ${token.substring(0,8)}...</span>`;
+          document.getElementById('shop-section').style.display = 'block';
+          document.getElementById('shop-section').style.opacity = '1';
+          updateTeam({ room: ROOM_ID, status: 'in-progress', result: 'Login OK' });
+        } else {
+          document.getElementById('login-msg').innerHTML = `<span class="error">${data.error}</span>`;
+        }
+      } catch (e) {
+        alert('Erro de rede: ' + e);
+      }
+    }
+
+    async function doCheckout() {
+      if (!token) return alert('Faz login primeiro!');
+      const discount = document.getElementById('discount').value;
+      const cart = [ { sku: 'MysteryBox', qty: 2, priceCents: 100000 } ];
+
+      const res = await fetch(`${API_BASE_URL}/room1/checkout`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token,
+          cart,
+          discountCode: discount,
+          shippingAddress: { country: 'PT' }
+        })
+      });
+      const data = await res.json();
+
+      const fmt = (cents) => (cents / 100).toFixed(2) + 'EUR';
+
+      if (data.ok) {
+        const amt = data.order.amounts;
+        const html = `
+Ref: ${data.order.id}
+--------------------------------
+Subtotal: ${fmt(amt.subtotalCents)}
+Discount: -${fmt(amt.discountCents)}
+Shipping: +${fmt(amt.shippingCents)}
+Tax (IVA): ${fmt(amt.taxCents)}  <-- VERIFICA ISTO
+--------------------------------
+TOTAL:    ${fmt(amt.totalCents)}
+        `;
+        document.getElementById('invoice-result').innerText = html;
+        document.getElementById('bug-hint').style.display = 'block';
+        updateTeam({ room: ROOM_ID, status: 'in-progress', result: 'Checkout complete' });
+      } else {
+        document.getElementById('invoice-result').innerText = 'Error: ' + JSON.stringify(data);
+      }
+    }
+
+    const savedTeam = getTeamName();
+    if (savedTeam) {
+      setTeamName(savedTeam);
+      joinTeam();
+      setTimeout(fetchTeamState, 500);
+    }
+    
+    // Refresh badges every 3s
+    setInterval(fetchTeamState, 3000);
+  </script>
+</body>
+</html>

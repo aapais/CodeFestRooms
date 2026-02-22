@@ -1,273 +1,371 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Room 2: Invoice Generator</title>
-    <style>
-        body { font-family: sans-serif; padding: 2rem; background: #f0f2f5; }
-        .team-bar { display: flex; gap: 8px; align-items: center; padding: 10px; border: 1px solid #ddd; border-radius: 6px; background: #fafafa; margin-bottom: 16px; }
-        .team-bar input { padding: 6px 8px; }
-        .team-actions { margin-left: auto; display: flex; gap: 8px; }
-        .team-status { font-size: 12px; color: #555; margin-bottom: 16px; }
-        .btn-secondary { background: #6b7280; }
-        .btn-secondary:hover { background: #4b5563; }
-        .card { background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); max-width: 600px; margin: 0 auto; }
-        pre { background: #fee; padding: 1rem; border-radius: 4px; overflow-x: auto; font-size: 0.9rem; }
-        .success { background: #e6fffa; color: #2c7a7b; }
-        .complex { border-left: 4px solid #e53e3e; }
-        button { background: #3182ce; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-size: 1rem; }
-        button:hover { background: #2c5282; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Room 2: Refactor Lab | Gemini Escape Room</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0d1117;
+      --panel: #161b22;
+      --border: #30363d;
+      --accent: #bc8cff; /* Purple for Lab */
+      --success: #3fb950;
+      --warning: #d29922;
+      --danger: #f85149;
+      --text: #c9d1d9;
+      --text-muted: #8b949e;
+    }
+
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Team Bar */
+    .team-bar {
+      background: #010409;
+      border-bottom: 1px solid var(--border);
+      padding: 10px 25px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      z-index: 100;
+    }
+
+    .team-bar input {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: white;
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+
+    .btn {
+      padding: 8px 18px;
+      border-radius: 4px;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+
+    .btn-primary { background: var(--accent); color: white; }
+    .btn-success { background: var(--success); color: white; }
+    .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text-muted); }
+    .btn:hover { opacity: 0.8; transform: translateY(-1px); }
+
+    .timer-box {
+      margin-left: auto;
+      font-family: 'Fira Code', monospace;
+      color: var(--warning);
+      font-weight: 700;
+      background: rgba(210, 153, 34, 0.1);
+      padding: 5px 12px;
+      border-radius: 4px;
+      border: 1px solid rgba(210, 153, 34, 0.2);
+    }
+
+    /* Main Layout */
+    .container {
+      display: grid;
+      grid-template-columns: 350px 1fr;
+      flex-grow: 1;
+      overflow: hidden;
+    }
+
+    /* Briefing Panel */
+    .briefing {
+      background: var(--panel);
+      border-right: 1px solid var(--border);
+      padding: 25px;
+      overflow-y: auto;
+    }
+
+    .briefing h1 { font-size: 20px; color: var(--accent); margin-top: 0; }
+    .briefing h2 { font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-top: 30px; }
+    
+    .objective-card {
+      background: rgba(188, 140, 255, 0.05);
+      border-left: 3px solid var(--accent);
+      padding: 15px;
+      margin: 15px 0;
+    }
+
+    .bonus-card {
+      background: rgba(210, 153, 34, 0.05);
+      border-left: 3px solid var(--warning);
+      padding: 15px;
+      margin: 15px 0;
+    }
+
+    /* Workspace Panel */
+    .workspace {
+      padding: 40px;
+      overflow-y: auto;
+      background-image: radial-gradient(circle at center, #1c162d 0%, #0d1117 100%);
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 30px;
+      max-width: 800px;
+      margin: 0 auto 30px;
+    }
+
+    .complexity-meter {
+      background: #010409;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 20px;
+      margin-top: 20px;
+    }
+
+    .badges-mini { display: flex; gap: 8px; margin-left: 15px; }
+    .badge-dot { width: 10px; height: 10px; border-radius: 50%; background: #30363d; }
+    .badge-dot.done { background: var(--success); box-shadow: 0 0 8px var(--success); }
+
+    .result-terminal {
+      background: #010409;
+      padding: 15px;
+      border-radius: 4px;
+      font-family: 'Fira Code', monospace;
+      font-size: 12px;
+      color: #7ee787;
+      margin-top: 20px;
+      border: 1px solid var(--border);
+      min-height: 100px;
+      white-space: pre-wrap;
+    }
+  </style>
 </head>
 <body>
-    <div class="team-bar">
-        <strong>Team</strong>
-        <input type="text" id="teamName" placeholder="Team name" />
-        <button onclick="joinTeam()">Join</button>
-        <div class="team-actions">
-            <div id="badges" style="display:flex; gap:4px; font-size:11px;"></div>
-            <button class="btn-secondary" onclick="openLeaderboard()">Leaderboard</button>
-            <button onclick="goPrevRoom()">Prev Room</button>
-            <button onclick="goNextRoom()">Next Room</button>
+  <div class="team-bar">
+    <strong style="font-size: 14px; color: var(--accent);">OP:</strong>
+    <input type="text" id="teamName" placeholder="Team Name" />
+    <button class="btn btn-primary" onclick="joinTeam()">INIT SESSION</button>
+    <div class="badges-mini" id="badges">
+      <div class="badge-dot"></div>
+      <div class="badge-dot"></div>
+      <div class="badge-dot"></div>
+      <div class="badge-dot"></div>
+    </div>
+    <span id="teamStatus" style="font-size: 12px; color: var(--text-muted); margin-left: 10px;"></span>
+    <div class="timer-box" id="timer">00:50:00</div>
+    <button class="btn btn-ghost" onclick="goPrevRoom()">← PREV</button>
+    <button class="btn btn-ghost" onclick="goNextRoom()">NEXT →</button>
+  </div>
+
+  <div class="container">
+    <aside class="briefing">
+      <h1>MISSION: REFACTOR LAB</h1>
+      <p>O motor de faturação (<code>invoiceEngine.js</code>) tornou-se um pesadelo de manutenção. Demasiados IFs, lógica duplicada e código confuso.</p>
+      
+      <h2>Main Objective</h2>
+      <div class="objective-card">
+        <strong>Reduce Complexity:</strong>
+        <p>Refatoriza o código para que nenhuma função tenha uma complexidade ciclomática superior a <strong>10</strong>. Garante que os cálculos de faturação continuam corretos.</p>
+      </div>
+
+      <h2>Secondary Quest (Bonus)</h2>
+      <div class="bonus-card">
+        <strong>Minimalist Architect (+75 pts):</strong>
+        <p>Alcança o nível de mestre: reduz a complexidade para menos de <strong>5</strong> usando o Gemini para extrair métodos e simplificar a lógica.</p>
+      </div>
+
+      <div style="margin-top: 40px;">
+        <button class="btn btn-primary" style="width: 100%; padding: 12px; margin-bottom: 10px;" onclick="generateInvoice()">1. TEST LOGIC</button>
+        <button class="btn btn-success" style="width: 100%; padding: 12px;" onclick="validateCode()">2. VERIFY & SUBMIT</button>
+      </div>
+    </aside>
+
+    <main class="workspace">
+      <div class="card">
+        <h3 style="margin-top:0; color: var(--accent);">🧾 Invoice Engine Console</h3>
+        <p style="font-size: 14px;">Utiliza este terminal para verificar se o teu refactor não quebrou as regras de negócio (IVA, Descontos, Envios).</p>
+        
+        <div id="logic-result">
+          <!-- Invoice will appear here -->
+          <div style="text-align:center; padding:40px; color:var(--text-muted); border: 2px dashed var(--border); border-radius:8px;">
+            Awaiting logic test...
+          </div>
         </div>
-    </div>
-    <div class="team-status" id="teamStatus">Not connected</div>
 
-    <div class="card">
-        <h1>🧾 Legacy Invoice Engine</h1>
-        <p>This system handles billing. The code is messy and hard to maintain.</p>
-        <p><strong>Goal:</strong> Refactor `src/invoiceEngine.js` to reduce complexity.</p>
-        
-            <div style="display: flex; gap: 10px; justify-content: center; margin-top: 2rem;">
-                <button onclick="generate()">⚡ 1. Test Logic (Generate Invoice)</button>
-                <button onclick="validate()" style="background-color: #805ad5;">🔍 2. Check Code Quality</button>
+        <div class="complexity-meter">
+          <h4 style="margin-top:0; font-size:12px; text-transform:uppercase; color:var(--text-muted);">HQ Code Quality Scan:</h4>
+          <div id="quality-result" class="result-terminal">Awaiting scan...</div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="/config.js"></script>
+  <script src="/timingConfig.js"></script>
+  <script>
+    const ROOM_ID = 'room2';
+    const CFG = window.ESCAPE_ROOM_CONFIG || {};
+    const TIMING = window.GAME_TIMING || {};
+    const API_BASE_URL = CFG.getApiUrl ? CFG.getApiUrl() : 'http://localhost:4000/api';
+    const ROOM_ORDER = ['room1', 'room2', 'room3', 'final'];
+    let teamState = { completedRooms: [] };
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const savedName = CFG.getTeamName();
+      if (savedName) {
+        document.getElementById('teamName').value = savedName;
+        joinTeam();
+      }
+    });
+
+    setInterval(() => {
+      const remaining = TIMING.getTimeRemaining();
+      const el = document.getElementById('timer');
+      if (remaining === null) el.textContent = '00:50:00';
+      else {
+        const m = Math.floor(remaining / 60);
+        const s = remaining % 60;
+        el.textContent = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+      }
+    }, 1000);
+
+    async function joinTeam() {
+      try {
+        const name = document.getElementById('teamName').value.trim();
+        if (!name) return;
+        CFG.setTeamName(name);
+        const res = await fetch(`${API_BASE_URL}/team/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name })
+        });
+        const data = await res.json();
+        if (data.ok && data.team.token) CFG.setTeamToken(data.team.token);
+        fetchTeamState();
+      } catch (e) {
+        console.warn('Uplink to HQ unavailable.');
+      }
+    }
+
+    async function fetchTeamState() {
+      try {
+        const res = await fetch(`${API_BASE_URL}/state`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.ok && data.teams) {
+          const me = data.teams.find(t => t.name === CFG.getTeamName());
+          if (me) {
+            teamState = me;
+            updateBadges();
+          }
+        }
+      } catch (e) {}
+    }
+
+    function updateBadges() {
+      const dots = document.querySelectorAll('.badge-dot');
+      ROOM_ORDER.forEach((id, i) => {
+        if (teamState.completedRooms && teamState.completedRooms.includes(id)) dots[i].classList.add('done');
+      });
+    }
+
+    async function generateInvoice() {
+      try {
+        const payload = {
+          items: [{ sku: 'VIP-SUB-YEAR', qty: 1, unitPrice: 1200, type: 'subscription' }],
+          discountCode: 'VIP20',
+          shippingAddress: { country: 'PT' },
+          isB2B: true
+        };
+        const res = await fetch('/api/invoice', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.ok) {
+          const inv = data.invoice;
+          document.getElementById('logic-result').innerHTML = `
+            <div class="result-terminal" style="color:white; border-color:var(--accent)">
+              INVOICE GENERATED SUCCESSFULLY\n
+              SUBTOTAL: ${inv.amounts.subtotal} EUR\n
+              DISCOUNT: -${inv.amounts.discount} EUR\n
+              SHIPPING: +${inv.amounts.shipping} EUR\n
+              TAX:      +${inv.amounts.tax} EUR\n
+              TOTAL:    ${inv.amounts.total} EUR\n
+              ----------------------------\n
+              STATUS: LOGIC VERIFIED
             </div>
-
-            <div id="quality-result" style="margin-top: 1rem;"></div>
-            <div id="result" style="margin-top: 2rem;"></div>
-    </div>
-
-    <script src="/config.js"></script>
-    <script>
-        const CURRENT_ROOM = 'room2';
-        const CFG = window.GAME_CONFIG || {};
-        const ESCAPE_CFG = window.ESCAPE_ROOM_CONFIG || {};
-        CFG.CURRENT_ROOM = CURRENT_ROOM;
-        const HUB_BASE = CFG.GAME_HUB_URL || `${location.protocol}//${location.hostname}:4000`;
-        const API_BASE_URL = ESCAPE_CFG.getApiUrl ? ESCAPE_CFG.getApiUrl() : HUB_BASE;
-        const ROOM_ORDER = ['room1', 'room2', 'room3', 'final'];
-        const ROOM_PORTS = { room1: 3000, room2: 3002, room3: 3003, final: 8080 };
-
-        let teamState = { completedRooms: [] };
-
-        function updateBadges() {
-            const badge = document.getElementById('badges');
-            badge.innerHTML = ROOM_ORDER.map((r, i) => {
-                const done = teamState.completedRooms && teamState.completedRooms.includes(r);
-                const icons = { room1: '🏚', room2: '🧱', room3: '🔐', final: '🏢' };
-                const labels = { room1: '1', room2: '2', room3: '3', final: 'F' };
-                return `<span style="color: ${done ? '#22c55e' : '#888'}; font-weight: bold;" title="${r}">${icons[r]} ${labels[r]}</span>`;
-            }).join('');
+          `;
         }
+      } catch (e) {
+        alert('Logic Engine Error: Ensure local Node server is running.');
+      }
+    }
 
-        async function fetchTeamState() {
-            try {
-                const res = await fetch(`${API_BASE_URL}/state`);
-                const data = await res.json();
-                if (data.ok && data.teams) {
-                    const me = data.teams.find(t => t.name === getTeamName());
-                    if (me) {
-                        teamState = me;
-                        updateBadges();
-                    }
-                }
-            } catch (e) {
-                console.error('Failed to fetch team state:', e);
-            }
-        }
-
-        function getTeamName() {
-            return localStorage.getItem('teamName') || '';
-        }
-
-        function setTeamName(name) {
-            localStorage.setItem('teamName', name);
-            document.getElementById('teamName').value = name;
-        }
-
-        async function joinTeam() {
-            const name = document.getElementById('teamName').value.trim();
-            if (!name) return alert('Enter a team name');
-            setTeamName(name);
-            await fetch(`${API_BASE_URL}/team/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name })
-            });
-            await updateTeam({ room: CURRENT_ROOM, status: 'in-progress' });
-            document.getElementById('teamStatus').textContent = `Connected as ${name}`;
-            fetchTeamState();
-        }
-
-        async function updateTeam(payload) {
-            const name = getTeamName();
-            if (!name) return;
-            await fetch(`${API_BASE_URL}/team/update`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, ...payload })
-            });
-        }
-
-        function openLeaderboard() {
-            window.open(`${HUB_BASE}/`, '_blank');
-        }
-
-        function goToRoom(roomId) {
-            updateTeam({ room: roomId, status: 'in-progress', result: `Moved to ${roomId}` });
-            const fallbackPort = ROOM_PORTS[roomId];
-            const fallbackUrl = fallbackPort ? `${location.protocol}//${location.hostname}:${fallbackPort}/` : '';
-            const targetUrl = (CFG.getRoomUrl && CFG.getRoomUrl(roomId)) || fallbackUrl;
-            if (!targetUrl) return;
-            window.location.href = targetUrl;
-        }
-
-        function goPrevRoom() {
-            const idx = ROOM_ORDER.indexOf(CURRENT_ROOM);
-            if (idx > 0) goToRoom(ROOM_ORDER[idx - 1]);
-        }
-
-        function goNextRoom() {
-            const idx = ROOM_ORDER.indexOf(CURRENT_ROOM);
-            if (idx >= 0 && idx < ROOM_ORDER.length - 1) goToRoom(ROOM_ORDER[idx + 1]);
-        }
-
-        async function validate() {
-            const el = document.getElementById('quality-result');
-            el.innerHTML = '<p>Running ESLint complexity check...</p>';
-            try {
-                const req = await fetch('/api/validate-complexity');
-                const data = await req.json();
-                
-                if (data.ok) {
-                    el.innerHTML = `<div style="background:#f0fff4; padding:1rem; border:1px solid #c6f6d5; color: green; font-weight: bold;">${data.message}</div>`;
-                    updateTeam({ room: CURRENT_ROOM, status: 'in-progress', completedRoom: CURRENT_ROOM, result: 'Complexity OK', scoreDelta: 0 });
-                    fetchTeamState();
-                } else {
-                    const details = (data.details || 'No details provided.').trim();
-                    el.innerHTML = `<div style="background:#fff5f5; padding:1rem; border:1px solid #feb2b2; color: #c53030;">
-                        <strong>${data.message}</strong>
-                        <pre style="background:transparent; padding:0; margin-top:5px; white-space:pre-wrap;">${details}</pre>
-                    </div>`;
-                    updateTeam({ room: CURRENT_ROOM, status: 'in-progress', result: 'Complexity too high' });
-                }
-            } catch (e) {
-                el.innerHTML = `<pre>Error running check: ${e.message}</pre>`;
-            }
-        }
-
-        async function generate() {
-            const el = document.getElementById('result');
-            el.innerHTML = '<p>Processing (Legacy Slow)...</p>';
-            
-            try {
-                // Mock payload specifically designed to trigger complex logic
-                const payload = {
-                    items: [
-                        { sku: 'VIP-SUB-YEAR', qty: 1, unitPrice: 1200, type: 'subscription' },
-                        { sku: 'SETUP-FEE', qty: 1, unitPrice: 150, type: 'service' },
-                        { sku: 'SUPPORT-HR', qty: 5, unitPrice: 60, type: 'service' }
-                    ],
-                    discountCode: 'VIP20',
-                    shippingAddress: { country: 'PT' },
-                    region: 'EU',
-                    isB2B: true
-                };
-
-                const res = await fetch('/api/invoice', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                
-                // Check if response is JSON to avoid parsing HTML errors
-                const contentType = res.headers.get("content-type");
-                if (!contentType || !contentType.includes("application/json")) {
-                    throw new Error("Server returned non-JSON response (Check console)");
-                }
-
-                const data = await res.json();
-                
-                if (!data.ok) {
-                    el.innerHTML = `<pre class="complex" style="color: red;">Error: ${data.error}</pre>`;
-                } else {
-                    const inv = data.invoice;
-                    const rows = inv.lines.map(l => `
-                        <tr>
-                            <td style="padding:8px; border-bottom:1px solid #eee;">${l.sku}</td>
-                            <td style="padding:8px; border-bottom:1px solid #eee;">${l.qty}</td>
-                            <td style="padding:8px; border-bottom:1px solid #eee;">€${l.unitPrice}</td>
-                            <td style="padding:8px; border-bottom:1px solid #eee;">€${l.lineTotal}</td>
-                        </tr>
-                    `).join('');
-
-                    el.innerHTML = `
-                        <div style="background:white; padding:1.5rem; border-radius:8px; border:1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-bottom:2px solid #3182ce; padding-bottom:0.5rem;">
-                                <h3 style="margin:0; color:#2d3748;">🧾 Invoice #${Date.now().toString().slice(-6)}</h3>
-                                <span style="background:#c6f6d5; color:#22543d; padding:4px 8px; border-radius:4px; font-size:0.8rem;">PAID</span>
-                            </div>
-                            
-                            <table style="width:100%; border-collapse:collapse; text-align:left; font-size:0.95rem;">
-                                <thead>
-                                    <tr style="background:#f7fafc; color:#4a5568;">
-                                        <th style="padding:8px;">Item</th>
-                                        <th style="padding:8px;">Qty</th>
-                                        <th style="padding:8px;">Price</th>
-                                        <th style="padding:8px;">Total</th>
-                                    </tr>
-                                </thead>
-                                updateTeam({ room: CURRENT_ROOM, status: 'in-progress', result: 'Invoice generated' });
-                                <tbody>${rows}</tbody>
-                            </table>
-
-                            <div style="margin-top:1.5rem; text-align:right; border-top:1px solid #e2e8f0; padding-top:1rem;">
-                                <div style="color:#718096; font-size:0.9rem;">Subtotal: €${inv.amounts.subtotal}</div>
-                                <div style="color:#718096; font-size:0.9rem;">Tax: €${inv.amounts.tax}</div>
-
-                    (function initTeam() {
-                        const saved = getTeamName();
-                        if (saved) {
-                            document.getElementById('teamName').value = saved;
-                            document.getElementById('teamStatus').textContent = `Connected as ${saved}`;
-                            updateTeam({ room: CURRENT_ROOM, status: 'in-progress', result: 'Opened Room 2' });
-                        }
-                    })();
-                                <div style="font-size:1.2rem; font-weight:bold; color:#2d3748; margin-top:0.5rem;">Total: €${inv.amounts.total}</div>
-                            </div>
-                            
-                            <div style="margin-top:1rem; font-size:0.8rem; color:#a0aec0; text-align:center;">
-                                ⏱️ Processed in ${data.meta.timeMs}ms | Currency: ${inv.currency}
-                            </div>
-                        </div>
-                    `;
-                }
-            } catch (e) {
-                console.error(e);
-                el.innerHTML = `<pre style="color:red">Network Error: ${e.message}</pre>`;
-            }
-        }
-
-        const savedTeam = getTeamName();
-        if (savedTeam) {
-            setTeamName(savedTeam);
-            joinTeam();
-            setTimeout(fetchTeamState, 500);
-        }
+    async function validateCode() {
+      const el = document.getElementById('quality-result');
+      el.textContent = ">>> INIT LOCAL SCAN...\n>>> RUNNING ESLINT COMPLEXITY CHECK...";
+      
+      try {
+        const localRes = await fetch('/api/validate-complexity');
+        const localData = await localRes.json();
         
-        // Refresh badges every 3s
-        setInterval(fetchTeamState, 3000);
-    </script>
+        if (!localData.ok) {
+          el.style.color = 'var(--danger)';
+          el.textContent = `>>> SCAN FAILED\n>>> ${localData.message}\n\n${localData.details}`;
+          return;
+        }
+
+        el.style.color = 'var(--success)';
+        el.textContent = `>>> LOCAL SCAN PASSED\n>>> UPLOADING SOURCE TO HQ FOR REMOTE VALIDATION...`;
+
+        const sourceRes = await fetch('/api/source');
+        const sourceData = await sourceRes.json();
+
+        const remoteRes = await fetch(`${API_BASE_URL}/team/update`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            name: CFG.getTeamName(), 
+            token: CFG.getTeamToken(),
+            completedRoom: ROOM_ID,
+            sourceCode: sourceData.source 
+          })
+        });
+        const remoteData = await remoteRes.json();
+
+        if (remoteData.ok) {
+          el.textContent += `\n>>> HQ VALIDATION SUCCESSFUL!\n>>> ROOM ESCAPED.`;
+          fetchTeamState();
+        } else {
+          el.style.color = 'var(--danger)';
+          el.textContent += `\n>>> HQ REJECTED CODE: ${remoteData.error}`;
+        }
+      } catch (e) {
+        el.textContent = ">>> SYSTEM ERROR: " + e.message;
+      }
+    }
+
+    function goPrevRoom() { window.location.href = CFG.getRoomUrl('room1'); }
+    function goNextRoom() {
+      if (!teamState.completedRooms.includes(ROOM_ID)) return alert('Finish mission first!');
+      window.location.href = CFG.getRoomUrl('room3');
+    }
+
+    setInterval(fetchTeamState, 5000);
+  </script>
 </body>
 </html>

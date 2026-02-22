@@ -32,6 +32,8 @@ app.use((req, res, next) => {
 });
 
 const teams = new Map();
+let gameTimer = null;
+
 const ROOM_ORDER = ['room1', 'room2', 'room3', 'final'];
 const ROOM_POINTS = {
   room1: 100,
@@ -53,6 +55,7 @@ function upsertTeam(name, updates = {}) {
   const existing = teams.get(id) || {
     id,
     name: id,
+    token: Math.random().toString(36).substring(2, 15),
     room: 'room1',
     score: 0,
     completedRooms: [],
@@ -93,7 +96,7 @@ function getState() {
 }
 
 function broadcastState() {
-  const payload = JSON.stringify({ type: 'state', teams: getState() });
+  const payload = JSON.stringify({ type: 'state', teams: getState(), timer: gameTimer });
   wss.clients.forEach((client) => {
     if (client.readyState === 1) {
       client.send(payload);
@@ -102,7 +105,30 @@ function broadcastState() {
 }
 
 app.get('/api/state', (req, res) => {
-  res.json({ ok: true, teams: getState() });
+  res.json({ ok: true, teams: getState(), timer: gameTimer });
+});
+
+app.get('/api/timer', (req, res) => {
+  res.json({ ok: true, timer: gameTimer });
+});
+
+app.post('/api/kickoff', (req, res) => {
+  gameTimer = {
+    startTime: Date.now(),
+    duration: 50 * 60 * 1000,
+    updatedAt: Date.now()
+  };
+  broadcastState();
+  res.json({ ok: true, startTime: gameTimer.startTime });
+});
+
+app.post('/api/reset', (req, res) => {
+  gameTimer = null;
+  if (req.body && req.body.clearTeams) {
+    teams.clear();
+  }
+  broadcastState();
+  res.json({ ok: true, message: 'Game reset' });
 });
 
 app.post('/api/team/login', (req, res) => {
