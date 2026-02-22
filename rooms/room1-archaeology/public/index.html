@@ -41,15 +41,6 @@
       z-index: 100;
     }
 
-    .team-bar input {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      color: white;
-      padding: 6px 12px;
-      border-radius: 4px;
-      font-size: 13px;
-    }
-
     .btn {
       padding: 6px 15px;
       border-radius: 4px;
@@ -232,20 +223,20 @@
   <script>
     const ROOM_ID = 'room1';
     const CFG = window.ESCAPE_ROOM_CONFIG || {};
+    const ESCAPE_CFG = CFG; 
     const TIMING = window.GAME_TIMING || {};
-    const API_BASE_URL = CFG.getApiUrl ? CFG.getApiUrl() : 'http://localhost:4000/api';
+    const API_BASE_URL = CFG.getApiUrl ? CFG.getApiUrl() : '/api';
     const ROOM_ORDER = ['room1', 'room2', 'room3', 'final'];
     let token = null;
     let teamState = { completedRooms: [] };
 
-    // Initialize
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
       const name = CFG.getTeamName();
-      if (!name) {
-        window.location.href = CFG.getUrl('gameHub') + '/';
-        return;
-      }
+      if (!name) { window.location.href = CFG.getUrl('gameHub') + '/'; return; }
+      const isLive = await CFG.checkGameStart();
+      if (!isLive) return;
       document.getElementById('displayTeamName').textContent = name;
+      document.getElementById('teamStatus').innerHTML = '<span style="color:var(--success)">● HQ LINK ACTIVE (AUTHORIZED)</span>';
       fetchTeamState();
     });
 
@@ -256,7 +247,6 @@
       }
     }
 
-    // Timer logic
     setInterval(() => {
       const remaining = TIMING.getTimeRemaining();
       const el = document.getElementById('timer');
@@ -265,7 +255,6 @@
         const m = Math.floor(remaining / 60);
         const s = remaining % 60;
         el.textContent = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
-        if (remaining < 300) el.style.color = 'var(--danger)';
       }
     }, 1000);
 
@@ -277,108 +266,66 @@
         const data = await res.json();
         if (data.ok && data.teams) {
           const me = data.teams.find(t => t.name === name);
-          if (me) {
-            teamState = me;
-            updateBadges();
-          }
+          if (me) { teamState = me; updateBadges(); }
         }
       } catch (e) { }
     }
 
     function updateBadges() {
       const dots = document.querySelectorAll('.badge-dot');
-      ROOM_ORDER.forEach((id, i) => {
-        if (teamState.completedRooms && teamState.completedRooms.includes(id)) dots[i].classList.add('done');
-      });
+      ROOM_ORDER.forEach((id, i) => { if (teamState.completedRooms.includes(id)) dots[i].classList.add('done'); });
     }
 
     async function doLogin() {
       try {
         const u = document.getElementById('username').value;
         const p = document.getElementById('password').value;
-        console.log(`[DEBUG] Attempting login for user: ${u}`);
         const res = await fetch('/api/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ username: u, password: p })
         });
         const data = await res.json();
-        console.log(`[DEBUG] Login response:`, data);
         if (data.ok) {
           token = data.token;
           document.getElementById('login-msg').innerHTML = `<span style="color:var(--success)">AUTH OK. Token valid.</span>`;
           document.getElementById('shop-section').style.display = 'block';
           document.getElementById('shop-section').style.opacity = '1';
         }
-      } catch (e) {
-        console.error(`[DEBUG] Login error:`, e);
-        alert('Authentication Error: Ensure you are running the local server in IDX.');
-      }
+      } catch (e) { alert('Authentication Error: Ensure local server is running.'); }
     }
 
     async function doCheckout() {
       try {
-        console.log(`[DEBUG] doCheckout called. Token: ${token}`);
-        if (!token) {
-          alert('Auth Token missing! Please login first.');
-          return;
-        }
+        if (!token) return;
         const discount = document.getElementById('discount').value;
-        console.log(`[DEBUG] Sending checkout request with discount: ${discount}`);
         const res = await fetch('/api/checkout', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token, discountCode: discount, shippingAddress: { country: 'PT' }, items: [{ sku: 'MysteryBox', qty: 2, priceCents: 100000 }] })
+          body: JSON.stringify({ token, items: [{ sku: 'MysteryBox', qty: 2, priceCents: 100000 }], discountCode: discount, shippingAddress: { country: 'PT' } })
         });
         const data = await res.json();
-        console.log(`[DEBUG] Checkout response:`, data);
         if (data.ok) {
           const amt = data.order.amounts;
-          document.getElementById('invoice-result').innerText = 
-            `INVOICE #${data.order.id}\n` +
-            `------------------------------\n` +
-            `SUBTOTAL: ${(amt.subtotalCents/100).toFixed(2)} EUR\n` +
-            `DISCOUNT: -${(amt.discountCents/100).toFixed(2)} EUR\n` +
-            `SHIPPING: +${(amt.shippingCents/100).toFixed(2)} EUR\n` +
-            `TAX (IVA): ${(amt.taxCents/100).toFixed(2)} EUR  <-- [CHECK LOGIC]\n` +
-            `------------------------------\n` +
-            `TOTAL:    ${(amt.totalCents/100).toFixed(2)} EUR`;
+          document.getElementById('invoice-result').innerText = `INVOICE #${data.order.id}\nSUBTOTAL: ${(amt.subtotalCents/100).toFixed(2)} EUR\nDISCOUNT: -${(amt.discountCents/100).toFixed(2)} EUR\nSHIPPING: +${(amt.shippingCents/100).toFixed(2)} EUR\nTAX (IVA): ${(amt.taxCents/100).toFixed(2)} EUR\nTOTAL: ${(amt.totalCents/100).toFixed(2)} EUR`;
         }
-      } catch (e) {
-        console.error(`[DEBUG] Checkout error:`, e);
-        alert('Checkout Error: Local logic server not responding.');
-      }
+      } catch (e) { alert('Checkout Error: Local server not responding.'); }
     }
 
     async function markComplete() {
       try {
         const name = CFG.getTeamName();
-        if (!name) return alert('Join team first');
-        
         const sourceRes = await fetch('/api/source');
-        if (!sourceRes.ok) throw new Error('Local server not accessible');
         const sourceData = await sourceRes.json();
-        
         const res = await fetch(`${API_BASE_URL}/team/update`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            name, 
-            token: CFG.getTeamToken(),
-            completedRoom: ROOM_ID,
-            sourceCode: sourceData.source 
-          })
+          body: JSON.stringify({ name, token: CFG.getTeamToken(), completedRoom: ROOM_ID, sourceCode: sourceData.source })
         });
         const data = await res.json();
-        if (data.ok) {
-          alert('Mission Accomplished! Code verified by HQ.');
-          fetchTeamState();
-        } else {
-          alert('Verification Failed: ' + data.error);
-        }
-      } catch (e) {
-        alert('Submission Error: Make sure you are playing inside Google IDX with the local server running.');
-      }
+        if (data.ok) { alert('Mission Accomplished!'); fetchTeamState(); }
+        else alert('Failed: ' + data.error);
+      } catch (e) { alert('Submission Error.'); }
     }
 
     function goNextRoom() {

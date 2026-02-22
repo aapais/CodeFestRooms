@@ -74,6 +74,38 @@ window.ESCAPE_ROOM_CONFIG = {
     localStorage.removeItem('teamName');
     localStorage.removeItem('teamToken');
     window.location.href = window.ESCAPE_ROOM_CONFIG.getUrl('gameHub');
+  },
+
+  checkGameStart: async function() {
+    if (this.MODE === 'production' || window.location.hostname.includes('.idx.google.com')) {
+      try {
+        const res = await fetch(this.getApiUrl() + '/timer');
+        const data = await res.json();
+        if (!data.ok || !data.timer || !data.timer.startTime) {
+          this.showLockOverlay();
+          return false;
+        }
+      } catch (e) { console.error('Sync error'); }
+    }
+    return true;
+  },
+
+  showLockOverlay: function() {
+    if (document.getElementById('hq-lock-overlay')) return;
+    const overlay = document.createElement('div');
+    overlay.id = 'hq-lock-overlay';
+    overlay.style = 'position:fixed;top:0;left:0;width:100%;height:100%;background:#05070a;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#f85149;font-family:monospace;text-align:center;padding:20px;';
+    overlay.innerHTML = `
+      <h1 style="font-size:40px;margin-bottom:10px;">⚠️ ACCESS DENIED</h1>
+      <p style="font-size:18px;color:#8b949e;">MISSION NOT STARTED BY HQ</p>
+      <div style="margin-top:30px;padding:15px;border:1px solid #30363d;border-radius:8px;background:#0d1117;color:#58a6ff;">
+        A aguardar sinal de rádio do facilitador...<br>
+        <span style="font-size:12px;color:#8b949e;">O sistema irá desbloquear automaticamente.</span>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    // Auto-refresh check
+    setTimeout(() => window.location.reload(), 5000);
   }
 };
 

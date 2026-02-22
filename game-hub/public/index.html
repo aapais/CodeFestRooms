@@ -107,29 +107,65 @@
       <label for="teamName">Operative / Team Name</label>
       <input type="text" id="teamName" placeholder="Ex: Team_Alpha" required maxlength="20" autocomplete="off" />
       
-      <button type="submit" class="btn-join" id="submitBtn">Initialize Mission</button>
+      <button type="submit" class="btn-join" id="submitBtn" disabled style="background:var(--muted); cursor:not-allowed;">Waiting for HQ...</button>
     </form>
 
-    <div id="status" class="status-msg"></div>
+    <div id="status" class="status-msg">>>> STATUS: ACCESS RESTRICTED. HQ authorization required.</div>
   </div>
 
   <script src="/config.js"></script>
+  <script src="/timingConfig.js"></script>
   <script>
     const CFG = window.ESCAPE_ROOM_CONFIG || {};
+    const TIMING = window.GAME_TIMING || {};
     const API_BASE_URL = CFG.getApiUrl ? CFG.getApiUrl() : '/api';
+    const btn = document.getElementById('submitBtn');
+    const status = document.getElementById('status');
+
+    async function checkGameStatus() {
+      try {
+        const res = await fetch(`${API_BASE_URL}/timer`);
+        const data = await res.json();
+        
+        if (data.ok && data.timer && data.timer.startTime) {
+          btn.disabled = false;
+          btn.style.background = 'var(--accent)';
+          btn.style.cursor = 'pointer';
+          btn.textContent = "Initialize Mission";
+          status.style.color = 'var(--success)';
+          status.textContent = ">>> STATUS: AUTHORIZED. You may proceed.";
+          return true;
+        } else {
+          btn.disabled = true;
+          btn.style.background = 'var(--muted)';
+          btn.style.cursor = 'not-allowed';
+          btn.textContent = "Waiting for HQ...";
+          status.style.color = 'var(--warning)';
+          status.textContent = ">>> STATUS: LOCKED. Waiting for Mission Start signal.";
+          return false;
+        }
+      } catch (e) {
+        console.warn('Unable to sync with HQ timer.');
+        return false;
+      }
+    }
+
+    // Check status every 3 seconds
+    setInterval(checkGameStatus, 3000);
+    checkGameStatus();
 
     document.getElementById('joinForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const btn = document.getElementById('submitBtn');
-      const status = document.getElementById('status');
-      const name = document.getElementById('teamName').value.trim();
+      const isActive = await checkGameStatus();
+      if (!isActive) return alert('HQ has not started the mission yet!');
 
+      const name = document.getElementById('teamName').value.trim();
       if (!name) return;
 
       btn.disabled = true;
       btn.textContent = "ESTABLISHING UPLINK...";
       status.style.color = 'var(--accent)';
-      status.textContent = ">>> Contacting Gemini HQ...";
+      status.textContent = ">>> Synchronizing operative data...";
 
       try {
         const res = await fetch(`${API_BASE_URL}/team/login`, {
@@ -141,12 +177,11 @@
         const data = await res.json();
         
         if (data.ok) {
-          // Guardar sessão global
           CFG.setTeamName(data.team.name);
           if (data.team.token) CFG.setTeamToken(data.team.token);
           
           status.style.color = '#3fb950';
-          status.textContent = ">>> ACCESS GRANTED. Redirecting to Room 1...";
+          status.textContent = ">>> INITIALIZATION COMPLETE. Entering Room 1...";
           
           setTimeout(() => {
             window.location.href = CFG.getRoomUrl('room1');
@@ -161,14 +196,6 @@
         status.textContent = ">>> ERROR: " + err.message;
       }
     });
-
-    // Se já estiver logado, redirecionar automaticamente
-    if (CFG.getTeamName() && CFG.getTeamToken()) {
-      document.getElementById('status').textContent = "Sessão ativa detetada. A redirecionar...";
-      setTimeout(() => {
-        window.location.href = CFG.getRoomUrl('room1');
-      }, 1000);
-    }
   </script>
 </body>
 </html>
