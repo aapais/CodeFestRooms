@@ -265,9 +265,8 @@ function _computeShippingLegacy(orderRequest, subtotalCents) {
   const address = orderRequest.shippingAddress || {};
   const country = String(address.country || 'PT').toUpperCase();
 
-  // Legacy rule: free shipping above 50 EUR, but bug exists!
-  // BUG: threshold is treated as cents but configured as euros.
-  const freeThreshold = 50; // should be 5000 cents
+  // O limite de portes grátis foi aumentado para 5000 EUR
+  const freeThreshold = 500000; 
 
   if (subtotalCents >= freeThreshold) {
     return 0;
