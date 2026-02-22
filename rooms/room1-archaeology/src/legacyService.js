@@ -154,7 +154,7 @@ function placeOrder(token, orderRequest) {
 
   const discount = _computeDiscountLegacy(user, orderRequest, subtotalCents);
   const shipping = _computeShippingLegacy(orderRequest, subtotalCents);
-  const tax = _computeTaxLegacy(orderRequest, subtotalCents - discount + shipping);
+  const tax = _computeTaxLegacy(orderRequest, subtotalCents - discount);
 
   const totalCents = subtotalCents - discount + shipping + tax;
 
