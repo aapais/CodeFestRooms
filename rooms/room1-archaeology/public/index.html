@@ -9,211 +9,59 @@
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #0d1117;
-      --panel: #161b22;
-      --border: #30363d;
-      --accent: #58a6ff;
-      --success: #3fb950;
-      --warning: #d29922;
-      --text: #c9d1d9;
-      --text-muted: #8b949e;
+      --bg: #0d1117; --panel: #161b22; --border: #30363d; --accent: #58a6ff;
+      --success: #3fb950; --warning: #d29922; --text: #c9d1d9; --text-muted: #8b949e;
     }
-
-    body {
-      font-family: 'Space Grotesk', sans-serif;
-      background-color: var(--bg);
-      color: var(--text);
-      margin: 0;
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      overflow: hidden;
-    }
-
-    /* Team Bar */
-    .team-bar {
-      background: #010409;
-      border-bottom: 1px solid var(--border);
-      padding: 10px 25px;
-      display: flex;
-      align-items: center;
-      gap: 15px;
-      z-index: 100;
-    }
-
-    .btn {
-      padding: 6px 15px;
-      border-radius: 4px;
-      border: none;
-      font-weight: 600;
-      cursor: pointer;
-      font-size: 13px;
-      transition: all 0.2s;
-    }
-
+    body { font-family: 'Space Grotesk', sans-serif; background-color: var(--bg); color: var(--text); margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+    .team-bar { background: #010409; border-bottom: 1px solid var(--border); padding: 10px 25px; display: flex; align-items: center; gap: 15px; z-index: 100; }
+    .btn { padding: 6px 15px; border-radius: 4px; border: none; font-weight: 600; cursor: pointer; font-size: 13px; transition: all 0.2s; }
     .btn-primary { background: var(--accent); color: white; }
     .btn-success { background: var(--success); color: white; }
     .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text-muted); }
-    .btn:hover { opacity: 0.8; transform: translateY(-1px); }
-
-    .timer-box {
-      margin-left: auto;
-      font-family: 'Fira Code', monospace;
-      color: var(--warning);
-      font-weight: 700;
-      background: rgba(210, 153, 34, 0.1);
-      padding: 5px 12px;
-      border-radius: 4px;
-      border: 1px solid rgba(210, 153, 34, 0.2);
-    }
-
-    /* Main Layout */
-    .container {
-      display: grid;
-      grid-template-columns: 350px 1fr;
-      flex-grow: 1;
-      overflow: hidden;
-    }
-
-    /* Briefing Panel */
-    .briefing {
-      background: var(--panel);
-      border-right: 1px solid var(--border);
-      padding: 25px;
-      overflow-y: auto;
-    }
-
-    .briefing h1 { font-size: 20px; color: var(--accent); margin-top: 0; }
-    .briefing h2 { font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-top: 30px; }
-    .briefing p { font-size: 14px; line-height: 1.6; }
-
-    .objective-card {
-      background: rgba(88, 166, 255, 0.05);
-      border-left: 3px solid var(--accent);
-      padding: 15px;
-      margin: 15px 0;
-    }
-
-    .bonus-card {
-      background: rgba(210, 153, 34, 0.05);
-      border-left: 3px solid var(--warning);
-      padding: 15px;
-      margin: 15px 0;
-    }
-
-    /* Workspace Panel */
-    .workspace {
-      padding: 40px;
-      overflow-y: auto;
-      background-image: radial-gradient(circle at center, #161b22 0%, #0d1117 100%);
-    }
-
-    .card {
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 25px;
-      max-width: 700px;
-      margin: 0 auto 30px;
-    }
-
-    .shop-items { width: 100%; border-collapse: collapse; margin: 20px 0; }
-    .shop-items th { text-align: left; color: var(--text-muted); font-size: 12px; padding-bottom: 10px; }
-    .shop-items td { padding: 12px 0; border-top: 1px solid var(--border); }
-
-    .invoice-output {
-      background: #010409;
-      padding: 20px;
-      border-radius: 6px;
-      font-family: 'Fira Code', monospace;
-      font-size: 13px;
-      line-height: 1.5;
-      color: #7ee787;
-      border: 1px solid var(--border);
-    }
-
-    .badges-mini { display: flex; gap: 8px; margin-left: 15px; }
+    .timer-box { margin-left: auto; font-family: 'Fira Code', monospace; color: var(--warning); font-weight: 700; background: rgba(210, 153, 34, 0.1); padding: 5px 12px; border-radius: 4px; border: 1px solid rgba(210, 153, 34, 0.2); }
+    .container { display: grid; grid-template-columns: 350px 1fr; flex-grow: 1; overflow: hidden; }
+    .briefing { background: var(--panel); border-right: 1px solid var(--border); padding: 25px; overflow-y: auto; }
+    .objective-card { background: rgba(88, 166, 255, 0.05); border-left: 3px solid var(--accent); padding: 15px; margin: 15px 0; }
+    .bonus-card { background: rgba(210, 153, 34, 0.05); border-left: 3px solid var(--warning); padding: 15px; margin: 15px 0; }
+    .workspace { padding: 40px; overflow-y: auto; background-image: radial-gradient(circle at center, #161b22 0%, #0d1117 100%); }
+    .card { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 25px; max-width: 700px; margin: 0 auto 30px; }
+    .invoice-output { background: #010409; padding: 20px; border-radius: 6px; font-family: 'Fira Code', monospace; font-size: 13px; color: #7ee787; border: 1px solid var(--border); }
     .badge-dot { width: 10px; height: 10px; border-radius: 50%; background: #30363d; }
     .badge-dot.done { background: var(--success); box-shadow: 0 0 8px var(--success); }
-
-    input[type="text"], input[type="password"] {
-      width: 100%;
-      background: #010409;
-      border: 1px solid var(--border);
-      color: white;
-      padding: 10px;
-      border-radius: 4px;
-      margin-bottom: 15px;
-    }
+    input { width: 100%; background: #010409; border: 1px solid var(--border); color: white; padding: 10px; border-radius: 4px; margin-bottom: 15px; }
   </style>
 </head>
 <body>
   <div class="team-bar">
-    <strong style="font-size: 14px; color: var(--accent);">OPERATIVE:</strong>
-    <span id="displayTeamName" style="font-weight: 700; color: white; background: rgba(255,255,255,0.1); padding: 4px 10px; border-radius: 4px; font-size: 13px;">...</span>
-    <button class="btn btn-ghost" style="padding: 4px 8px; font-size: 10px;" onclick="logout()">RESET SESSION</button>
-    <div class="badges-mini" id="badges">
-      <div class="badge-dot"></div>
-      <div class="badge-dot"></div>
-      <div class="badge-dot"></div>
-      <div class="badge-dot"></div>
-    </div>
+    <strong style="color: var(--accent);">OPERATIVE:</strong>
+    <span id="displayTeamName" style="font-weight: 700;">...</span>
+    <button class="btn btn-ghost" style="font-size: 10px;" onclick="logout()">LOGOUT</button>
+    <div style="display:flex; gap:8px; margin-left:15px;" id="badges"><div class="badge-dot"></div><div class="badge-dot"></div><div class="badge-dot"></div><div class="badge-dot"></div></div>
     <span id="teamStatus" style="font-size: 12px; color: var(--text-muted); margin-left: 10px;"></span>
     <div class="timer-box" id="timer">00:50:00</div>
-    <button class="btn btn-ghost" onclick="goNextRoom()">NEXT ROOM →</button>
+    <button id="nextRoomBtn" class="btn" style="display:none; background:var(--success); color:black;" onclick="goNextRoom()">NEXT MISSION →</button>
   </div>
 
   <div class="container">
     <aside class="briefing">
       <h1>MISSION: ARCHAEOLOGY</h1>
-      <p>Bem-vindo ao sistema de e-commerce legado da empresa. O nosso sistema de checkout está a perder dinheiro devido a um erro fiscal.</p>
-      
-      <h2>Main Objective</h2>
-      <div class="objective-card">
-        <strong>Fix the IVA Bug:</strong>
-        <p>O imposto (23%) está a ser calculado incorretamente quando há descontos e custos de envio. Analisa a função <code>calculateTax</code> em <code>legacyService.js</code>.</p>
-      </div>
-
-      <h2>Secondary Quest (Bonus)</h2>
-      <div class="bonus-card">
-        <strong>The Documentarian (+50 pts):</strong>
-        <p>Usa o Gemini para gerar documentação JSDoc completa para as funções do ficheiro. O sistema de IA do quartel-general vai validar os comentários.</p>
-      </div>
-
-      <div style="margin-top: 40px;">
-        <button class="btn btn-success" style="width: 100%; padding: 12px;" onclick="markComplete()">SUBMIT & ESCAPE</button>
-      </div>
+      <p>O checkout está a perder dinheiro. Corrige o erro de IVA.</p>
+      <div class="objective-card"><strong>Fix the IVA Bug:</strong><p>Imposto deve incidir sobre Subtotal - Desconto + Envio.</p></div>
+      <div class="bonus-card"><strong>JSDoc Bonus (+50):</strong><p>Documenta o código com Gemini.</p></div>
+      <button class="btn btn-success" style="width: 100%; padding: 12px;" onclick="markComplete()">SUBMIT & ESCAPE</button>
     </aside>
-
     <main class="workspace">
-      <div class="card" id="login-section">
-        <h3 style="margin-top:0">1. System Access</h3>
-        <p style="font-size: 13px; color: var(--text-muted);">Usa as credenciais pré-configuradas para entrar no terminal de vendas.</p>
+      <div class="card">
+        <h3>1. System Authentication</h3>
         <input type="text" id="username" value="Alice" />
         <input type="password" id="password" value="secret123" />
         <button class="btn btn-primary" onclick="doLogin()">AUTHENTICATE</button>
-        <div id="login-msg" style="margin-top:15px; font-size:13px;"></div>
+        <div id="login-msg" style="margin-top:10px;"></div>
       </div>
-
-      <div class="card" id="shop-section" style="display:none; opacity: 0.5;">
-        <h3 style="margin-top:0">2. Checkout Simulator</h3>
-        <table class="shop-items">
-          <thead><tr><th>ITEM</th><th>QTY</th><th>PRICE</th></tr></thead>
-          <tbody>
-            <tr><td>Mystery Box (Legacy)</td><td>2</td><td>1000.00 EUR</td></tr>
-          </tbody>
-        </table>
-        
-        <div style="display:flex; gap:10px; align-items:center; margin-bottom:20px;">
-          <span style="font-size:13px">PROMO:</span>
-          <input type="text" id="discount" value="WELCOME10" style="margin:0; width:150px;" />
-          <span style="font-size:13px">SHIP TO: <strong>PORTUGAL</strong></span>
-        </div>
-
+      <div class="card" id="shop-section" style="display:none;">
+        <h3>2. Checkout Terminal</h3>
         <button class="btn btn-primary" onclick="doCheckout()">GENERATE INVOICE</button>
-
-        <h4 style="margin: 25px 0 10px; font-size:12px; color: var(--text-muted);">OUTPUT TERMINAL:</h4>
-        <pre class="invoice-output" id="invoice-result">Awaiting input...</pre>
+        <pre class="invoice-output" id="invoice-result" style="margin-top:20px;">Awaiting input...</pre>
       </div>
     </main>
   </div>
@@ -222,120 +70,74 @@
   <script src="/timingConfig.js"></script>
   <script>
     const ROOM_ID = 'room1';
-    const CFG = window.ESCAPE_ROOM_CONFIG || {};
-    const TIMING = window.GAME_TIMING || {};
-    // API_BASE_URL should point to the Hub's API
-    const API_BASE_URL = CFG.getApiUrl();
-    const ROOM_ORDER = ['room1', 'room2', 'room3', 'final'];
-    let token = null;
+    const CFG = window.ESCAPE_ROOM_CONFIG;
+    const API = CFG.getApiUrl();
     let teamState = { completedRooms: [] };
 
     document.addEventListener('DOMContentLoaded', async () => {
       const name = CFG.getTeamName();
       if (!name) { window.location.href = CFG.getUrl('gameHub'); return; }
-      const isLive = await CFG.checkGameStart();
-      if (!isLive) return;
+      if (!(await CFG.checkGameStart())) return;
       document.getElementById('displayTeamName').textContent = name;
-      document.getElementById('teamStatus').innerHTML = '<span style="color:var(--success)">● HQ LINK ACTIVE</span>';
       fetchTeamState();
     });
 
-    function logout() {
-      if (confirm('Encerrar sessão?')) {
-        CFG.logout();
-        window.location.href = CFG.getUrl('gameHub');
-      }
-    }
-
-    setInterval(() => {
-      const remaining = TIMING.getTimeRemaining();
-      const el = document.getElementById('timer');
-      if (remaining === null) el.textContent = '00:50:00';
-      else {
-        const m = Math.floor(remaining / 60);
-        const s = remaining % 60;
-        el.textContent = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
-      }
-    }, 1000);
-
     async function fetchTeamState() {
       try {
-        const name = CFG.getTeamName();
-        if (!name) return;
-        const res = await fetch(`${API_BASE_URL}/state`);
+        const res = await fetch(`${API}/state`);
         const data = await res.json();
-        if (data.ok && data.teams) {
-          const me = data.teams.find(t => t.name === name);
-          if (me) { teamState = me; updateBadges(); }
+        const me = data.teams?.find(t => t.name === CFG.getTeamName());
+        if (me) {
+          teamState = me;
+          const dots = document.querySelectorAll('.badge-dot');
+          ['room1','room2','room3','final'].forEach((id, i) => {
+            if (teamState.completedRooms.includes(id)) {
+              dots[i].classList.add('done');
+              if (id === ROOM_ID) document.getElementById('nextRoomBtn').style.display = 'block';
+            }
+          });
         }
-      } catch (e) { }
-    }
-
-    function updateBadges() {
-      const dots = document.querySelectorAll('.badge-dot');
-      ROOM_ORDER.forEach((id, i) => { if (teamState.completedRooms.includes(id)) dots[i].classList.add('done'); });
+      } catch (e) {}
     }
 
     async function doLogin() {
-      try {
-        const u = document.getElementById('username').value;
-        const p = document.getElementById('password').value;
-        console.log('>>> AUTH ATTEMPT:', u);
-        const res = await fetch('/room1/api/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username: u, password: p })
-        });
-        const data = await res.json();
-        if (data.ok) {
-          token = data.token;
-          document.getElementById('login-msg').innerHTML = `<span style="color:var(--success)">AUTH OK. Token valid.</span>`;
-          document.getElementById('shop-section').style.display = 'block';
-          document.getElementById('shop-section').style.opacity = '1';
-        } else {
-          document.getElementById('login-msg').innerHTML = `<span style="color:var(--danger)">Login Failed: ${data.error}</span>`;
-        }
-      } catch (e) { console.error('Auth Error:', e); alert('Authentication Error: Local server not responding.'); }
+      const res = await fetch('/room1/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: 'Alice' }) });
+      const data = await res.json();
+      if (data.ok) {
+        document.getElementById('login-msg').innerHTML = '<span style="color:var(--success)">AUTH OK</span>';
+        document.getElementById('shop-section').style.display = 'block';
+      }
     }
 
     async function doCheckout() {
-      try {
-        if (!token) return;
-        const discount = document.getElementById('discount').value;
-        const res = await fetch('/room1/api/checkout', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token, items: [{ sku: 'MysteryBox', qty: 2, priceCents: 100000 }], discountCode: discount, shippingAddress: { country: 'PT' } })
-        });
-        const data = await res.json();
-        if (data.ok) {
-          const amt = data.order.amounts;
-          document.getElementById('invoice-result').innerText = `INVOICE #${data.order.id}\nSUBTOTAL: ${(amt.subtotalCents/100).toFixed(2)} EUR\nDISCOUNT: -${(amt.discountCents/100).toFixed(2)} EUR\nSHIPPING: +${(amt.shippingCents/100).toFixed(2)} EUR\nTAX (IVA): ${(amt.taxCents/100).toFixed(2)} EUR\nTOTAL: ${(amt.totalCents/100).toFixed(2)} EUR`;
-        }
-      } catch (e) { alert('Checkout Error.'); }
+      const res = await fetch('/room1/api/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items: [{qty:2, priceCents:1000}] }) });
+      const data = await res.json();
+      if (data.ok) {
+        const a = data.order.amounts;
+        document.getElementById('invoice-result').innerText = `TOTAL: ${(a.totalCents/100).toFixed(2)} EUR\nIVA: ${(a.taxCents/100).toFixed(2)} EUR`;
+      }
     }
 
     async function markComplete() {
-      try {
-        const name = CFG.getTeamName();
-        const sourceRes = await fetch('/room1/api/source');
-        const sourceData = await sourceRes.json();
-        const res = await fetch(`${API_BASE_URL}/team/update`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, token: CFG.getTeamToken(), completedRoom: ROOM_ID, sourceCode: sourceData.source })
-        });
-        const data = await res.json();
-        if (data.ok) { alert('Mission Accomplished!'); fetchTeamState(); }
-        else alert('Failed: ' + data.error);
-      } catch (e) { alert('Submission Error.'); }
+      const sourceRes = await fetch('/room1/api/source');
+      const sourceData = await sourceRes.json();
+      const res = await fetch(`${API}/team/update`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: CFG.getTeamName(), token: CFG.getTeamToken(), completedRoom: ROOM_ID, sourceCode: sourceData.source })
+      });
+      const data = await res.json();
+      if (data.ok) { alert('Success!'); fetchTeamState(); } else { alert('Failed: ' + data.error); }
     }
 
-    function goNextRoom() {
-      if (!teamState.completedRooms.includes(ROOM_ID)) return alert('Finish mission first!');
-      window.location.href = CFG.getRoomUrl('room2');
-    }
-
+    function logout() { CFG.logout(); }
+    function goNextRoom() { window.location.href = CFG.getRoomUrl('room2'); }
+    setInterval(() => {
+      const rem = window.GAME_TIMING.getTimeRemaining();
+      if (rem !== null) {
+        const m = Math.floor(rem/60), s = rem%60;
+        document.getElementById('timer').textContent = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+      }
+    }, 1000);
     setInterval(fetchTeamState, 5000);
   </script>
 </body>
