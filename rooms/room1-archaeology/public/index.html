@@ -18,7 +18,7 @@
     .btn-primary { background: var(--accent); color: white; }
     .btn-success { background: var(--success); color: white; }
     .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text-muted); }
-    .timer-box { margin-left: auto; font-family: 'Fira Code', monospace; color: var(--warning); font-weight: 700; background: rgba(210, 153, 34, 0.1); padding: 5px 12px; border-radius: 4px; border: 1px solid rgba(210, 153, 34, 0.2); }
+    .timer-box { margin-left: auto; font-family: 'Fira Code', monospace; color: var(--warning); font-weight: 700; background: rgba(210, 153, 34, 0.1); padding: 5px 12px; border-radius: 4px; border: 1px solid rgba(210, 153, 34, 0.2); min-width: 80px; text-align: center; }
     .container { display: grid; grid-template-columns: 350px 1fr; flex-grow: 1; overflow: hidden; }
     .briefing { background: var(--panel); border-right: 1px solid var(--border); padding: 25px; overflow-y: auto; }
     .objective-card { background: rgba(88, 166, 255, 0.05); border-left: 3px solid var(--accent); padding: 15px; margin: 15px 0; }
@@ -35,20 +35,19 @@
   <div class="team-bar">
     <strong style="color: var(--accent);">OPERATIVE:</strong>
     <span id="displayTeamName" style="font-weight: 700;">...</span>
-    <button class="btn btn-ghost" style="font-size: 10px;" onclick="logout()">LOGOUT</button>
+    <button class="btn btn-ghost" style="font-size: 10px; padding: 2px 8px;" onclick="logout()">LOGOUT</button>
     <div style="display:flex; gap:8px; margin-left:15px;" id="badges"><div class="badge-dot"></div><div class="badge-dot"></div><div class="badge-dot"></div><div class="badge-dot"></div></div>
-    <span id="teamStatus" style="font-size: 12px; color: var(--text-muted); margin-left: 10px;"></span>
-    <div class="timer-box" id="timer">00:50:00</div>
-    <button id="nextRoomBtn" class="btn" style="display:none; background:var(--success); color:black;" onclick="goNextRoom()">NEXT MISSION →</button>
+    <span id="teamStatus" style="font-size: 12px; color: var(--success); margin-left: 10px;"></span>
+    <div class="timer-box" id="timer">--:--</div>
   </div>
 
   <div class="container">
     <aside class="briefing">
       <h1>MISSION: ARCHAEOLOGY</h1>
       <p>O checkout está a perder dinheiro. Corrige o erro de IVA.</p>
-      <div class="objective-card"><strong>Fix the IVA Bug:</strong><p>Imposto deve incidir sobre Subtotal - Desconto + Envio.</p></div>
+      <div class="objective-card"><strong>Fix the IVA Bug:</strong><p>Imposto (23%) deve incidir sobre Subtotal - Desconto + Envio.</p></div>
       <div class="bonus-card"><strong>JSDoc Bonus (+50):</strong><p>Documenta o código com Gemini.</p></div>
-      <button class="btn btn-success" style="width: 100%; padding: 12px;" onclick="markComplete()">SUBMIT & ESCAPE</button>
+      <button class="btn btn-success" id="submitBtn" style="width: 100%; padding: 12px;" onclick="markComplete()">SUBMIT & ESCAPE</button>
     </aside>
     <main class="workspace">
       <div class="card">
@@ -80,6 +79,8 @@
       if (!(await CFG.checkGameStart())) return;
       document.getElementById('displayTeamName').textContent = name;
       fetchTeamState();
+      // Sincronização contínua do relógio
+      setInterval(() => CFG.syncClock(), 10000);
     });
 
     async function fetchTeamState() {
@@ -91,10 +92,7 @@
           teamState = me;
           const dots = document.querySelectorAll('.badge-dot');
           ['room1','room2','room3','final'].forEach((id, i) => {
-            if (teamState.completedRooms.includes(id)) {
-              dots[i].classList.add('done');
-              if (id === ROOM_ID) document.getElementById('nextRoomBtn').style.display = 'block';
-            }
+            if (teamState.completedRooms.includes(id)) dots[i].classList.add('done');
           });
         }
       } catch (e) {}
@@ -119,18 +117,31 @@
     }
 
     async function markComplete() {
-      const sourceRes = await fetch('/room1/api/source');
-      const sourceData = await sourceRes.json();
-      const res = await fetch(`${API}/team/update`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: CFG.getTeamName(), token: CFG.getTeamToken(), completedRoom: ROOM_ID, sourceCode: sourceData.source })
-      });
-      const data = await res.json();
-      if (data.ok) { alert('Success!'); fetchTeamState(); } else { alert('Failed: ' + data.error); }
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = true;
+      btn.textContent = "VERIFYING CODE...";
+      
+      try {
+        const sourceRes = await fetch('/room1/api/source');
+        const sourceData = await sourceRes.json();
+        const res = await fetch(`${API}/team/update`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: CFG.getTeamName(), token: CFG.getTeamToken(), completedRoom: ROOM_ID, sourceCode: sourceData.source })
+        });
+        const data = await res.json();
+        if (data.ok) { 
+          btn.style.background = 'var(--success)';
+          btn.textContent = "SUCCESS! UNLOCKING ROOM 2...";
+          setTimeout(() => { window.location.href = CFG.getRoomUrl('room2'); }, 2000);
+        } else { 
+          alert('Failed: ' + data.error); 
+          btn.disabled = false;
+          btn.textContent = "SUBMIT & ESCAPE";
+        }
+      } catch (e) { alert('System error'); btn.disabled = false; }
     }
 
     function logout() { CFG.logout(); }
-    function goNextRoom() { window.location.href = CFG.getRoomUrl('room2'); }
     setInterval(() => {
       const rem = window.GAME_TIMING.getTimeRemaining();
       if (rem !== null) {

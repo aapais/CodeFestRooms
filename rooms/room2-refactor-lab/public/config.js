@@ -1,13 +1,13 @@
 /**
- * Visual Escape Room - Configuration (ULTRA-SIMPLIFIED)
- * No more port guessing, no more hostname manipulation.
+ * Visual Escape Room - Configuration
+ * Global Sync & Auto-Flow Version
  */
 const isDev = location.hostname.includes('localhost') || location.hostname.includes('idx.google.com') || location.hostname.includes('cloudworkstations.dev');
+const CLOUD_API = 'https://us-central1-codefestrooms-487913.cloudfunctions.net/api';
 
 window.ESCAPE_ROOM_CONFIG = {
   MODE: isDev ? 'development' : 'production',
   
-  // No IDX, usamos apenas caminhos relativos na mesma origem
   getUrl: function(target) {
     if (!isDev) {
       const prod = {
@@ -19,42 +19,66 @@ window.ESCAPE_ROOM_CONFIG = {
       };
       return prod[target] || prod.gameHub;
     }
-    // MODO IDX: Fica sempre no mesmo link, muda apenas a pasta
     const paths = { gameHub: '/', room1: '/room1/', room2: '/room2/', room3: '/room3/', final: '/final/' };
     return paths[target] || '/';
   },
 
-  // A API aponta sempre para a Cloud para o progresso global
-  getApiUrl: () => 'https://us-central1-codefestrooms-487913.cloudfunctions.net/api',
-  getGlobalApiUrl: () => 'https://us-central1-codefestrooms-487913.cloudfunctions.net/api',
+  getApiUrl: () => CLOUD_API,
+  getGlobalApiUrl: () => CLOUD_API,
+
+  // Sincroniza o relógio da sala com o Dashboard
+  syncClock: async function() {
+    try {
+      const res = await fetch(this.getGlobalApiUrl() + '/timer');
+      const data = await res.json();
+      if (data.ok && data.timer && data.timer.startTime) {
+        window.GAME_TIMING.startTimer(data.timer.startTime);
+        return true;
+      }
+    } catch (e) { return false; }
+    return false;
+  },
 
   getRoomUrl: function(roomId) {
-    const baseUrl = this.getUrl(roomId);
+    const url = this.getUrl(roomId);
     const name = this.getTeamName();
     const token = this.getTeamToken();
     if (name && token && isDev) {
-      const sep = baseUrl.includes('?') ? '&' : '?';
-      return `${baseUrl}${sep}teamName=${encodeURIComponent(name)}&teamToken=${encodeURIComponent(token)}`;
+      const sep = url.includes('?') ? '&' : '?';
+      return `${url}${sep}teamName=${encodeURIComponent(name)}&teamToken=${encodeURIComponent(token)}`;
     }
-    return baseUrl;
+    return url;
   },
 
   getTeamName: () => localStorage.getItem('teamName') || new URLSearchParams(window.location.search).get('teamName'),
   setTeamName: (name) => localStorage.setItem('teamName', name),
   getTeamToken: () => localStorage.getItem('teamToken') || new URLSearchParams(window.location.search).get('teamToken'),
-  setTeamToken: (token) => localStorage.setItem('token', token),
+  setTeamToken: (token) => localStorage.setItem('teamToken', token),
   
-  // Bloqueio simplificado sem auto-refresh para evitar crashes
   checkGameStart: async function() {
-    try {
-      const res = await fetch(this.getGlobalApiUrl() + '/timer');
-      const data = await res.json();
-      return !!(data.ok && data.timer && data.timer.startTime);
-    } catch (e) { return true; }
+    const started = await this.syncClock();
+    if (!started) this.showLockOverlay();
+    return started;
+  },
+
+  showLockOverlay: function() {
+    if (document.getElementById('hq-lock-overlay')) return;
+    const overlay = document.createElement('div');
+    overlay.id = 'hq-lock-overlay';
+    overlay.style = 'position:fixed;top:0;left:0;width:100%;height:100%;background:#05070a;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#f85149;font-family:monospace;text-align:center;padding:20px;';
+    overlay.innerHTML = `<h1>⚠️ ACCESS DENIED</h1><p>MISSION NOT STARTED BY HQ</p>`;
+    document.body.appendChild(overlay);
+    setTimeout(() => window.location.reload(), 5000);
   },
 
   logout: () => {
     localStorage.clear();
     window.location.href = '/';
   }
+};
+
+window.GAME_CONFIG = {
+  get GAME_HUB_URL() { return window.ESCAPE_ROOM_CONFIG.getUrl('gameHub'); },
+  get WS_URL() { return location.origin.replace('http', 'ws'); },
+  getRoomUrl: (id) => window.ESCAPE_ROOM_CONFIG.getRoomUrl(id)
 };
