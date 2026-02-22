@@ -24,10 +24,10 @@
       previews = {
         web = {
           # Iniciamos apenas o Hub (Login) como preview padrão
-          command = ["npm" "run" "start:hub"];
+          command = ["npm" "run" "start:all"];
           manager = "web";
           env = {
-            PORT = "$PORT"; 
+            PORT = "8080"; 
           };
         };
       };
