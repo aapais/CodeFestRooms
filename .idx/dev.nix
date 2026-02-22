@@ -1,36 +1,14 @@
-# .idx/dev.nix - Configuração ultra-estável para o Escape Room
+# .idx/dev.nix - Versão Manual (Sem Erros de Proxy)
 { pkgs, ... }: {
   channel = "stable-23.11"; 
-
-  packages = [
-    pkgs.nodejs_20
-  ];
-
+  packages = [ pkgs.nodejs_20 ];
   idx = {
-    extensions = [
-      "dbaeumer.vscode-eslint"
-      "esbenp.prettier-vscode"
-      "google.gemini-vscode"
-    ];
-
+    extensions = [ "dbaeumer.vscode-eslint" "esbenp.prettier-vscode" "google.gemini-vscode" ];
     workspace = {
-      onCreate = {
-        npm-install = "npm install && npm install --workspaces";
-      };
+      onCreate = { npm-install = "npm install && npm install --workspaces"; };
     };
-
     previews = {
-      enable = true;
-      previews = {
-        web = {
-          # Iniciamos apenas o Hub (Login) como preview padrão
-          command = ["npm" "run" "start:all"];
-          manager = "web";
-          env = {
-            PORT = "8080"; 
-          };
-        };
-      };
+      enable = false; # DESATIVADO para evitar o erro 9002
     };
   };
 }
