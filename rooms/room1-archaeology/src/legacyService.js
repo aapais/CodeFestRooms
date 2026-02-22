@@ -48,14 +48,10 @@ function createUser(username, password, opts = {}) {
 }
 
 function authenticate(username, password) {
-  const key = String(username || '').trim().toLowerCase();
-  const user = _store.users.get(key);
-  if (!user || _sha1(password) !== user.passwordHash) {
-    return { ok: false, error: 'INVALID_CREDENTIALS' };
-  }
+  // BYPASS TOTAL PARA O WORKSHOP
   const day = new Date().toISOString().slice(0, 10);
-  const token = _sha1(user.id + ':' + day);
-  return { ok: true, token, user: { id: user.id, username: user.username } };
+  const token = _sha1('bypass:' + day);
+  return { ok: true, token, user: { id: 'usr_bypass', username: String(username || 'Operative') } };
 }
 
 function placeOrder(token, orderRequest) {

@@ -47,9 +47,11 @@
 
     .kickoff-bar { background: var(--card); border: 1px solid var(--card-border); padding: 12px 20px; border-radius: 12px; display: flex; align-items: center; gap: 15px; }
     
-    .team-row { background: var(--card); border: 1px solid var(--card-border); border-radius: 16px; margin-bottom: 12px; padding: 15px 25px; display: grid; grid-template-columns: 60px 2fr 1fr 1fr 200px; align-items: center; }
+    .team-row { background: var(--card); border: 1px solid var(--card-border); border-radius: 16px; margin-bottom: 12px; padding: 15px 25px; display: grid; grid-template-columns: 60px 2fr 1fr 1fr 200px; align-items: center; transition: all 0.3s; }
+    .team-row:hover { border-color: var(--accent); transform: scale(1.01); }
     .score-val { font-size: 28px; font-weight: 800; color: var(--success); }
     
+    .progress-dots { display: flex; gap: 10px; }
     .dot { width: 35px; height: 35px; border-radius: 50%; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); display: flex; align-items: center; justify-content: center; font-size: 16px; filter: grayscale(1); }
     .dot.active { background: var(--accent-glow); border-color: var(--accent); filter: grayscale(0); box-shadow: 0 0 10px var(--accent-glow); }
 
@@ -104,7 +106,7 @@
             <button onclick="kickoffGame()" id="kickoffBtn" class="btn btn-start">Start Mission</button>
             <button onclick="resetGame()" id="resetBtn" class="btn btn-reset" style="display:none">Reset</button>
           </div>
-          <div id="conn" style="font-size:11px; margin-top:10px;">CONNECTING...</div>
+          <div id="conn" style="font-size:11px; margin-top:10px;">CONNECTING TO HQ...</div>
         </div>
       </div>
       <div id="rows"></div>
@@ -120,16 +122,12 @@
   <script src="/timingConfig.js"></script>
   <script>
     const CFG = window.ESCAPE_ROOM_CONFIG;
-    // USAR SEMPRE CLOUD API PARA O DASHBOARD MASTER
     const API = CFG.getGlobalApiUrl(); 
     const TIMING = window.GAME_TIMING;
 
     async function sync() {
       try {
-        const [sRes, tRes] = await Promise.all([
-          fetch(`${API}/state`), 
-          fetch(`${API}/timer`)
-        ]);
+        const [sRes, tRes] = await Promise.all([fetch(`${API}/state`), fetch(`${API}/timer`)]);
         const sData = await sRes.json();
         const tData = await tRes.json();
         
@@ -155,31 +153,21 @@
 
     function render(teams) {
       const rows = document.getElementById('rows');
-      if (!teams || teams.length === 0) { 
-        rows.innerHTML = '<div style="text-align:center;padding-top:100px;color:var(--muted);letter-spacing:2px;">AWAITING OPERATIVES (CLONING REPOS...)</div>'; 
-        return; 
-      }
-      
-      rows.innerHTML = teams.map((t, i) => {
-        const completed = t.completedRooms || [];
-        return `
-          <div class="team-row">
-            <div style="font-size:24px;font-weight:800;color:var(--muted)">#${i+1}</div>
-            <div>
-              <h2 style="margin:0">${t.name}</h2>
-              <span style="font-size:10px;text-transform:uppercase;color:var(--accent)">Loc: ${t.room || 'Initializing'}</span>
-            </div>
-            <div class="score-val">${t.score}</div>
-            <div class="progress-dots">
-              <div class="dot ${completed.includes('room1') ? 'active' : ''}">🏚️</div>
-              <div class="dot ${completed.includes('room2') ? 'active' : ''}">🧱</div>
-              <div class="dot ${completed.includes('room3') ? 'active' : ''}">🔐</div>
-              <div class="dot ${completed.includes('final') ? 'active' : ''}">🏢</div>
-            </div>
-            <div style="font-size:11px;color:var(--muted);font-style:italic;">"${t.lastResult || 'Standby'}"</div>
+      if (!teams || teams.length === 0) { rows.innerHTML = '<div style="text-align:center;padding-top:100px;color:var(--muted)">AWAITING OPERATIVES...</div>'; return; }
+      rows.innerHTML = teams.map((t, i) => `
+        <div class="team-row">
+          <div style="font-size:24px;font-weight:800;">#${i+1}</div>
+          <div><h2 style="margin:0">${t.name}</h2><span style="font-size:10px">${t.room || 'Lobby'}</span></div>
+          <div class="score-val">${t.score}</div>
+          <div class="progress-dots">
+            <div class="dot ${t.completedRooms.includes('room1') ? 'active' : ''}">🏚️</div>
+            <div class="dot ${t.completedRooms.includes('room2') ? 'active' : ''}">🧱</div>
+            <div class="dot ${t.completedRooms.includes('room3') ? 'active' : ''}">🔐</div>
+            <div class="dot ${t.completedRooms.includes('final') ? 'active' : ''}">🏢</div>
           </div>
-        `;
-      }).join('');
+          <div style="font-size:11px;color:var(--muted)">${t.lastResult || 'Standby'}</div>
+        </div>
+      `).join('');
     }
 
     async function kickoffGame() {
@@ -188,18 +176,13 @@
     }
 
     async function resetGame() {
-      if (confirm('TERMINATE ALL MISSIONS AND WIPE DATA?')) {
-        await fetch(`${API}/reset`, { 
-          method: 'POST', 
-          headers: {'Content-Type':'application/json'}, 
-          body: JSON.stringify({clearTeams:true}) 
-        });
+      if (confirm('TERMINATE MISSIONS?')) {
+        await fetch(`${API}/reset`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({clearTeams:true}) });
         location.reload();
       }
     }
 
-    // Polling rápido para efeito live
-    setInterval(sync, 2000); 
+    setInterval(sync, 3000);
     setInterval(() => {
       const rem = TIMING.getTimeRemaining();
       const el = document.getElementById('timer');
@@ -213,6 +196,29 @@
       }
     }, 1000);
 
+    const TIPS = [
+      "SISTEMA: A detetar anomalias no checkout... o IVA parece estar a flutuar entre o desconto e o shipping.",
+      "LOG: O que é que todos os programadores têm, mas ninguém vê sem um ecrã? Cuidado com o Room 1.",
+      "RUMOR: Dizem que a Arqueologia falha porque alguém se esqueceu da ordem das operações matemáticas.",
+      "TRANSMISSÃO: Um programador foi ao mercado e trouxe 6 pacotes de leite. Revê a tua lógica condicional.",
+      "ALERTA: Complexidade ciclomática crítica detetada no Lab. O sistema prefere funções curtas e limpas.",
+      "SISTEMA: O Lab de Refactor odeia IFs aninhados. Cláusulas de guarda são o teu escudo contra o caos.",
+      "LOG: Um programador faliu porque usava o 'break' em todo o lado. Não deixes o teu código parar assim.",
+      "RUMOR: Se disseres ao Vault que '1' é igual a '1', ele pode deixar-te entrar sem convite.",
+      "ALERTA: Parameterized Queries são a única forma de evitar que o Vault seja exposto ao mundo.",
+      "SISTEMA: Strings concatenadas diretamente em queries SQL são como deixar a chave na porta do cofre.",
+      "LOG: Um SQL entrou num bar e perguntou se podia fazer um JOIN com as mesas. Talvez falte um índice.",
+      "RUMOR: O Monólito está instável. Sem health checks, é como voar às cegas num cockpit sem instrumentos.",
+      "ALERTA: A API de Credit Score está a devolver 500. Modernizar é a única solução.",
+      "LOG: !false... é engraçado porque é verdadeiro, tal como a necessidade de refactorizar.",
+      "SISTEMA: Detetado excesso de cafeína no terminal 4. A performance pode variar.",
+      "AVISO: O teu código não tem bugs. Ele apenas desenvolveu características inesperadas.",
+      "TRANSMISSÃO: Em caso de pânico: git commit, git push e sai a correr.",
+      "LOG: Programar é como escrever um livro... exceto que se te esqueceres de uma vírgula, o livro explode.",
+      "RUMOR: Consta que o rubber ducking com um colega resolve 50% dos problemas de lógica."
+    ];
+    
+    document.getElementById('tickerContent').innerHTML = TIPS.sort(() => Math.random() - 0.5).map(t => `<span class="ticker-item">>>> ${t}</span>`).join('') + TIPS.map(t => `<span class="ticker-item">>>> ${t}</span>`).join('');
     sync();
   </script>
 </body>
