@@ -1,17 +1,30 @@
 #!/usr/bin/env node
 
-const { spawn } = require('child_process');
+const { spawn, execSync } = require('child_process');
 const path = require('path');
 
 const processes = [];
 
-function startProcess(name, command, args = [], envOverrides = {}) {
-  console.log(`🚀 Starting ${name}...`);
+// Kill existing processes on our ports
+try {
+  console.log('🧹 Cleaning up ports...');
+  // This works on Linux/macOS (IDX environment)
+  execSync('fuser -k 4000/tcp 3001/tcp 3002/tcp 3003/tcp 3004/tcp 2>/dev/null || true');
+} catch (e) {
+  // Ignore errors on Windows or if fuser is missing
+}
+
+function startProcess(name, command, args = [], port) {
+  console.log(`🚀 Starting ${name} on port ${port}...`);
+  const env = { ...process.env };
+  delete env.PORT; // Clear IDX assigned port
+  env.PORT = port;
+  
   const proc = spawn(command, args, {
     cwd: __dirname,
     stdio: 'inherit',
     shell: true,
-    env: { ...process.env, ...envOverrides }
+    env
   });
   
   proc.on('error', (err) => {
@@ -25,22 +38,22 @@ function startProcess(name, command, args = [], envOverrides = {}) {
 // Start all services
 console.log('🎮 Starting Visual Escape Room...\n');
 
-startProcess('Game Hub', 'npm', ['run', 'start:hub']);
+startProcess('Game Hub', 'npm', ['run', 'start:hub'], '4000');
 
 setTimeout(() => {
-  startProcess('Room 1', 'npm', ['run', 'start:room1'], { PORT: '3001' });
+  startProcess('Room 1', 'npm', ['run', 'start:room1'], '3001');
 }, 2000);
 
 setTimeout(() => {
-  startProcess('Room 2', 'npm', ['run', 'start:room2'], { PORT: '3002' });
+  startProcess('Room 2', 'npm', ['run', 'start:room2'], '3002');
 }, 4000);
 
 setTimeout(() => {
-  startProcess('Room 3', 'npm', ['run', 'start:room3'], { PORT: '3003' });
+  startProcess('Room 3', 'npm', ['run', 'start:room3'], '3003');
 }, 6000);
 
 setTimeout(() => {
-  startProcess('Final Room', 'npm', ['run', 'start:final'], { PORT: '3004' });
+  startProcess('Final Room', 'npm', ['run', 'start:final'], '3004');
 }, 8000);
 
 // Handle shutdown

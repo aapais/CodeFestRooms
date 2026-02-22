@@ -15,14 +15,17 @@ const PORT = process.env.PORT || process.env.HUB_PORT || 4000;
 
 // Configuração de Proxy para as Salas
 const setupRoomProxy = (path, targetPort) => {
+  const target = `http://127.0.0.1:${targetPort}`;
+  console.log(`[PROXY_SETUP] Mapping ${path} -> ${target}`);
+  
   app.use(path, createProxyMiddleware({
-    target: `http://127.0.0.1:${targetPort}`,
+    target,
     changeOrigin: true,
     pathRewrite: { [`^${path}`]: '' },
     ws: true,
     logLevel: 'debug',
     onError: (err, req, res) => {
-      console.error(`[PROXY_ERROR] Failed to reach Room at port ${targetPort}:`, err.message);
+      console.error(`[PROXY_ERROR] Failed to reach Room at ${target}:`, err.message);
       res.status(502).send(`Room at port ${targetPort} is not responding. Please wait a few seconds and try again.`);
     }
   }));
