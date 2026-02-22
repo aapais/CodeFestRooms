@@ -1,13 +1,12 @@
 /**
- * Visual Escape Room - Configuration (ULTRA-SIMPLIFIED)
- * No more port guessing, no more hostname manipulation.
+ * Visual Escape Room - Configuration
+ * Robust Unified Server Version
  */
 const isDev = location.hostname.includes('localhost') || location.hostname.includes('idx.google.com') || location.hostname.includes('cloudworkstations.dev');
 
 window.ESCAPE_ROOM_CONFIG = {
   MODE: isDev ? 'development' : 'production',
   
-  // No IDX, usamos apenas caminhos relativos na mesma origem
   getUrl: function(target) {
     if (!isDev) {
       const prod = {
@@ -19,14 +18,19 @@ window.ESCAPE_ROOM_CONFIG = {
       };
       return prod[target] || prod.gameHub;
     }
-    // MODO IDX: Fica sempre no mesmo link, muda apenas a pasta
+    // MODO UNIFICADO: Tudo na mesma porta atual
     const paths = { gameHub: '/', room1: '/room1/', room2: '/room2/', room3: '/room3/', final: '/final/' };
     return paths[target] || '/';
   },
 
-  // A API aponta sempre para a Cloud para o progresso global
-  getApiUrl: () => 'https://us-central1-codefestrooms-487913.cloudfunctions.net/api',
-  getGlobalApiUrl: () => 'https://us-central1-codefestrooms-487913.cloudfunctions.net/api',
+  getApiUrl: function() {
+    // No workshop, usamos o servidor que está a servir a página
+    return '/api';
+  },
+
+  getGlobalApiUrl: function() {
+    return '/api';
+  },
 
   getRoomUrl: function(roomId) {
     const baseUrl = this.getUrl(roomId);
@@ -42,12 +46,11 @@ window.ESCAPE_ROOM_CONFIG = {
   getTeamName: () => localStorage.getItem('teamName') || new URLSearchParams(window.location.search).get('teamName'),
   setTeamName: (name) => localStorage.setItem('teamName', name),
   getTeamToken: () => localStorage.getItem('teamToken') || new URLSearchParams(window.location.search).get('teamToken'),
-  setTeamToken: (token) => localStorage.setItem('token', token),
+  setTeamToken: (token) => localStorage.setItem('teamToken', token),
   
-  // Bloqueio simplificado sem auto-refresh para evitar crashes
   checkGameStart: async function() {
     try {
-      const res = await fetch(this.getGlobalApiUrl() + '/timer');
+      const res = await fetch('/api/timer');
       const data = await res.json();
       return !!(data.ok && data.timer && data.timer.startTime);
     } catch (e) { return true; }
@@ -57,4 +60,10 @@ window.ESCAPE_ROOM_CONFIG = {
     localStorage.clear();
     window.location.href = '/';
   }
+};
+
+window.GAME_CONFIG = {
+  get GAME_HUB_URL() { return window.ESCAPE_ROOM_CONFIG.getUrl('gameHub'); },
+  get WS_URL() { return location.origin.replace('http', 'ws'); },
+  getRoomUrl: (id) => window.ESCAPE_ROOM_CONFIG.getRoomUrl(id)
 };
