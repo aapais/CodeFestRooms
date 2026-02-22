@@ -22,9 +22,9 @@
     previews = {
       enable = true;
       previews = {
-        # O IDX apenas observa as portas. Tu corres o comando no terminal.
         web = {
-          command = ["npm" "run" "start:hub"];
+          # INICIAR TUDO AUTOMATICAMENTE: Hub + 4 Rooms
+          command = ["node" "start-all.js"];
           manager = "web";
           env = {
             PORT = "$PORT"; 
