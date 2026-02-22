@@ -86,13 +86,13 @@
     const ROOM_ID = 'room2';
     const CFG = window.ESCAPE_ROOM_CONFIG || {};
     const TIMING = window.GAME_TIMING || {};
-    const API_BASE_URL = CFG.getApiUrl ? CFG.getApiUrl() : '/api';
+    const API_BASE_URL = CFG.getApiUrl();
     const ROOM_ORDER = ['room1', 'room2', 'room3', 'final'];
     let teamState = { completedRooms: [] };
 
     document.addEventListener('DOMContentLoaded', async () => {
       const name = CFG.getTeamName();
-      if (!name) { window.location.href = CFG.getUrl('gameHub') + '/'; return; }
+      if (!name) { window.location.href = CFG.getUrl('gameHub'); return; }
       const isLive = await CFG.checkGameStart();
       if (!isLive) return;
       document.getElementById('displayTeamName').textContent = name;
@@ -100,7 +100,7 @@
       fetchTeamState();
     });
 
-    function logout() { if (confirm('Sair?')) { CFG.logout(); window.location.href = CFG.getUrl('gameHub') + '/'; } }
+    function logout() { if (confirm('Sair?')) { CFG.logout(); window.location.href = CFG.getUrl('gameHub'); } }
 
     setInterval(() => {
       const remaining = TIMING.getTimeRemaining();
@@ -131,7 +131,8 @@
 
     async function generateInvoice() {
       try {
-        const res = await fetch('/api/invoice', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items: [{ unitPrice: 1200, qty: 1 }], discountCode: 'VIP20', shippingAddress: { country: 'PT' } }) });
+        // Caminho relativo para bater no servidor da sala
+        const res = await fetch('api/invoice', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items: [{ unitPrice: 1200, qty: 1 }], discountCode: 'VIP20', shippingAddress: { country: 'PT' } }) });
         const data = await res.json();
         if (data.ok) document.getElementById('logic-result').innerHTML = `<div class="result-terminal" style="color:white; border-color:var(--accent)">INVOICE GENERATED\nTOTAL: ${data.invoice.amounts.total} EUR</div>`;
       } catch (e) { alert('Local server error'); }
@@ -139,11 +140,15 @@
 
     async function validateCode() {
       try {
-        const localRes = await fetch('/api/validate-complexity');
+        // Caminho relativo
+        const localRes = await fetch('api/validate-complexity');
         const localData = await localRes.json();
         if (!localData.ok) { document.getElementById('quality-result').textContent = localData.message; return; }
-        const sourceRes = await fetch('/api/source');
+        
+        const sourceRes = await fetch('api/source');
         const sourceData = await sourceRes.json();
+        
+        // Caminho absoluto via Hub API
         const res = await fetch(`${API_BASE_URL}/team/update`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: CFG.getTeamName(), token: CFG.getTeamToken(), completedRoom: ROOM_ID, sourceCode: sourceData.source }) });
         const data = await res.json();
         if (data.ok) { alert('Success!'); fetchTeamState(); }

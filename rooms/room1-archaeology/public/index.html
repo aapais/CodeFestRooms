@@ -223,27 +223,27 @@
   <script>
     const ROOM_ID = 'room1';
     const CFG = window.ESCAPE_ROOM_CONFIG || {};
-    const ESCAPE_CFG = CFG; 
     const TIMING = window.GAME_TIMING || {};
-    const API_BASE_URL = CFG.getApiUrl ? CFG.getApiUrl() : '/api';
+    // API_BASE_URL should point to the Hub's API
+    const API_BASE_URL = CFG.getApiUrl();
     const ROOM_ORDER = ['room1', 'room2', 'room3', 'final'];
     let token = null;
     let teamState = { completedRooms: [] };
 
     document.addEventListener('DOMContentLoaded', async () => {
       const name = CFG.getTeamName();
-      if (!name) { window.location.href = CFG.getUrl('gameHub') + '/'; return; }
+      if (!name) { window.location.href = CFG.getUrl('gameHub'); return; }
       const isLive = await CFG.checkGameStart();
       if (!isLive) return;
       document.getElementById('displayTeamName').textContent = name;
-      document.getElementById('teamStatus').innerHTML = '<span style="color:var(--success)">● HQ LINK ACTIVE (AUTHORIZED)</span>';
+      document.getElementById('teamStatus').innerHTML = '<span style="color:var(--success)">● HQ LINK ACTIVE</span>';
       fetchTeamState();
     });
 
     function logout() {
-      if (confirm('Encerrar sessão desta equipa?')) {
+      if (confirm('Encerrar sessão?')) {
         CFG.logout();
-        window.location.href = CFG.getUrl('gameHub') + '/';
+        window.location.href = CFG.getUrl('gameHub');
       }
     }
 
@@ -280,7 +280,8 @@
       try {
         const u = document.getElementById('username').value;
         const p = document.getElementById('password').value;
-        const res = await fetch('/api/login', {
+        // Caminho relativo para bater no servidor da própria sala (proxied by Hub)
+        const res = await fetch('api/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ username: u, password: p })
@@ -292,14 +293,15 @@
           document.getElementById('shop-section').style.display = 'block';
           document.getElementById('shop-section').style.opacity = '1';
         }
-      } catch (e) { alert('Authentication Error: Ensure local server is running.'); }
+      } catch (e) { alert('Authentication Error: Local server not responding.'); }
     }
 
     async function doCheckout() {
       try {
         if (!token) return;
         const discount = document.getElementById('discount').value;
-        const res = await fetch('/api/checkout', {
+        // Caminho relativo
+        const res = await fetch('api/checkout', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ token, items: [{ sku: 'MysteryBox', qty: 2, priceCents: 100000 }], discountCode: discount, shippingAddress: { country: 'PT' } })
@@ -309,14 +311,16 @@
           const amt = data.order.amounts;
           document.getElementById('invoice-result').innerText = `INVOICE #${data.order.id}\nSUBTOTAL: ${(amt.subtotalCents/100).toFixed(2)} EUR\nDISCOUNT: -${(amt.discountCents/100).toFixed(2)} EUR\nSHIPPING: +${(amt.shippingCents/100).toFixed(2)} EUR\nTAX (IVA): ${(amt.taxCents/100).toFixed(2)} EUR\nTOTAL: ${(amt.totalCents/100).toFixed(2)} EUR`;
         }
-      } catch (e) { alert('Checkout Error: Local server not responding.'); }
+      } catch (e) { alert('Checkout Error.'); }
     }
 
     async function markComplete() {
       try {
         const name = CFG.getTeamName();
-        const sourceRes = await fetch('/api/source');
+        // Caminho relativo para obter o código
+        const sourceRes = await fetch('api/source');
         const sourceData = await sourceRes.json();
+        // Enviar para o HUB via API_BASE_URL (absoluto /api)
         const res = await fetch(`${API_BASE_URL}/team/update`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
