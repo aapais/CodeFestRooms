@@ -28,7 +28,7 @@ console.log('🎮 Starting Visual Escape Room...\n');
 startProcess('Game Hub', 'npm', ['run', 'start:hub']);
 
 setTimeout(() => {
-  startProcess('Room 1', 'npm', ['run', 'start:room1'], { PORT: '3000' });
+  startProcess('Room 1', 'npm', ['run', 'start:room1'], { PORT: '3001' });
 }, 2000);
 
 setTimeout(() => {
@@ -40,7 +40,7 @@ setTimeout(() => {
 }, 6000);
 
 setTimeout(() => {
-  startProcess('Final Room', 'npm', ['run', 'start:final'], { PORT: '8080' });
+  startProcess('Final Room', 'npm', ['run', 'start:final'], { PORT: '3004' });
 }, 8000);
 
 // Handle shutdown

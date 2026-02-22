@@ -18,16 +18,20 @@ const setupRoomProxy = (path, targetPort) => {
   app.use(path, createProxyMiddleware({
     target: `http://127.0.0.1:${targetPort}`,
     changeOrigin: true,
-    pathRewrite: { [`^${path}`]: '' }, // Remove o prefixo ao mandar para a sala
-    ws: true, // Support websockets if needed
-    logLevel: 'error'
+    pathRewrite: { [`^${path}`]: '' },
+    ws: true,
+    logLevel: 'debug',
+    onError: (err, req, res) => {
+      console.error(`[PROXY_ERROR] Failed to reach Room at port ${targetPort}:`, err.message);
+      res.status(502).send(`Room at port ${targetPort} is not responding. Please wait a few seconds and try again.`);
+    }
   }));
 };
 
-setupRoomProxy('/room1', 3000);
+setupRoomProxy('/room1', 3001);
 setupRoomProxy('/room2', 3002);
 setupRoomProxy('/room3', 3003);
-setupRoomProxy('/final', 8080);
+setupRoomProxy('/final', 3004);
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
