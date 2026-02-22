@@ -1,4 +1,3 @@
-# .idx/dev.nix - Versão Manual (Sem Erros de Proxy)
 { pkgs, ... }: {
   channel = "stable-23.11"; 
   packages = [ pkgs.nodejs_20 ];
@@ -8,7 +7,14 @@
       onCreate = { npm-install = "npm install && npm install --workspaces"; };
     };
     previews = {
-      enable = false; # DESATIVADO para evitar o erro 9002
+      enable = true;
+      previews = {
+        web = {
+          command = ["node" "game-hub/server.js"];
+          manager = "web";
+          env = { PORT = "$PORT"; };
+        };
+      };
     };
   };
 }

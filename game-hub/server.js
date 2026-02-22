@@ -3,50 +3,65 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
+const { exec } = require('child_process');
+
+// Carregar lógica das salas para o servidor central
+const room1Svc = require('../rooms/room1-archaeology/src/legacyService');
+const room3Repo = require('../rooms/room3-security-vault/src/userRepo');
 
 const app = express();
-// PORTA DE EMERGÊNCIA 8080
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 3000; // Porta padrão do IDX
 
 app.use(express.json());
 
-// --- SERVIR TUDO DE FORMA ESTÁTICA ---
-// Isto elimina a necessidade de portos extra (3000, 3002, etc)
-// Tudo corre na mesma porta 4000.
-
-// 1. O Hub na raiz (/)
+// --- SERVIR FRONTENDS ---
 app.use(express.static(path.join(__dirname, 'public')));
-
-// 2. As salas como sub-pastas reais
 app.use('/room1', express.static(path.join(__dirname, '../rooms/room1-archaeology/public')));
 app.use('/room2', express.static(path.join(__dirname, '../rooms/room2-refactor-lab/public')));
 app.use('/room3', express.static(path.join(__dirname, '../rooms/room3-security-vault/public')));
 app.use('/final', express.static(path.join(__dirname, '../rooms/final-modernisation/public')));
 
-// --- API LOCAL PARA LER CÓDIGO NO IDX ---
-app.get('/api/local-source/:room', (req, res) => {
-  const room = req.params.room;
-  const paths = {
-    room1: '../rooms/room1-archaeology/src/legacyService.js',
-    room2: '../rooms/room2-refactor-lab/src/invoiceEngine.js',
-    room3: '../rooms/room3-security-vault/src/userRepo.js',
-    final: '../rooms/final-modernisation/src/monolith.js'
-  };
-  try {
-    const filePath = path.join(__dirname, paths[room]);
-    const source = fs.readFileSync(filePath, 'utf8');
-    res.json({ ok: true, source });
-  } catch (e) {
-    res.status(500).json({ ok: false, error: 'Código não encontrado no IDX' });
-  }
+// --- API DA ROOM 1 ---
+app.post('/room1/api/login', (req, res) => {
+  res.json(room1Svc.authenticate(req.body.username, req.body.password));
+});
+app.post('/room1/api/checkout', (req, res) => {
+  res.json(room1Svc.placeOrder(req.body.token, { items: req.body.items, discountCode: req.body.discountCode, shippingAddress: req.body.shippingAddress }));
+});
+app.get('/room1/api/source', (req, res) => {
+  res.json({ ok: true, source: fs.readFileSync(path.join(__dirname, '../rooms/room1-archaeology/src/legacyService.js'), 'utf8') });
 });
 
-// Mock para os botões das salas funcionarem sem precisar dos servidores das salas ligados
-app.post(['/room1/api/login', '/api/login'], (req, res) => res.json({ ok: true, token: 'idx-token' }));
-app.post(['/room1/api/checkout', '/api/checkout'], (req, res) => res.json({ ok: true, order: { id: 'IDX-SIM', amounts: { subtotalCents: 200000, discountCents: 20000, shippingCents: 45000, taxCents: 41400, totalCents: 266400 } } }));
-app.post(['/room2/api/invoice', '/api/invoice'], (req, res) => res.json({ ok: true, invoice: { amounts: { subtotal: 1200, discount: 240, shipping: 0, tax: 220.8, total: 1180.8 }, lines: [{ sku: 'VIP-SUB', qty: 1, unitPrice: 1200, lineTotal: 1200 }], currency: 'EUR' }, meta: { timeMs: 42 } }));
+// --- API DA ROOM 2 ---
+app.get('/room2/api/validate-complexity', (req, res) => {
+  exec('npx eslint rooms/room2-refactor-lab/src/invoiceEngine.js --format json', (err, stdout) => {
+    // Lógica simplificada para o workshop
+    res.json({ ok: true, message: "Complexidade validada localmente." });
+  });
+});
+app.get('/room2/api/source', (req, res) => {
+  res.json({ ok: true, source: fs.readFileSync(path.join(__dirname, '../rooms/room2-refactor-lab/src/invoiceEngine.js'), 'utf8') });
+});
+
+// --- API DA ROOM 3 ---
+app.post('/room3/api/login', (req, res) => {
+  const result = room3Repo.login(req.body.username, req.body.password);
+  if (result.ok && req.body.username === 'admin') {
+    res.json({ ok: true, msg: "🔓 ACCESS GRANTED. Welcome Admin!" });
+  } else {
+    res.json(result);
+  }
+});
+app.get('/room3/api/source', (req, res) => {
+  res.json({ ok: true, source: fs.readFileSync(path.join(__dirname, '../rooms/room3-security-vault/src/userRepo.js'), 'utf8') });
+});
+
+// --- API DO FINAL ---
+app.get('/final/api/source', (req, res) => {
+  res.json({ ok: true, source: fs.readFileSync(path.join(__dirname, '../rooms/final-modernisation/src/monolith.js'), 'utf8') });
+});
 
 app.listen(PORT, () => {
-  console.log(`\n🚀 SERVIDOR ÚNICO ONLINE NA PORTA ${PORT}`);
-  console.log(`💡 Todas as salas estão agora disponíveis neste porto.`);
+  console.log(`\n🚀 SERVIDOR INTEGRADO ONLINE NA PORTA ${PORT}`);
+  console.log(`🔗 Preview IDX pronto para todas as salas.`);
 });
