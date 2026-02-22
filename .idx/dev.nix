@@ -22,12 +22,12 @@
     previews = {
       enable = true;
       previews = {
+        # O IDX apenas observa as portas. Tu corres o comando no terminal.
         web = {
-          # Abre a porta 4000 (Game Hub) por defeito na página de Join
           command = ["npm" "run" "start:hub"];
           manager = "web";
           env = {
-            PORT = "4000";
+            PORT = "$PORT"; 
           };
         };
       };

@@ -9,7 +9,7 @@ const app = express();
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
 
-const PORT = process.env.HUB_PORT || 4000;
+const PORT = process.env.PORT || process.env.HUB_PORT || 4000;
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
