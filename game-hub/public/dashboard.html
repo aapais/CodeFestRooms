@@ -119,12 +119,17 @@
   <script src="/config.js"></script>
   <script src="/timingConfig.js"></script>
   <script>
-    const API = window.ESCAPE_ROOM_CONFIG.getApiUrl();
+    const CFG = window.ESCAPE_ROOM_CONFIG;
+    // USAR SEMPRE CLOUD API PARA O DASHBOARD MASTER
+    const API = CFG.getGlobalApiUrl(); 
     const TIMING = window.GAME_TIMING;
 
     async function sync() {
       try {
-        const [sRes, tRes] = await Promise.all([fetch(`${API}/state`), fetch(`${API}/timer`)]);
+        const [sRes, tRes] = await Promise.all([
+          fetch(`${API}/state`), 
+          fetch(`${API}/timer`)
+        ]);
         const sData = await sRes.json();
         const tData = await tRes.json();
         
@@ -140,27 +145,41 @@
           document.getElementById('resetBtn').style.display = 'none';
           document.getElementById('gameStatus').textContent = 'STATUS: READY';
         }
-        document.getElementById('conn').textContent = 'CONNECTED TO HQ';
-      } catch (e) { document.getElementById('conn').textContent = 'OFFLINE'; }
+        document.getElementById('conn').textContent = 'CONNECTED TO CLOUD HQ';
+        document.getElementById('conn').style.color = 'var(--success)';
+      } catch (e) { 
+        document.getElementById('conn').textContent = 'OFFLINE (SYNC ERROR)'; 
+        document.getElementById('conn').style.color = 'var(--danger)';
+      }
     }
 
     function render(teams) {
       const rows = document.getElementById('rows');
-      if (!teams || teams.length === 0) { rows.innerHTML = '<div style="text-align:center;padding-top:100px;color:var(--muted)">AWAITING OPERATIVES...</div>'; return; }
-      rows.innerHTML = teams.map((t, i) => `
-        <div class="team-row">
-          <div style="font-size:24px;font-weight:800;">#${i+1}</div>
-          <div><h2 style="margin:0">${t.name}</h2><span style="font-size:10px">${t.room || 'Lobby'}</span></div>
-          <div class="score-val">${t.score}</div>
-          <div class="progress-dots">
-            <div class="dot ${t.completedRooms.includes('room1') ? 'active' : ''}">🏚️</div>
-            <div class="dot ${t.completedRooms.includes('room2') ? 'active' : ''}">🧱</div>
-            <div class="dot ${t.completedRooms.includes('room3') ? 'active' : ''}">🔐</div>
-            <div class="dot ${t.completedRooms.includes('final') ? 'active' : ''}">🏢</div>
+      if (!teams || teams.length === 0) { 
+        rows.innerHTML = '<div style="text-align:center;padding-top:100px;color:var(--muted);letter-spacing:2px;">AWAITING OPERATIVES (CLONING REPOS...)</div>'; 
+        return; 
+      }
+      
+      rows.innerHTML = teams.map((t, i) => {
+        const completed = t.completedRooms || [];
+        return `
+          <div class="team-row">
+            <div style="font-size:24px;font-weight:800;color:var(--muted)">#${i+1}</div>
+            <div>
+              <h2 style="margin:0">${t.name}</h2>
+              <span style="font-size:10px;text-transform:uppercase;color:var(--accent)">Loc: ${t.room || 'Initializing'}</span>
+            </div>
+            <div class="score-val">${t.score}</div>
+            <div class="progress-dots">
+              <div class="dot ${completed.includes('room1') ? 'active' : ''}">🏚️</div>
+              <div class="dot ${completed.includes('room2') ? 'active' : ''}">🧱</div>
+              <div class="dot ${completed.includes('room3') ? 'active' : ''}">🔐</div>
+              <div class="dot ${completed.includes('final') ? 'active' : ''}">🏢</div>
+            </div>
+            <div style="font-size:11px;color:var(--muted);font-style:italic;">"${t.lastResult || 'Standby'}"</div>
           </div>
-          <div style="font-size:11px;color:var(--muted)">${t.lastResult || 'Standby'}</div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
     }
 
     async function kickoffGame() {
@@ -169,13 +188,18 @@
     }
 
     async function resetGame() {
-      if (confirm('Reset?')) {
-        await fetch(`${API}/reset`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({clearTeams:true}) });
+      if (confirm('TERMINATE ALL MISSIONS AND WIPE DATA?')) {
+        await fetch(`${API}/reset`, { 
+          method: 'POST', 
+          headers: {'Content-Type':'application/json'}, 
+          body: JSON.stringify({clearTeams:true}) 
+        });
         location.reload();
       }
     }
 
-    setInterval(sync, 3000);
+    // Polling rápido para efeito live
+    setInterval(sync, 2000); 
     setInterval(() => {
       const rem = TIMING.getTimeRemaining();
       const el = document.getElementById('timer');
@@ -189,8 +213,6 @@
       }
     }, 1000);
 
-    const TIPS = ["SISTEMA: IVA instável na Room 1.","LOG: SQL Injection detetado no Vault.","ENIGMA: !false é verdadeiro."];
-    document.getElementById('tickerContent').innerHTML = TIPS.map(t => `<span class="ticker-item">>>> ${t}</span>`).join('') + TIPS.map(t => `<span class="ticker-item">>>> ${t}</span>`).join('');
     sync();
   </script>
 </body>

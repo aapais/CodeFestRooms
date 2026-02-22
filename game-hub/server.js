@@ -12,70 +12,53 @@ const wss = new WebSocketServer({ server });
 
 const PORT = process.env.PORT || 4000;
 
-// --- PROXY PARA AS SALAS ---
-// Isto permite que todo o workshop corra numa única porta (a do Hub)
-// Evitando erros de CORS e de redireccionamento do Google IDX
-const setupProxy = (route, targetPort) => {
+// URL DA TUA CLOUD (FONTE DA VERDADE)
+const CLOUD_API_URL = 'https://us-central1-codefestrooms-487913.cloudfunctions.net/api';
+
+// --- TÚNEL PARA A CLOUD (API CENTRAL) ---
+// Todos os pedidos feitos a /api/ no IDX são enviados para o Firebase
+app.use('/api', createProxyMiddleware({
+  target: CLOUD_API_URL,
+  changeOrigin: true,
+  pathRewrite: { '^/api': '' }, // A Cloud Function já está mapeada em /api
+  logLevel: 'debug',
+  onProxyReq: (proxyReq, req, res) => {
+    // Garante que o body em JSON é passado corretamente
+    if (req.body && Object.keys(req.body).length) {
+      const bodyData = JSON.stringify(req.body);
+      proxyReq.setHeader('Content-Type', 'application/json');
+      proxyReq.setHeader('Content-Length', Buffer.byteLength(bodyData));
+      proxyReq.write(bodyData);
+    }
+  }
+}));
+
+// --- PROXY PARA AS SALAS (CONTEÚDO LOCAL) ---
+const setupRoomProxy = (route, targetPort) => {
   app.use(route, createProxyMiddleware({
     target: `http://127.0.0.1:${targetPort}`,
     changeOrigin: true,
     pathRewrite: { [`^${route}`]: '' },
-    logLevel: 'debug', // Ver logs no terminal do Hub
-    onError: (err, req, res) => {
-      console.error(`[PROXY_ERR] Sala na porta ${targetPort} não responde.`);
-      res.status(502).send(`A Sala ${route} ainda está a iniciar. Aguarda 10 segundos e faz refresh.`);
-    }
+    logLevel: 'silent'
   }));
 };
 
-// Mapeamento de rotas para portos internos
-setupProxy('/room1', 3001);
-setupProxy('/room2', 3002);
-setupProxy('/room3', 3003);
-setupProxy('/final', 3004);
+setupRoomProxy('/room1', 3001);
+setupRoomProxy('/room2', 3002);
+setupRoomProxy('/room3', 3003);
+setupRoomProxy('/final', 3004);
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// API do Hub
-const teams = new Map();
-let gameTimer = null;
-const ROOM_POINTS = { room1: 100, room2: 150, room3: 150, final: 200 };
-
-function normalizeTeamName(name) { return String(name || '').trim().replace(/\s+/g, ' ').slice(0, 32) || 'Team'; }
-
-app.get('/api/state', (req, res) => res.json({ ok: true, teams: Array.from(teams.values()) }));
-app.get('/api/timer', (req, res) => res.json({ ok: true, timer: gameTimer }));
-
-app.post('/api/kickoff', (req, res) => {
-  gameTimer = { startTime: Date.now(), duration: 50 * 60 * 1000, updatedAt: Date.now() };
-  res.json({ ok: true, startTime: gameTimer.startTime });
-});
-
-app.post('/api/team/login', (req, res) => {
-  const name = normalizeTeamName(req.body.name);
-  if (!teams.has(name)) {
-    teams.set(name, { name, token: Math.random().toString(36).slice(2), score: 0, completedRooms: [], room: 'room1', updatedAt: Date.now() });
-  }
-  res.json({ ok: true, team: teams.get(name) });
-});
-
-app.post('/api/team/update', (req, res) => {
-  const { name, completedRoom, room, result } = req.body;
-  const team = teams.get(normalizeTeamName(name));
-  if (team) {
-    if (room) team.room = room;
-    if (result) team.lastResult = result;
-    if (completedRoom && !team.completedRooms.includes(completedRoom)) {
-      team.completedRooms.push(completedRoom);
-      team.score += ROOM_POINTS[completedRoom] || 0;
-    }
-    team.updatedAt = Date.now();
-  }
-  res.json({ ok: true });
-});
+// Notificar via WebSocket quando houver mudanças (opcional, o dashboard usa polling)
+function broadcast(data) {
+  wss.clients.forEach(client => {
+    if (client.readyState === 1) client.send(JSON.stringify(data));
+  });
+}
 
 server.listen(PORT, () => {
-  console.log(`🚀 ESCAPE ROOM HUB (API + PROXY) ONLINE NA PORTA ${PORT}`);
-  console.log(`Acessível via caminhos: /room1, /room2, /room3, /final`);
+  console.log(`🚀 HUB DE SINCRONIZAÇÃO ONLINE (Porta ${PORT})`);
+  console.log(`📡 Ligado à Cloud: ${CLOUD_API_URL}`);
 });
