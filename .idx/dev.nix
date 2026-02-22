@@ -15,7 +15,13 @@
 
     workspace = {
       onCreate = {
+        # Instala dependências automaticamente na criação
         npm-install = "npm install && npm install --workspaces";
+      };
+      onStart = {
+        # Sempre que o workspace abre, garante que as dependências estão lá
+        # e avisa o utilizador para iniciar o jogo
+        welcome-msg = "echo '🚀 BEM-VINDO AO GEMINI ESCAPE ROOM! Escreve: npm run start:all para iniciar os sistemas.'";
       };
     };
 
@@ -23,7 +29,9 @@
       enable = true;
       previews = {
         web = {
-          command = ["node" "start-all.js"];
+          # Não corremos o comando aqui para evitar loops de 502/Proxy
+          # O utilizador corre o comando no terminal e o IDX deteta a porta
+          command = ["npm" "run" "start:hub"]; 
           manager = "web";
           env = {
             PORT = "$PORT"; 
