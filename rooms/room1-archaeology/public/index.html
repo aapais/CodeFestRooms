@@ -79,7 +79,6 @@
       if (!(await CFG.checkGameStart())) return;
       document.getElementById('displayTeamName').textContent = name;
       fetchTeamState();
-      // Sincronização contínua do relógio
       setInterval(() => CFG.syncClock(), 10000);
     });
 
@@ -92,14 +91,19 @@
           teamState = me;
           const dots = document.querySelectorAll('.badge-dot');
           ['room1','room2','room3','final'].forEach((id, i) => {
-            if (teamState.completedRooms.includes(id)) dots[i].classList.add('done');
+            if (teamState.completedRooms.includes(id)) {
+              dots[i].classList.add('done');
+              if (id === ROOM_ID) {
+                // If already completed, just allow manual nav if needed, or stay
+              }
+            }
           });
         }
       } catch (e) {}
     }
 
     async function doLogin() {
-      const res = await fetch('/room1/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: 'Alice' }) });
+      const res = await fetch('api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: 'Alice' }) });
       const data = await res.json();
       if (data.ok) {
         document.getElementById('login-msg').innerHTML = '<span style="color:var(--success)">AUTH OK</span>';
@@ -108,7 +112,7 @@
     }
 
     async function doCheckout() {
-      const res = await fetch('/room1/api/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items: [{qty:2, priceCents:1000}] }) });
+      const res = await fetch('api/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items: [{qty:2, priceCents:1000}] }) });
       const data = await res.json();
       if (data.ok) {
         const a = data.order.amounts;
@@ -122,7 +126,7 @@
       btn.textContent = "VERIFYING CODE...";
       
       try {
-        const sourceRes = await fetch('/room1/api/source');
+        const sourceRes = await fetch('api/source');
         const sourceData = await sourceRes.json();
         const res = await fetch(`${API}/team/update`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -131,8 +135,8 @@
         const data = await res.json();
         if (data.ok) { 
           btn.style.background = 'var(--success)';
-          btn.textContent = "SUCCESS! UNLOCKING ROOM 2...";
-          setTimeout(() => { window.location.href = CFG.getRoomUrl('room2'); }, 2000);
+          btn.textContent = "SUCCESS! REDIRECTING...";
+          setTimeout(() => { window.location.href = CFG.getRoomUrl('room2'); }, 1000);
         } else { 
           alert('Failed: ' + data.error); 
           btn.disabled = false;

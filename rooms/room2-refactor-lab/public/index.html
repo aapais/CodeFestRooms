@@ -9,57 +9,36 @@
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #0d1117;
-      --panel: #161b22;
-      --border: #30363d;
-      --accent: #bc8cff;
-      --success: #3fb950;
-      --warning: #d29922;
-      --text: #c9d1d9;
-      --text-muted: #8b949e;
+      --bg: #0d1117; --panel: #161b22; --border: #30363d; --accent: #bc8cff;
+      --success: #3fb950; --warning: #d29922; --text: #c9d1d9; --text-muted: #8b949e;
     }
-
-    body {
-      font-family: 'Space Grotesk', sans-serif;
-      background-color: var(--bg);
-      color: var(--text);
-      margin: 0;
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      overflow: hidden;
-    }
-
-    .team-bar { background: #010409; border-bottom: 1px solid var(--border); padding: 10px 25px; display: flex; align-items: center; gap: 15px; }
+    body { font-family: 'Space Grotesk', sans-serif; background-color: var(--bg); color: var(--text); margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+    .team-bar { background: #010409; border-bottom: 1px solid var(--border); padding: 10px 25px; display: flex; align-items: center; gap: 15px; z-index: 100; }
     .btn { padding: 8px 18px; border-radius: 4px; border: none; font-weight: 600; cursor: pointer; font-size: 13px; transition: all 0.2s; }
     .btn-primary { background: var(--accent); color: white; }
     .btn-success { background: var(--success); color: white; }
     .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text-muted); }
-    .timer-box { margin-left: auto; font-family: 'Fira Code', monospace; color: var(--warning); font-weight: 700; background: rgba(210, 153, 34, 0.1); padding: 5px 12px; border-radius: 4px; border: 1px solid rgba(210, 153, 34, 0.2); }
-
+    .timer-box { margin-left: auto; font-family: 'Fira Code', monospace; color: var(--warning); font-weight: 700; background: rgba(210, 153, 34, 0.1); padding: 5px 12px; border-radius: 4px; border: 1px solid rgba(210, 153, 34, 0.2); min-width: 80px; text-align: center; }
     .container { display: grid; grid-template-columns: 350px 1fr; flex-grow: 1; overflow: hidden; }
     .briefing { background: var(--panel); border-right: 1px solid var(--border); padding: 25px; overflow-y: auto; }
-    .briefing h1 { font-size: 20px; color: var(--accent); margin-top: 0; }
     .objective-card { background: rgba(188, 140, 255, 0.05); border-left: 3px solid var(--accent); padding: 15px; margin: 15px 0; }
     .bonus-card { background: rgba(210, 153, 34, 0.05); border-left: 3px solid var(--warning); padding: 15px; margin: 15px 0; }
     .workspace { padding: 40px; overflow-y: auto; background-image: radial-gradient(circle at center, #1c162d 0%, #0d1117 100%); }
     .card { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 30px; max-width: 800px; margin: 0 auto 30px; }
     .result-terminal { background: #010409; padding: 15px; border-radius: 4px; font-family: 'Fira Code', monospace; font-size: 12px; color: #7ee787; border: 1px solid var(--border); min-height: 100px; white-space: pre-wrap; margin-top: 20px; }
-    .badges-mini { display: flex; gap: 8px; margin-left: 15px; }
     .badge-dot { width: 10px; height: 10px; border-radius: 50%; background: #30363d; }
     .badge-dot.done { background: var(--success); box-shadow: 0 0 8px var(--success); }
   </style>
 </head>
 <body>
   <div class="team-bar">
-    <strong style="font-size: 14px; color: var(--accent);">OPERATIVE:</strong>
-    <span id="displayTeamName" style="font-weight: 700; color: white; background: rgba(255,255,255,0.1); padding: 4px 10px; border-radius: 4px; font-size: 13px;">...</span>
-    <button class="btn btn-ghost" style="padding: 4px 8px; font-size: 10px;" onclick="logout()">RESET SESSION</button>
-    <div class="badges-mini" id="badges"><div class="badge-dot"></div><div class="badge-dot"></div><div class="badge-dot"></div><div class="badge-dot"></div></div>
-    <span id="teamStatus" style="font-size: 12px; color: var(--text-muted); margin-left: 10px;"></span>
-    <div class="timer-box" id="timer">00:50:00</div>
-    <button class="btn btn-ghost" onclick="goPrevRoom()">← PREV</button>
-    <button class="btn btn-ghost" onclick="goNextRoom()">NEXT →</button>
+    <strong style="color: var(--accent);">OPERATIVE:</strong>
+    <span id="displayTeamName" style="font-weight: 700;">...</span>
+    <button class="btn btn-ghost" style="font-size: 10px; padding: 2px 8px;" onclick="logout()">LOGOUT</button>
+    <div style="display:flex; gap:8px; margin-left:15px;" id="badges"><div class="badge-dot"></div><div class="badge-dot"></div><div class="badge-dot"></div><div class="badge-dot"></div></div>
+    <span id="teamStatus" style="font-size: 12px; color: var(--success); margin-left: 10px;"></span>
+    <div class="timer-box" id="timer">--:--</div>
+    <button class="btn btn-ghost" style="margin-left:10px" onclick="goPrevRoom()">← PREV</button>
   </div>
 
   <div class="container">
@@ -69,7 +48,7 @@
       <div class="objective-card"><strong>Reduce Complexity:</strong><p>Nenhuma função com complexidade > 10.</p></div>
       <div class="bonus-card"><strong>Minimalist (+75 pts):</strong><p>Complexidade < 5.</p></div>
       <button class="btn btn-primary" style="width: 100%; margin-bottom: 10px;" onclick="generateInvoice()">1. TEST LOGIC</button>
-      <button class="btn btn-success" style="width: 100%;" onclick="validateCode()">2. VERIFY & SUBMIT</button>
+      <button class="btn btn-success" id="verifyBtn" style="width: 100%;" onclick="validateCode()">2. VERIFY & SUBMIT</button>
     </aside>
     <main class="workspace">
       <div class="card">
@@ -84,54 +63,34 @@
   <script src="/timingConfig.js"></script>
   <script>
     const ROOM_ID = 'room2';
-    const CFG = window.ESCAPE_ROOM_CONFIG || {};
-    const TIMING = window.GAME_TIMING || {};
-    const API_BASE_URL = CFG.getApiUrl();
-    const ROOM_ORDER = ['room1', 'room2', 'room3', 'final'];
+    const CFG = window.ESCAPE_ROOM_CONFIG;
+    const API = CFG.getApiUrl();
     let teamState = { completedRooms: [] };
 
     document.addEventListener('DOMContentLoaded', async () => {
       const name = CFG.getTeamName();
       if (!name) { window.location.href = CFG.getUrl('gameHub'); return; }
-      const isLive = await CFG.checkGameStart();
-      if (!isLive) return;
+      if (!(await CFG.checkGameStart())) return;
       document.getElementById('displayTeamName').textContent = name;
-      document.getElementById('teamStatus').innerHTML = '<span style="color:var(--success)">● HQ LINK ACTIVE</span>';
       fetchTeamState();
+      setInterval(() => CFG.syncClock(), 10000);
     });
-
-    function logout() { if (confirm('Sair?')) { CFG.logout(); window.location.href = CFG.getUrl('gameHub'); } }
-
-    setInterval(() => {
-      const remaining = TIMING.getTimeRemaining();
-      const el = document.getElementById('timer');
-      if (remaining !== null) {
-        const m = Math.floor(remaining / 60);
-        const s = remaining % 60;
-        el.textContent = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
-      }
-    }, 1000);
 
     async function fetchTeamState() {
       try {
-        const name = CFG.getTeamName();
-        const res = await fetch(`${API_BASE_URL}/state`);
+        const res = await fetch(`${API}/state`);
         const data = await res.json();
-        if (data.ok && data.teams) {
-          const me = data.teams.find(t => t.name === name);
-          if (me) { teamState = me; updateBadges(); }
+        const me = data.teams?.find(t => t.name === CFG.getTeamName());
+        if (me) {
+          teamState = me;
+          const dots = document.querySelectorAll('.badge-dot');
+          ['room1','room2','room3','final'].forEach((id, i) => { if (teamState.completedRooms.includes(id)) dots[i].classList.add('done'); });
         }
       } catch (e) {}
     }
 
-    function updateBadges() {
-      const dots = document.querySelectorAll('.badge-dot');
-      ROOM_ORDER.forEach((id, i) => { if (teamState.completedRooms.includes(id)) dots[i].classList.add('done'); });
-    }
-
     async function generateInvoice() {
       try {
-        // Caminho relativo para bater no servidor da sala
         const res = await fetch('api/invoice', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items: [{ unitPrice: 1200, qty: 1 }], discountCode: 'VIP20', shippingAddress: { country: 'PT' } }) });
         const data = await res.json();
         if (data.ok) document.getElementById('logic-result').innerHTML = `<div class="result-terminal" style="color:white; border-color:var(--accent)">INVOICE GENERATED\nTOTAL: ${data.invoice.amounts.total} EUR</div>`;
@@ -139,24 +98,38 @@
     }
 
     async function validateCode() {
+      const btn = document.getElementById('verifyBtn');
+      btn.disabled = true;
+      btn.textContent = "SCANNING CODE...";
       try {
-        // Caminho relativo
         const localRes = await fetch('api/validate-complexity');
         const localData = await localRes.json();
-        if (!localData.ok) { document.getElementById('quality-result').textContent = localData.message; return; }
-        
+        if (!localData.ok) { 
+          document.getElementById('quality-result').textContent = localData.message; 
+          btn.disabled = false; btn.textContent = "2. VERIFY & SUBMIT";
+          return; 
+        }
         const sourceRes = await fetch('api/source');
         const sourceData = await sourceRes.json();
-        
-        // Caminho absoluto via Hub API
-        const res = await fetch(`${API_BASE_URL}/team/update`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: CFG.getTeamName(), token: CFG.getTeamToken(), completedRoom: ROOM_ID, sourceCode: sourceData.source }) });
+        const res = await fetch(`${API}/team/update`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: CFG.getTeamName(), token: CFG.getTeamToken(), completedRoom: ROOM_ID, sourceCode: sourceData.source }) });
         const data = await res.json();
-        if (data.ok) { alert('Success!'); fetchTeamState(); }
-      } catch (e) { alert('System error'); }
+        if (data.ok) { 
+          btn.style.background = 'var(--success)';
+          btn.textContent = "SUCCESS! REDIRECTING...";
+          setTimeout(() => { window.location.href = CFG.getRoomUrl('room3'); }, 1000);
+        } else { alert('Failed: ' + data.error); btn.disabled = false; }
+      } catch (e) { alert('System error'); btn.disabled = false; }
     }
 
+    function logout() { CFG.logout(); }
     function goPrevRoom() { window.location.href = CFG.getRoomUrl('room1'); }
-    function goNextRoom() { if (!teamState.completedRooms.includes(ROOM_ID)) return alert('Finish first!'); window.location.href = CFG.getRoomUrl('room3'); }
+    setInterval(() => {
+      const rem = window.GAME_TIMING.getTimeRemaining();
+      if (rem !== null) {
+        const m = Math.floor(rem/60), s = rem%60;
+        document.getElementById('timer').textContent = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+      }
+    }, 1000);
     setInterval(fetchTeamState, 5000);
   </script>
 </body>

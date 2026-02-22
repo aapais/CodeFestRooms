@@ -9,217 +9,59 @@
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #0d1117;
-      --panel: #161b22;
-      --border: #30363d;
-      --accent: #3fb950; /* Green for Final/Go */
-      --success: #3fb950;
-      --warning: #d29922;
-      --danger: #f85149;
-      --text: #c9d1d9;
-      --text-muted: #8b949e;
+      --bg: #0d1117; --panel: #161b22; --border: #30363d; --accent: #3fb950;
+      --success: #3fb950; --warning: #d29922; --danger: #f85149; --text: #c9d1d9; --text-muted: #8b949e;
     }
-
-    body {
-      font-family: 'Space Grotesk', sans-serif;
-      background-color: var(--bg);
-      color: var(--text);
-      margin: 0;
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      overflow: hidden;
-    }
-
-    /* Team Bar */
-    .team-bar {
-      background: #010409;
-      border-bottom: 1px solid var(--border);
-      padding: 10px 25px;
-      display: flex;
-      align-items: center;
-      gap: 15px;
-      z-index: 100;
-    }
-
-    .team-bar input {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      color: white;
-      padding: 6px 12px;
-      border-radius: 4px;
-      font-size: 13px;
-    }
-
-    .btn {
-      padding: 8px 18px;
-      border-radius: 4px;
-      border: none;
-      font-weight: 600;
-      cursor: pointer;
-      font-size: 13px;
-      transition: all 0.2s;
-    }
-
+    body { font-family: 'Space Grotesk', sans-serif; background-color: var(--bg); color: var(--text); margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+    .team-bar { background: #010409; border-bottom: 1px solid var(--border); padding: 10px 25px; display: flex; align-items: center; gap: 15px; }
+    .btn { padding: 8px 18px; border-radius: 4px; border: none; font-weight: 600; cursor: pointer; font-size: 13px; transition: all 0.2s; }
     .btn-primary { background: var(--accent); color: white; }
     .btn-success { background: var(--success); color: white; }
     .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text-muted); }
-    .btn:hover { opacity: 0.8; transform: translateY(-1px); }
-
-    .timer-box {
-      margin-left: auto;
-      font-family: 'Fira Code', monospace;
-      color: var(--warning);
-      font-weight: 700;
-      background: rgba(210, 153, 34, 0.1);
-      padding: 5px 12px;
-      border-radius: 4px;
-      border: 1px solid rgba(210, 153, 34, 0.2);
-    }
-
-    /* Main Layout */
-    .container {
-      display: grid;
-      grid-template-columns: 350px 1fr;
-      flex-grow: 1;
-      overflow: hidden;
-    }
-
-    /* Briefing Panel */
-    .briefing {
-      background: var(--panel);
-      border-right: 1px solid var(--border);
-      padding: 25px;
-      overflow-y: auto;
-    }
-
-    .briefing h1 { font-size: 20px; color: var(--accent); margin-top: 0; }
-    .briefing h2 { font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-top: 30px; }
-    
-    .objective-card {
-      background: rgba(63, 185, 80, 0.05);
-      border-left: 3px solid var(--accent);
-      padding: 15px;
-      margin: 15px 0;
-    }
-
-    .bonus-card {
-      background: rgba(210, 153, 34, 0.05);
-      border-left: 3px solid var(--warning);
-      padding: 15px;
-      margin: 15px 0;
-    }
-
-    /* Workspace Panel */
-    .workspace {
-      padding: 40px;
-      background-image: radial-gradient(circle at center, #162d1c 0%, #0d1117 100%);
-      overflow-y: auto;
-    }
-
-    .card {
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 25px;
-      max-width: 800px;
-      margin: 0 auto 30px;
-    }
-
-    .status-monitor {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 20px;
-      padding: 30px;
-      background: #010409;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      margin-bottom: 30px;
-    }
-
-    .status-light {
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      background: var(--danger);
-      box-shadow: 0 0 10px var(--danger);
-    }
+    .timer-box { margin-left: auto; font-family: 'Fira Code', monospace; color: var(--warning); font-weight: 700; background: rgba(210, 153, 34, 0.1); padding: 5px 12px; border-radius: 4px; border: 1px solid rgba(210, 153, 34, 0.2); min-width: 80px; text-align: center; }
+    .container { display: grid; grid-template-columns: 350px 1fr; flex-grow: 1; overflow: hidden; }
+    .briefing { background: var(--panel); border-right: 1px solid var(--border); padding: 25px; overflow-y: auto; }
+    .objective-card { background: rgba(63, 185, 80, 0.05); border-left: 3px solid var(--accent); padding: 15px; margin: 15px 0; }
+    .bonus-card { background: rgba(210, 153, 34, 0.05); border-left: 3px solid var(--warning); padding: 15px; margin: 15px 0; }
+    .workspace { padding: 40px; background-image: radial-gradient(circle at center, #162d1c 0%, #0d1117 100%); overflow-y: auto; }
+    .card { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 25px; max-width: 800px; margin: 0 auto 30px; }
+    .status-monitor { display: flex; align-items: center; justify-content: center; gap: 20px; padding: 30px; background: #010409; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 30px; }
+    .status-light { width: 20px; height: 20px; border-radius: 50%; background: var(--danger); box-shadow: 0 0 10px var(--danger); }
     .status-light.online { background: var(--success); box-shadow: 0 0 15px var(--success); }
-
-    .badges-mini { display: flex; gap: 8px; margin-left: 15px; }
     .badge-dot { width: 10px; height: 10px; border-radius: 50%; background: #30363d; }
     .badge-dot.done { background: var(--success); box-shadow: 0 0 8px var(--success); }
-
-    textarea {
-      width: 100%;
-      background: #010409;
-      border: 1px solid var(--border);
-      color: #7ee787;
-      padding: 15px;
-      border-radius: 6px;
-      font-family: 'Fira Code', monospace;
-      font-size: 13px;
-      margin-bottom: 15px;
-    }
+    textarea { width: 100%; background: #010409; border: 1px solid var(--border); color: #7ee787; padding: 15px; border-radius: 6px; font-family: 'Fira Code', monospace; font-size: 13px; margin-bottom: 15px; }
   </style>
 </head>
 <body>
   <div class="team-bar">
-    <strong style="font-size: 14px; color: var(--accent);">OP:</strong>
-    <input type="text" id="teamName" placeholder="Team Name" />
-    <button class="btn btn-primary" onclick="joinTeam()">INIT SESSION</button>
-    <div class="badges-mini" id="badges">
-      <div class="badge-dot"></div>
-      <div class="badge-dot"></div>
-      <div class="badge-dot"></div>
-      <div class="badge-dot"></div>
-    </div>
-    <span id="teamStatus" style="font-size: 12px; color: var(--text-muted); margin-left: 10px;"></span>
-    <div class="timer-box" id="timer">00:50:00</div>
-    <button class="btn btn-ghost" onclick="goPrevRoom()">← PREV ROOM</button>
+    <strong style="color: var(--accent);">OPERATIVE:</strong>
+    <span id="displayTeamName" style="font-weight: 700;">...</span>
+    <button class="btn btn-ghost" style="font-size: 10px; padding: 2px 8px;" onclick="logout()">LOGOUT</button>
+    <div style="display:flex; gap:8px; margin-left:15px;" id="badges"><div class="badge-dot"></div><div class="badge-dot"></div><div class="badge-dot"></div><div class="badge-dot"></div></div>
+    <span id="teamStatus" style="font-size: 12px; color: var(--success); margin-left: 10px;"></span>
+    <div class="timer-box" id="timer">--:--</div>
+    <button class="btn btn-ghost" style="margin-left:10px" onclick="goPrevRoom()">← PREV</button>
   </div>
 
   <div class="container">
     <aside class="briefing">
       <h1>MISSION: MODERNIZE</h1>
-      <p>Chegaste ao núcleo do Monólito. O sistema está instável e as APIs de cálculo de risco são opacas. É hora de modernizar a infraestrutura.</p>
-      
-      <h2>Main Objective</h2>
-      <div class="objective-card">
-        <strong>Stabilize & Verify:</strong>
-        <p>Garante que a API de Credit Score em <code>monolith.js</code> está a funcionar corretamente. Refactoriza para que o sistema seja resiliente.</p>
-      </div>
-
-      <h2>Secondary Quest (Bonus)</h2>
-      <div class="bonus-card">
-        <strong>Ops Master (+50 pts):</strong>
-        <p>Implementa um padrão de <strong>Health Check</strong>. O servidor HQ vai procurar por referências a <code>/health</code> ou status de uptime no teu código.</p>
-      </div>
-
-      <div style="margin-top: 40px;">
-        <button class="btn btn-success" style="width: 100%; padding: 15px; font-size: 16px;" onclick="markComplete()">FINISH MISSION</button>
-      </div>
+      <p>Chegaste ao núcleo. Estabiliza o Monólito.</p>
+      <div class="objective-card"><strong>Stabilize:</strong><p>Garante que a API de Credit Score funciona.</p></div>
+      <div class="bonus-card"><strong>Ops Master (+50):</strong><p>Implementa Health Check.</p></div>
+      <button class="btn btn-success" id="finishBtn" style="width: 100%; padding: 15px;" onclick="markComplete()">FINISH MISSION</button>
     </aside>
-
     <main class="workspace">
       <div class="card">
-        <h3 style="margin-top:0;">System Observability</h3>
         <div class="status-monitor">
           <div id="statusLight" class="status-light"></div>
           <div id="statusText" style="font-family:'Fira Code', monospace;">STATUS: OFFLINE</div>
           <button class="btn btn-ghost" onclick="checkHealth()" style="margin-left:auto;">PING SYSTEM</button>
         </div>
-
-        <h3>Credit Score API Tester</h3>
-        <p style="font-size: 13px; color: var(--text-muted);">Simula um pedido de análise de risco para validar o monólito.</p>
-        <textarea id="payload" rows="5">{
-  "age": 30,
-  "country": "PT",
-  "spends": [100, 500, 120]
-}</textarea>
+        <textarea id="payload" rows="5">{"age": 30, "country": "PT", "spends": [100, 500]}</textarea>
         <button class="btn btn-primary" onclick="calcScore()">CALCULATE RISK</button>
-        <pre id="scoreResult" style="background:#010409; padding:15px; border-radius:6px; margin-top:15px; font-family:'Fira Code', monospace; font-size:12px; color:#7ee787; border:1px solid var(--border);">Awaiting calculation...</pre>
+        <pre id="scoreResult" style="background:#010409; padding:15px; border-radius:6px; margin-top:15px; font-family:'Fira Code', monospace; font-size:12px; color:#7ee787; border:1px solid var(--border);">Awaiting...</pre>
       </div>
     </main>
   </div>
@@ -228,140 +70,78 @@
   <script src="/timingConfig.js"></script>
   <script>
     const ROOM_ID = 'final';
-    const CFG = window.ESCAPE_ROOM_CONFIG || {};
-    const TIMING = window.GAME_TIMING || {};
-    const API_BASE_URL = CFG.getApiUrl ? CFG.getApiUrl() : 'http://localhost:4000/api';
-    const ROOM_ORDER = ['room1', 'room2', 'room3', 'final'];
+    const CFG = window.ESCAPE_ROOM_CONFIG;
+    const API = CFG.getApiUrl();
     let teamState = { completedRooms: [] };
 
-    document.addEventListener('DOMContentLoaded', () => {
-      const savedName = CFG.getTeamName();
-      if (savedName) {
-        document.getElementById('teamName').value = savedName;
-        joinTeam();
-      }
+    document.addEventListener('DOMContentLoaded', async () => {
+      const name = CFG.getTeamName();
+      if (!name) { window.location.href = CFG.getUrl('gameHub'); return; }
+      if (!(await CFG.checkGameStart())) return;
+      document.getElementById('displayTeamName').textContent = name;
+      fetchTeamState();
       checkHealth();
+      setInterval(() => CFG.syncClock(), 10000);
     });
-
-    setInterval(() => {
-      const remaining = TIMING.getTimeRemaining();
-      const el = document.getElementById('timer');
-      if (remaining === null) el.textContent = '00:50:00';
-      else {
-        const m = Math.floor(remaining / 60);
-        const s = remaining % 60;
-        el.textContent = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
-      }
-    }, 1000);
-
-    async function joinTeam() {
-      try {
-        const name = document.getElementById('teamName').value.trim();
-        if (!name) return;
-        CFG.setTeamName(name);
-        const res = await fetch(`${API_BASE_URL}/team/login`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name })
-        });
-        const data = await res.json();
-        if (data.ok && data.team.token) CFG.setTeamToken(data.team.token);
-        fetchTeamState();
-      } catch (e) {
-        console.warn('HQ Uplink Offline.');
-      }
-    }
 
     async function fetchTeamState() {
       try {
-        const res = await fetch(`${API_BASE_URL}/state`);
-        if (!res.ok) return;
+        const res = await fetch(`${API}/state`);
         const data = await res.json();
-        if (data.ok && data.teams) {
-          const me = data.teams.find(t => t.name === CFG.getTeamName());
-          if (me) {
-            teamState = me;
-            updateBadges();
-          }
+        const me = data.teams?.find(t => t.name === CFG.getTeamName());
+        if (me) {
+          teamState = me;
+          const dots = document.querySelectorAll('.badge-dot');
+          ['room1','room2','room3','final'].forEach((id, i) => { if (teamState.completedRooms.includes(id)) dots[i].classList.add('done'); });
         }
       } catch (e) {}
     }
 
-    function updateBadges() {
-      const dots = document.querySelectorAll('.badge-dot');
-      ROOM_ORDER.forEach((id, i) => {
-        if (teamState.completedRooms && teamState.completedRooms.includes(id)) dots[i].classList.add('done');
-      });
-    }
-
     async function checkHealth() {
       try {
-        const res = await fetch('/status');
-        const light = document.getElementById('statusLight');
-        const text = document.getElementById('statusText');
+        const res = await fetch('status');
+        const light = document.getElementById('statusLight'), text = document.getElementById('statusText');
         if (res.ok) {
           const data = await res.json();
-          light.classList.add('online');
-          text.textContent = `STATUS: ONLINE (UPTIME: ${data.uptime.toFixed(0)}s)`;
-          text.style.color = 'var(--success)';
-        } else {
-          throw new Error();
-        }
+          light.classList.add('online'); text.textContent = `STATUS: ONLINE`; text.style.color = 'var(--success)';
+        } else { throw new Error(); }
       } catch (e) {
         document.getElementById('statusLight').classList.remove('online');
-        document.getElementById('statusText').textContent = "STATUS: UNSTABLE / 503";
+        document.getElementById('statusText').textContent = "STATUS: UNSTABLE";
         document.getElementById('statusText').style.color = 'var(--danger)';
       }
     }
 
     async function calcScore() {
-      try {
-        const payload = document.getElementById('payload').value;
-        const res = await fetch('/api/score', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: payload
-        });
-        const data = await res.json();
-        document.getElementById('scoreResult').innerText = JSON.stringify(data, null, 2);
-      } catch (e) {
-        document.getElementById('scoreResult').innerText = "API Error: Ensure local server is running.";
-      }
+      const res = await fetch('api/score', { method: 'POST', headers: {'Content-Type':'application/json'}, body: document.getElementById('payload').value });
+      const data = await res.json();
+      document.getElementById('scoreResult').innerText = JSON.stringify(data, null, 2);
     }
 
     async function markComplete() {
+      const btn = document.getElementById('finishBtn');
+      btn.disabled = true; btn.textContent = "VERIFYING...";
       try {
-        const name = CFG.getTeamName();
-        if (!name) return alert('Join team first');
-        
-        const sourceRes = await fetch('/api/source');
-        if (!sourceRes.ok) throw new Error('Local source not found');
+        const sourceRes = await fetch('api/source');
         const sourceData = await sourceRes.json();
-        
-        const res = await fetch(`${API_BASE_URL}/team/update`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            name, 
-            token: CFG.getTeamToken(),
-            completedRoom: ROOM_ID,
-            sourceCode: sourceData.source 
-          })
-        });
+        const res = await fetch(`${API}/team/update`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ name: CFG.getTeamName(), token: CFG.getTeamToken(), completedRoom: ROOM_ID, sourceCode: sourceData.source }) });
         const data = await res.json();
-        if (data.ok) {
-          alert('ALL MISSIONS COMPLETED! HQ analysis confirmed system modernization.');
-          fetchTeamState();
-        } else {
-          alert('Verification Failed: ' + data.error);
-        }
-      } catch (e) {
-        alert('Mission Status Error: Check your IDX local server.');
-      }
+        if (data.ok) { 
+          btn.style.background = 'var(--success)'; btn.textContent = "CONGRATULATIONS!";
+          setTimeout(() => { window.location.href = CFG.getUrl('gameHub'); }, 1000);
+        } else { alert('Failed: ' + data.error); btn.disabled = false; btn.textContent = "FINISH MISSION"; }
+      } catch (e) { alert('Error'); btn.disabled = false; }
     }
 
+    function logout() { CFG.logout(); }
     function goPrevRoom() { window.location.href = CFG.getRoomUrl('room3'); }
-
+    setInterval(() => {
+      const rem = window.GAME_TIMING.getTimeRemaining();
+      if (rem !== null) {
+        const m = Math.floor(rem/60), s = rem%60;
+        document.getElementById('timer').textContent = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+      }
+    }, 1000);
     setInterval(fetchTeamState, 5000);
   </script>
 </body>

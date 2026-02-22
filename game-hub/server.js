@@ -9,7 +9,7 @@ const PORT = process.env.PORT || 8080;
 
 app.use(express.json());
 
-// --- BASE DE DADOS EM MEMÓRIA (Para o Workshop) ---
+// --- BASE DE DADOS EM MEMÓRIA ---
 const teams = new Map();
 let gameTimer = null;
 
@@ -20,68 +20,52 @@ app.use('/room2', express.static(path.join(__dirname, '../rooms/room2-refactor-l
 app.use('/room3', express.static(path.join(__dirname, '../rooms/room3-security-vault/public')));
 app.use('/final', express.static(path.join(__dirname, '../rooms/final-modernisation/public')));
 
-// --- API DE SINCRONIZAÇÃO (Equipas e Dashboard) ---
-
-app.get('/api/state', (req, res) => {
-  res.json({ ok: true, teams: Array.from(teams.values()) });
-});
-
-app.get('/api/timer', (req, res) => {
-  res.json({ ok: true, timer: gameTimer });
-});
-
-app.post('/api/kickoff', (req, res) => {
-  gameTimer = { startTime: Date.now(), duration: 50 * 60 * 1000 };
-  res.json({ ok: true, startTime: gameTimer.startTime });
-});
-
+// --- API DE SINCRONIZAÇÃO (Dashboard & HQ) ---
+app.get('/api/state', (req, res) => res.json({ ok: true, teams: Array.from(teams.values()) }));
+app.get('/api/timer', (req, res) => res.json({ ok: true, timer: gameTimer }));
+app.post('/api/kickoff', (req, res) => { gameTimer = { startTime: Date.now(), duration: 50 * 60 * 1000 }; res.json({ ok: true, startTime: gameTimer.startTime }); });
 app.post('/api/team/login', (req, res) => {
   const name = req.body.name || 'Operative';
   if (!teams.has(name)) {
-    teams.set(name, { 
-      name, 
-      token: 'tk-' + Math.random().toString(36).slice(2), 
-      score: 0, 
-      completedRooms: [], 
-      room: 'room1', 
-      lastResult: 'Initialized',
-      updatedAt: Date.now() 
-    });
+    teams.set(name, { name, token: 'tk-' + Math.random().toString(36).slice(2), score: 0, completedRooms: [], room: 'room1', updatedAt: Date.now() });
   }
   res.json({ ok: true, team: teams.get(name) });
 });
-
 app.post('/api/team/update', (req, res) => {
-  const { name, completedRoom, room, result } = req.body;
+  const { name, completedRoom, room } = req.body;
   const team = teams.get(name);
   if (team) {
     if (room) team.room = room;
-    if (result) team.lastResult = result;
     if (completedRoom && !team.completedRooms.includes(completedRoom)) {
       team.completedRooms.push(completedRoom);
-      team.score += 100; // Pontuação simplificada
+      team.score += 100;
     }
     team.updatedAt = Date.now();
   }
   res.json({ ok: true });
 });
 
-// --- API DA ROOM 1 (Login da Loja - SIMPLIFICADO) ---
-app.post('/room1/api/login', (req, res) => {
-  // Aceita tudo para não travar o workshop
-  res.json({ ok: true, token: 'idx-fake-token', user: { username: req.body.username || 'Operative' } });
-});
+// --- API ROOM 1 ---
+app.post('/room1/api/login', (req, res) => res.json({ ok: true }));
+app.post('/room1/api/checkout', (req, res) => res.json({ ok: true, order: { id: 'ORD-123', amounts: { subtotalCents: 200000, discountCents: 20000, shippingCents: 45000, taxCents: 41400, totalCents: 266400 } } }));
+app.get('/room1/api/source', (req, res) => res.json({ ok: true, source: fs.readFileSync(path.join(__dirname, '../rooms/room1-archaeology/src/legacyService.js'), 'utf8') }));
 
-app.post('/room1/api/checkout', (req, res) => {
-  res.json({ ok: true, order: { id: 'ORD-' + Math.random().toString(36).slice(-5).toUpperCase(), amounts: { subtotalCents: 200000, discountCents: 20000, shippingCents: 45000, taxCents: 41400, totalCents: 266400 } } });
-});
+// --- API ROOM 2 ---
+app.post('/room2/api/invoice', (req, res) => res.json({ ok: true, invoice: { amounts: { total: 1180.8 } } }));
+app.get('/room2/api/validate-complexity', (req, res) => res.json({ ok: true, message: "Quality Scan OK." }));
+app.get('/room2/api/source', (req, res) => res.json({ ok: true, source: fs.readFileSync(path.join(__dirname, '../rooms/room2-refactor-lab/src/invoiceEngine.js'), 'utf8') }));
 
-app.get('/room1/api/source', (req, res) => {
-  const src = fs.readFileSync(path.join(__dirname, '../rooms/room1-archaeology/src/legacyService.js'), 'utf8');
-  res.json({ ok: true, source: src });
+// --- API ROOM 3 ---
+app.post('/room3/api/login', (req, res) => {
+  const { username, password } = req.body;
+  if (username === 'admin' && (password.includes("' OR '1'='1") || password === 'secret')) return res.json({ ok: true, msg: "🔓 ACCESS GRANTED" });
+  res.json({ ok: false, msg: "Access Denied" });
 });
+app.get('/room3/api/source', (req, res) => res.json({ ok: true, source: fs.readFileSync(path.join(__dirname, '../rooms/room3-security-vault/src/userRepo.js'), 'utf8') }));
 
-app.listen(PORT, () => {
-  console.log(`\n🚀 SERVIDOR CENTRALIZADO ONLINE NA PORTA ${PORT}`);
-  console.log(`📡 Dashboard em /dashboard.html`);
-});
+// --- API FINAL ---
+app.get('/final/status', (req, res) => res.json({ ok: true, uptime: process.uptime() }));
+app.post('/final/api/score', (req, res) => res.json({ ok: true, score: 850, risk: "LOW" }));
+app.get('/final/api/source', (req, res) => res.json({ ok: true, source: fs.readFileSync(path.join(__dirname, '../rooms/final-modernisation/src/monolith.js'), 'utf8') }));
+
+app.listen(PORT, () => console.log(`🚀 WORKSHOP SERVER ONLINE ON PORT ${PORT}`));
