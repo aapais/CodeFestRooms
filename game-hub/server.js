@@ -1,34 +1,49 @@
 'use strict';
 
 const express = require('express');
-const http = require('http');
 const path = require('path');
-const { createProxyMiddleware } = require('http-proxy-middleware');
+const fs = require('fs');
 
 const app = express();
-const server = http.createServer(app);
-
 const PORT = process.env.PORT || 4000;
 
-// --- PROXY PARA AS SALAS (CONTEÚDO ESTÁTICO LOCAL) ---
-const setupRoomProxy = (route, targetPort) => {
-  app.use(route, createProxyMiddleware({
-    target: `http://127.0.0.1:${targetPort}`,
-    changeOrigin: true,
-    pathRewrite: { [`^${route}`]: '' },
-    logLevel: 'error'
-  }));
-};
+app.use(express.json());
 
-setupRoomProxy('/room1', 3001);
-setupRoomProxy('/room2', 3002);
-setupRoomProxy('/room3', 3003);
-setupRoomProxy('/final', 3004);
-
-// Servir ficheiros públicos do Hub
+// Servir o próprio Hub
 app.use(express.static(path.join(__dirname, 'public')));
 
-server.listen(PORT, () => {
-  console.log(`🚀 HUB LOCAL ONLINE NA PORTA ${PORT}`);
-  console.log(`📡 Nota: Este Hub agora apenas serve UI. As chamadas de API vão direto para a Cloud.`);
+// Servir as Salas como sub-pastas (MUITO MAIS SIMPLES)
+app.use('/room1', express.static(path.join(__dirname, '../rooms/room1-archaeology/public')));
+app.use('/room2', express.static(path.join(__dirname, '../rooms/room2-refactor-lab/public')));
+app.use('/room3', express.static(path.join(__dirname, '../rooms/room3-security-vault/public')));
+app.use('/final', express.static(path.join(__dirname, '../rooms/final-modernisation/public')));
+
+// Endpoint local para ler o código da equipa no IDX
+app.get('/api/local-source/:room', (req, res) => {
+  const room = req.params.room;
+  let filePath = '';
+  if (room === 'room1') filePath = '../rooms/room1-archaeology/src/legacyService.js';
+  if (room === 'room2') filePath = '../rooms/room2-refactor-lab/src/invoiceEngine.js';
+  if (room === 'room3') filePath = '../rooms/room3-security-vault/src/userRepo.js';
+  if (room === 'final') filePath = '../rooms/final-modernisation/src/monolith.js';
+
+  try {
+    const source = fs.readFileSync(path.join(__dirname, filePath), 'utf8');
+    res.json({ ok: true, source });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: 'Não foi possível ler o ficheiro no IDX' });
+  }
+});
+
+// APIs locais de simulação (para que os botões de teste funcionem)
+// Sala 1: Login e Checkout Simulado
+app.post('/room1/api/login', (req, res) => res.json({ ok: true, token: 'fake-jwt' }));
+app.post('/room1/api/checkout', (req, res) => {
+  // Lógica mínima para o botão funcionar no IDX
+  res.json({ ok: true, order: { id: 'IDX-TEST', amounts: { subtotalCents: 200000, discountCents: 20000, shippingCents: 45000, taxCents: 41400, totalCents: 266400 } } });
+});
+
+app.listen(PORT, () => {
+  console.log(`\n🚀 WORKSHOP SERVER ONLINE`);
+  console.log(`🔗 Preview IDX: http://localhost:${PORT}\n`);
 });
