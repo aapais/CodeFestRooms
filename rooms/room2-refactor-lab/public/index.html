@@ -93,7 +93,7 @@
 
     async function generateInvoice() {
       try {
-        const res = await fetch('api/invoice', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items: [{ sku: 'REF-01', unitPrice: 1200, qty: 1 }], discountCode: 'VIP20', shippingAddress: { country: 'PT' } }) });
+        const res = await fetch('/room2/api/invoice', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items: [{ sku: 'REF-01', unitPrice: 1200, qty: 1 }], discountCode: 'VIP20', shippingAddress: { country: 'PT' } }) });
         const data = await res.json();
         if (data.ok) document.getElementById('logic-result').innerHTML = `<div class="result-terminal" style="color:white; border-color:var(--accent)">INVOICE GENERATED\nTOTAL: ${data.invoice.amounts.total} EUR</div>`;
       } catch (e) { alert('Local server error'); }
@@ -104,7 +104,7 @@
       term.textContent = ">>> SCANNING CODE FOR COMPLEXITY...";
       term.style.color = "var(--accent)";
       try {
-        const res = await fetch('api/validate-complexity');
+        const res = await fetch('/room2/api/validate-complexity');
         const data = await res.json();
         term.textContent = `>>> ${data.message}\n${data.details || ''}`;
         term.style.color = data.ok ? "var(--success)" : "var(--warning)";
@@ -118,14 +118,14 @@
       const btn = document.getElementById('verifyBtn');
       btn.disabled = true; btn.textContent = "VERIFYING...";
       try {
-        const localRes = await fetch('api/validate-complexity');
+        const localRes = await fetch('/room2/api/validate-complexity');
         const localData = await localRes.json();
         if (!localData.ok) { 
           document.getElementById('quality-result').textContent = localData.message; 
           btn.disabled = false; btn.textContent = "3. VERIFY & SUBMIT";
           return; 
         }
-        const sourceRes = await fetch('api/source');
+        const sourceRes = await fetch('/room2/api/source');
         const sourceData = await sourceRes.json();
         const res = await fetch(`${API}/team/update`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: CFG.getTeamName(), token: CFG.getTeamToken(), completedRoom: ROOM_ID, sourceCode: sourceData.source }) });
         const data = await res.json();

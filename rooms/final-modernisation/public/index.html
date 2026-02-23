@@ -99,7 +99,7 @@
 
     async function checkHealth() {
       try {
-        const res = await fetch('status');
+        const res = await fetch('/final/status');
         const light = document.getElementById('statusLight'), text = document.getElementById('statusText');
         if (res.ok) {
           const data = await res.json();
@@ -113,7 +113,7 @@
     }
 
     async function calcScore() {
-      const res = await fetch('api/score', { method: 'POST', headers: {'Content-Type':'application/json'}, body: document.getElementById('payload').value });
+      const res = await fetch('/final/api/score', { method: 'POST', headers: {'Content-Type':'application/json'}, body: document.getElementById('payload').value });
       const data = await res.json();
       document.getElementById('scoreResult').innerText = JSON.stringify(data, null, 2);
     }
@@ -122,7 +122,7 @@
       const btn = document.getElementById('finishBtn');
       btn.disabled = true; btn.textContent = "VERIFYING...";
       try {
-        const sourceRes = await fetch('api/source');
+        const sourceRes = await fetch('/final/api/source');
         const sourceData = await sourceRes.json();
         const res = await fetch(`${API}/team/update`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ name: CFG.getTeamName(), token: CFG.getTeamToken(), completedRoom: ROOM_ID, sourceCode: sourceData.source }) });
         const data = await res.json();
