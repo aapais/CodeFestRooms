@@ -46,11 +46,29 @@
 
   <div class="container">
     <aside class="briefing">
-      <h1>MISSION: MODERNIZE</h1>
-      <p>Chegaste ao núcleo. Estabiliza o Monólito.</p>
-      <div class="objective-card"><strong>Stabilize:</strong><p>Garante que a API de Credit Score funciona.</p></div>
-      <div class="bonus-card"><strong>Ops Master (+50):</strong><p>Implementa Health Check.</p></div>
-      <button class="btn btn-success" id="finishBtn" style="width: 100%; padding: 15px;" onclick="markComplete()">FINISH MISSION</button>
+      <h1>FINAL MISSION: THE MONOLITH</h1>
+      <p>O núcleo do sistema está obsoleto. A tua missão é converter este código legado numa infraestrutura moderna e resiliente.</p>
+      
+      <h2>Main Objective: Modernize & Scale</h2>
+      <div class="objective-card">
+        <strong>1. Implement New Business Logic:</strong>
+        <p>O QG exige uma nova regra: Se o gasto total (<code>totalSpent</code>) for <strong>superior a 5000 EUR</strong>, o <code>score</code> deve ser fixado em <strong>50</strong> (independente da idade ou país).</p>
+      </div>
+
+      <div class="objective-card">
+        <strong>2. Verify System Integrity:</strong>
+        <p>Usa o Gemini para garantir que a função <code>calcScore</code> em <code>monolith.js</code> está limpa e livre de erros de parsing.</p>
+      </div>
+
+      <h2>Secondary Quest (Bonus)</h2>
+      <div class="bonus-card">
+        <strong>Ops Master (+50 pts):</strong>
+        <p>Adiciona um padrão de <strong>Health Check</strong>. O código deve conter referências a um endpoint <code>/health</code> ou retornar o <code>uptime</code> do sistema.</p>
+      </div>
+
+      <div style="margin-top: 40px;">
+        <button class="btn btn-success" id="finishBtn" style="width: 100%; padding: 15px; font-size: 16px;" onclick="markComplete()">ACTIVATE MODERN CORE</button>
+      </div>
     </aside>
     <main class="workspace">
       <div class="card">
