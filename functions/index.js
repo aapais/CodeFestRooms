@@ -1,5 +1,5 @@
 /**
- * Firebase Functions - Final High-Fidelity Version
+ * Firebase Functions - Final Challenge Hardening
  */
 
 const functions = require('firebase-functions');
@@ -20,35 +20,27 @@ app.use(express.json());
 const linter = new Linter();
 const ROOM_POINTS = { room1: 100, room2: 150, room3: 150, final: 200 };
 
-// --- VALIDATION ENGINES ---
-
+// --- ENGINES ---
 function validateRoom1(source) {
   try {
     const sandbox = { module: { exports: {} }, require: (m) => m === 'crypto' ? crypto : {}, console: { log: () => {} }, Date, Math, Number, String, JSON };
-    vm.createContext(sandbox); vm.runInContext(source, sandbox, { timeout: 1000 });
+    vm.createContext(sandbox); vm.runInContext(source, sandbox);
     const svc = sandbox.module.exports; svc.createUser('V', 'P'); const auth = svc.authenticate('V', 'P');
     const res = svc.placeOrder(auth.token, { items: [{ priceCents: 1000, qty: 5 }], discountCode: 'WELCOME10', shippingAddress: { country: 'PT' } });
     if (res?.order?.amounts?.taxCents === 1139) return { ok: true };
     return { ok: false, error: "IVA incorreto." };
-  } catch (e) { return { ok: false, error: "Erro Room 1." }; }
+  } catch (e) { return { ok: false, error: "Erro sintaxe Room 1." }; }
 }
 
 function validateRoom2(source) {
   try {
     const sandbox = { module: { exports: {} }, console: { log: () => {} }, Math, Number, String, JSON, Array, Error };
-    vm.createContext(sandbox); vm.runInContext(source, sandbox, { timeout: 1000 });
+    vm.createContext(sandbox); vm.runInContext(source, sandbox);
     const engine = new sandbox.module.exports.InvoiceEngine();
     const res = engine.generateInvoice({ items: [{ sku: 'T', unitPrice: 100, qty: 2 }] }, { tier: 'VIP' });
     if (!res?.ok) return { ok: false, error: "Lógica Room 2 partida." };
-    const messages = linter.verify(source, {
-      languageOptions: { ecmaVersion: 2022, sourceType: 'commonjs' },
-      rules: { complexity: ['error', 1] }
-    });
-    let maxComplexity = 0;
-    messages.forEach(m => {
-      const match = m.message.match(/complexity of (\d+)/);
-      if (match) maxComplexity = Math.max(maxComplexity, parseInt(match[1]));
-    });
+    const messages = linter.verify(source, { languageOptions: { ecmaVersion: 2022, sourceType: 'commonjs' }, rules: { complexity: ['error', 1] } });
+    let maxComplexity = 0; messages.forEach(m => { const match = m.message.match(/complexity of (\d+)/); if (match) maxComplexity = Math.max(maxComplexity, parseInt(match[1])); });
     if (maxComplexity > 10) return { ok: false, error: `Complexidade ${maxComplexity} superior a 10.` };
     return { ok: true, complexity: maxComplexity };
   } catch (e) { return { ok: false, error: "Erro Room 2." }; }
@@ -56,30 +48,37 @@ function validateRoom2(source) {
 
 function validateRoom3(source) {
   const isVulnerable = source.includes(" + password") || source.includes(" + username") || source.includes("' + ");
-  const isSafe = source.includes("?") || source.includes("$1");
-  if (isVulnerable || !isSafe) return { ok: false, error: "Vulnerabilidade SQL Injection ainda aberta." };
+  if (isVulnerable || !source.includes("?")) return { ok: false, error: "Vulnerabilidade SQL Injection detectada." };
   return { ok: true, bonus: source.includes('bcrypt') || source.includes('.hash') };
 }
 
 function validateFinal(source) {
   try {
-    const sandbox = { 
-      module: { exports: {} }, exports: {},
-      console: { log: () => {} }, Date, Math, Number, String, JSON, Array,
-      process: { argv: [], exit: () => {} }, require: () => ({})
-    };
-    vm.createContext(sandbox);
-    vm.runInContext(source, sandbox, { timeout: 1000 });
+    const sandbox = { module: { exports: {} }, exports: {}, console: { log: () => {} }, Date, Math, Number, String, JSON, Array, process: { argv: [], exit: () => {} }, require: () => ({}) };
+    vm.createContext(sandbox); vm.runInContext(source, sandbox);
     const svc = sandbox.module.exports.calcScore ? sandbox.module.exports : sandbox.exports;
-    // Teste funcional: perfil PT, 30 anos, 100 spent -> Score 15 + 2 = 17
-    const res = svc.calcScore({ age: 30, country: 'PT', spends: [100] });
-    if (res && res.score === 17) return { ok: true, bonus: source.includes('/health') || source.includes('uptime') };
-    return { ok: false, error: "O motor de cálculo do monólito não devolveu o resultado esperado." };
+    
+    // TESTE 1: Perfil normal (30 anos, PT, 100 spent) -> Score 17 (15 + 2)
+    const res1 = svc.calcScore({ age: 30, country: 'PT', spends: [100] });
+    
+    // TESTE 2: Perfil High Roller (Nova regra exigida: se gasto > 5000, +50 pontos)
+    // O código original daria 15 (age) + 2 (PT) + 10 (spent > 1000) = 27
+    // O código modernizado deve dar 15 + 2 + 50 = 67
+    const res2 = svc.calcScore({ age: 30, country: 'PT', spends: [6000] });
+
+    if (res1.score === 17 && res2.score === 67) {
+      return { ok: true, bonus: source.includes('/health') || source.includes('uptime') };
+    }
+    
+    if (res2.score === 27) {
+      return { ok: false, error: "A lógica de modernização falhou. O motor ainda usa as regras antigas para gastos elevados (> 5000)." };
+    }
+
+    return { ok: false, error: "O cálculo do score não corresponde às novas especificações de modernização." };
   } catch (e) { return { ok: false, error: "Erro no Monólito: " + e.message }; }
 }
 
 // --- API ---
-
 app.get(['/state', '/api/state'], async (req, res) => {
   const snapshot = await db.collection('teams').get();
   const teams = []; snapshot.forEach(doc => teams.push(doc.data()));
@@ -122,13 +121,13 @@ app.post(['/team/update', '/api/team/update'], async (req, res) => {
     if (completedRoom === 'room3') v = validateRoom3(sourceCode);
     if (completedRoom === 'final') v = validateFinal(sourceCode);
     
-    if (!v.ok) return res.json({ ok: false, error: v.error });
+    if (!v.ok) return res.status(200).json({ ok: false, error: v.error });
 
     let finalScore = (team.score || 0) + ROOM_POINTS[completedRoom];
     let resultMsg = `✅ Sala ${completedRoom} completa!`;
 
     if (completedRoom === 'room1' && (sourceCode.match(/\/\*\*[\s\S]*?\*\//g) || []).length >= 3) { finalScore += 50; resultMsg = "✅ Room 1 + BÓNUS Doc!"; }
-    if (completedRoom === 'room2' && v.complexity < 5) { finalScore += 75; resultMsg = `✅ Room 2 + BÓNUS Minimalist (${v.complexity})!`; }
+    if (completedRoom === 'room2' && v.complexity < 5) { finalScore += 75; resultMsg = `✅ Room 2 + BÓNUS Minimalist!`; }
     if (completedRoom === 'room3' && v.bonus) { finalScore += 100; resultMsg = "✅ Room 3 + BÓNUS Crypto!"; }
     if (completedRoom === 'final' && v.bonus) { finalScore += 50; resultMsg = "✅ Missão Final + BÓNUS Ops!"; }
 

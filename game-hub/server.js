@@ -7,10 +7,6 @@ const vm = require('vm');
 const crypto = require('crypto');
 const { exec } = require('child_process');
 
-// Carregar lógica das salas
-const room1Svc = require('../rooms/room1-archaeology/src/legacyService');
-const room3Repo = require('../rooms/room3-security-vault/src/userRepo');
-
 const app = express();
 const PORT = process.env.PORT || 8080;
 
@@ -70,28 +66,38 @@ app.post('/room3/api/login', (req, res) => {
 });
 app.get('/room3/api/source', (req, res) => res.json({ ok: true, source: fs.readFileSync(path.join(__dirname, '../rooms/room3-security-vault/src/userRepo.js'), 'utf8') }));
 
-// --- API FINAL MISSION ---
+// --- API FINAL MISSION (Fix 500 and Logic) ---
 app.get('/final/status', (req, res) => res.json({ ok: true, uptime: process.uptime() }));
 app.post('/final/api/score', (req, res) => {
   try {
     const source = fs.readFileSync(path.join(__dirname, '../rooms/final-modernisation/src/monolith.js'), 'utf8');
-    // Provide a more complete sandbox to avoid errors with require/process
     const sandbox = { 
-      module: { exports: {} }, 
-      exports: {},
-      console, Date, Math, Number, String, JSON, Array,
-      require: (m) => ({}),
-      process: { argv: [], exit: () => {} }
+      module: { exports: {} }, exports: {}, console, Date, Math, Number, String, JSON, Array,
+      require: () => ({}), process: { argv: [], exit: () => {} }
     };
     vm.createContext(sandbox); 
     vm.runInContext(source, sandbox);
     const svc = sandbox.module.exports.calcScore ? sandbox.module.exports : sandbox.exports;
+    if (!svc.calcScore) throw new Error("A função calcScore não foi exportada corretamente.");
     const result = svc.calcScore(req.body);
     res.json({ ok: true, ...result });
   } catch (e) {
+    console.error("[ROOM4_ERR]", e.message);
     res.status(500).json({ ok: false, error: "Erro no Monólito: " + e.message });
   }
 });
 app.get('/final/api/source', (req, res) => res.json({ ok: true, source: fs.readFileSync(path.join(__dirname, '../rooms/final-modernisation/src/monolith.js'), 'utf8') }));
 
-app.listen(PORT, () => console.log(`🚀 UNIFIED WORKSHOP SERVER ONLINE ON PORT ${PORT}`));
+// --- API DE SINCRONIZAÇÃO DASHBOARD ---
+const teams = new Map();
+let gameTimer = null;
+app.get('/api/state', (req, res) => res.json({ ok: true, teams: Array.from(teams.values()) }));
+app.get('/api/timer', (req, res) => res.json({ ok: true, timer: gameTimer }));
+app.post('/api/kickoff', (req, res) => { gameTimer = { startTime: Date.now(), duration: 50*60*1000 }; res.json({ ok: true }); });
+app.post('/api/team/login', (req, res) => {
+  const name = req.body.name || 'Team';
+  if (!teams.has(name)) teams.set(name, { name, score: 0, completedRooms: [], updatedAt: Date.now(), token: 'tk-' + Math.random().toString(36).slice(2) });
+  res.json({ ok: true, team: teams.get(name) });
+});
+
+app.listen(PORT, () => console.log(`🚀 UNIFIED SERVER ONLINE ON PORT ${PORT}`));
