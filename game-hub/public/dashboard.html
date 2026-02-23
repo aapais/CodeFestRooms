@@ -15,44 +15,34 @@
     }
     * { box-sizing: border-box; }
     body { margin: 0; padding: 0; height: 100vh; width: 100vw; font-family: var(--font); color: var(--text); background-color: var(--bg); overflow: hidden; }
-    
     .dashboard-layout { display: grid; grid-template-columns: 380px 1fr; height: 100vh; padding-bottom: 60px; }
-
-    /* Barra Lateral */
     .mission-control { background: rgba(10, 12, 16, 0.95); border-right: 1px solid var(--card-border); padding: 25px; display: flex; flex-direction: column; overflow-y: auto; }
     .logo-glow { font-size: 22px; font-weight: 800; color: var(--accent); text-shadow: 0 0 15px var(--accent-glow); margin-bottom: 25px; text-align: center; text-transform: uppercase; }
-
     .mission-card { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 14px; margin-bottom: 12px; }
     .mission-card h3 { margin: 0 0 5px; font-size: 15px; color: var(--accent); display: flex; align-items: center; gap: 8px; }
     .mission-card p { margin: 0; font-size: 12px; color: var(--muted); line-height: 1.4; }
     .mission-points { display: inline-block; margin-top: 8px; font-size: 10px; font-weight: 700; color: var(--warning); text-transform: uppercase; }
-
-    /* Área Principal */
     .main-view { padding: 40px; display: flex; flex-direction: column; overflow-y: auto; }
     .header-stats { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; }
     .big-timer { font-family: monospace; font-size: 84px; font-weight: 800; line-height: 1; color: white; text-shadow: 0 0 20px rgba(255,255,255,0.1); }
     .kickoff-bar { background: var(--card); border: 1px solid var(--card-border); padding: 15px 25px; border-radius: 12px; display: flex; align-items: center; gap: 20px; }
-
-    /* Leaderboard */
-    .team-row { background: var(--card); border: 1px solid var(--card-border); border-radius: 16px; margin-bottom: 12px; padding: 15px 25px; display: grid; grid-template-columns: 60px 2fr 100px 120px 180px; align-items: center; transition: all 0.5s; }
+    .team-row { background: var(--card); border: 1px solid var(--card-border); border-radius: 16px; margin-bottom: 12px; padding: 15px 25px; display: grid; grid-template-columns: 60px 2fr 100px 120px 220px; align-items: center; transition: all 0.5s; }
     .score-val { font-size: 32px; font-weight: 800; color: var(--success); }
     .mission-time { font-family: monospace; color: var(--muted); font-size: 16px; font-weight: 600; }
-    .progress-dots { display: flex; gap: 10px; }
+    .progress-dots { display: flex; gap: 15px; }
+    .room-badge { display: flex; flex-direction: column; align-items: center; gap: 4px; }
     .dot { width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-size: 14px; filter: grayscale(1); }
     .dot.active { background: var(--accent-glow); border-color: var(--accent); filter: grayscale(0); box-shadow: 0 0 10px var(--accent-glow); }
-
+    .bonus-val { font-size: 10px; font-weight: 800; color: var(--warning); height: 12px; }
     .btn { padding: 10px 20px; border-radius: 8px; border: none; font-weight: 700; cursor: pointer; text-transform: uppercase; font-size: 12px; }
-    .btn-start { background: var(--success); color: white; box-shadow: 0 0 15px rgba(63, 185, 80, 0.3); }
+    .btn-start { background: var(--success); color: white; }
     .btn-reset { background: transparent; border: 1px solid var(--danger); color: var(--danger); }
     .btn-audio { background: var(--accent); color: black; width: 100%; margin-bottom: 20px; }
-
-    /* Marquee */
-    @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
     .ticker-wrap { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.95); border-top: 2px solid var(--accent); padding: 15px 0; z-index: 1000; display: flex; align-items: center; overflow: hidden; }
     .ticker-label { background: var(--accent); color: black; padding: 6px 14px; margin-left: 20px; border-radius: 4px; font-size: 13px; font-weight: 900; z-index: 1001; margin-right: 20px; }
-    .ticker-container { overflow: hidden; white-space: nowrap; width: 100%; }
     .ticker-move { display: inline-block; white-space: nowrap; animation: marquee 30s linear infinite; }
-    .ticker-item { display: inline-block; padding: 0 60px; color: var(--accent); font-family: monospace; font-size: 20px; font-weight: 600; text-shadow: 0 0 10px var(--accent-glow); }
+    .ticker-item { display: inline-block; padding: 0 60px; color: var(--accent); font-family: monospace; font-size: 20px; font-weight: 600; }
+    @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
   </style>
 </head>
 <body>
@@ -72,15 +62,11 @@
         <div class="mission-card"><h3>🏢 Final</h3><p>Modernize Monolith.</p><div class="mission-points">200 Pts + ⭐️ 50 Bonus</div></div>
       </div>
     </aside>
-
     <main class="main-view">
       <div class="header-stats">
         <div><div style="font-size:14px; color:var(--muted); letter-spacing:2px; margin-bottom:5px;">MISSION ELAPSED</div><div class="big-timer" id="timer">00:50:00</div></div>
         <div class="kickoff-bar">
-          <div style="text-align:right">
-            <div id="gameStatus" style="font-size:11px; font-weight:800; color:var(--accent); margin-bottom:4px;">STATUS: READY</div>
-            <div id="conn" style="font-size:10px; color:var(--muted)">CONNECTING TO HQ...</div>
-          </div>
+          <div style="text-align:right"><div id="gameStatus" style="font-size:11px; font-weight:800; color:var(--accent); margin-bottom:4px;">STATUS: READY</div><div id="conn" style="font-size:10px; color:var(--muted)">CONNECTING TO HQ...</div></div>
           <button onclick="kickoffGame()" id="kickoffBtn" class="btn btn-start">Start Mission</button>
           <button onclick="resetGame()" id="resetBtn" class="btn btn-reset" style="display:none">Reset</button>
         </div>
@@ -88,12 +74,10 @@
       <div id="rows"></div>
     </main>
   </div>
-
   <div class="ticker-wrap">
     <div class="ticker-label">ENCRYPTED TRANSMISSION</div>
-    <div class="ticker-container"><div class="ticker-move" id="tickerContent"></div></div>
+    <div class="ticker-move" id="tickerContent"></div>
   </div>
-
   <script src="/config.js"></script>
   <script src="/timingConfig.js"></script>
   <script>
@@ -104,32 +88,24 @@
     let gameStartTime = null;
 
     function enableAudio() { audioEnabled = true; document.getElementById('audioBtn').style.display = 'none'; }
-
     function playRankSound() {
       if (!audioEnabled) return;
       const ctx = new (window.AudioContext || window.webkitAudioContext)();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
+      const osc = ctx.createOscillator(); const gain = ctx.createGain();
       osc.type = 'square'; osc.frequency.setValueAtTime(440, ctx.currentTime);
       osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.1);
-      gain.gain.setValueAtTime(0.1, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
-      osc.connect(gain); gain.connect(ctx.destination);
-      osc.start(); osc.stop(ctx.currentTime + 0.3);
+      gain.gain.setValueAtTime(0.1, ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+      osc.connect(gain); gain.connect(ctx.destination); osc.start(); osc.stop(ctx.currentTime + 0.3);
     }
 
     async function sync() {
       try {
         const [sRes, tRes] = await Promise.all([fetch(`${API}/state`), fetch(`${API}/timer`)]);
-        const sData = await sRes.json();
-        const tData = await tRes.json();
+        const sData = await sRes.json(); const tData = await tRes.json();
         if (tData.ok && tData.timer?.startTime) {
-          gameStartTime = tData.timer.startTime;
-          TIMING.startTimer(gameStartTime);
-          document.getElementById('kickoffBtn').style.display = 'none';
-          document.getElementById('resetBtn').style.display = 'inline-block';
-          document.getElementById('gameStatus').textContent = 'STATUS: ACTIVE';
-          document.getElementById('gameStatus').style.color = 'var(--success)';
+          gameStartTime = tData.timer.startTime; TIMING.startTimer(gameStartTime);
+          document.getElementById('kickoffBtn').style.display = 'none'; document.getElementById('resetBtn').style.display = 'inline-block';
+          document.getElementById('gameStatus').textContent = 'STATUS: ACTIVE'; document.getElementById('gameStatus').style.color = 'var(--success)';
         }
         if (sData.ok) render(sData.teams);
         document.getElementById('conn').textContent = '📡 HQ LINK ACTIVE';
@@ -149,9 +125,9 @@
       if (lastRankOrder.length > 0 && lastRankOrder !== currentOrder) playRankSound();
       lastRankOrder = currentOrder;
       const rows = document.getElementById('rows');
-      if (!teams.length) { rows.innerHTML = '<div style="text-align:center;padding-top:100px;color:var(--muted)">AWAITING OPERATIVES...</div>'; return; }
       rows.innerHTML = teams.map((t, i) => {
         const duration = (gameStartTime && t.updatedAt > gameStartTime) ? (t.updatedAt - gameStartTime) : 0;
+        const b = t.bonusMap || {};
         return `
           <div class="team-row">
             <div style="font-size:24px; font-weight:800; color:var(--muted)">#${i+1}</div>
@@ -159,10 +135,10 @@
             <div class="score-val">${t.score}</div>
             <div class="mission-time">⏱️ ${formatDuration(duration)}</div>
             <div class="progress-dots">
-              <div class="dot ${t.completedRooms.includes('room1') ? 'active' : ''}">🏚️</div>
-              <div class="dot ${t.completedRooms.includes('room2') ? 'active' : ''}">🧱</div>
-              <div class="dot ${t.completedRooms.includes('room3') ? 'active' : ''}">🔐</div>
-              <div class="dot ${t.completedRooms.includes('final') ? 'active' : ''}">🏢</div>
+              <div class="room-badge"><div class="dot ${t.completedRooms.includes('room1') ? 'active' : ''}">🏚️</div><div class="bonus-val">${b.room1 ? '+'+b.room1 : ''}</div></div>
+              <div class="room-badge"><div class="dot ${t.completedRooms.includes('room2') ? 'active' : ''}">🧱</div><div class="bonus-val">${b.room2 ? '+'+b.room2 : ''}</div></div>
+              <div class="room-badge"><div class="dot ${t.completedRooms.includes('room3') ? 'active' : ''}">🔐</div><div class="bonus-val">${b.room3 ? '+'+b.room3 : ''}</div></div>
+              <div class="room-badge"><div class="dot ${t.completedRooms.includes('final') ? 'active' : ''}">🏢</div><div class="bonus-val">${b.final ? '+'+b.final : ''}</div></div>
             </div>
           </div>
         `;
@@ -170,7 +146,7 @@
     }
 
     async function kickoffGame() { await fetch(`${API}/kickoff`, { method: 'POST' }); sync(); }
-    async function resetGame() { if (confirm('RESET ALL MISSIONS?')) { await fetch(`${API}/reset`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({clearTeams:true}) }); location.reload(); } }
+    async function resetGame() { if (confirm('RESET ALL?')) { await fetch(`${API}/reset`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({clearTeams:true}) }); location.reload(); } }
 
     setInterval(sync, 3000);
     setInterval(() => {
@@ -181,15 +157,7 @@
       }
     }, 1000);
 
-    const TIPS = [
-      "SISTEMA: IVA instável na Room 1.","LOG: SQL Injection detetado no Vault.","ENIGMA: !false é verdadeiro.",
-      "DICA: O motor de faturas odeia duplicados.","AVISO: O tempo é o teu único desempate.",
-      "RUMOR: Dizem que a Arqueologia falha por falta de atenção aos portes.",
-      "ALERTA: Complexidade crítica no Lab. O sistema prefere funções curtas.",
-      "TRANSMISSÃO: strings concatenadas em SQL são um perigo!",
-      "LOG: Programar é como escrever um livro... se te esqueceres de uma vírgula, ele explode.",
-      "SISTEMA:Rubber ducking com um colega resolve 50% dos problemas."
-    ];
+    const TIPS = ["SISTEMA: IVA instável na Room 1.","LOG: SQLi detetado no Vault.","DICA: O tempo é o teu desempate."];
     document.getElementById('tickerContent').innerHTML = TIPS.sort(() => Math.random() - 0.5).map(t => `<span class="ticker-item">>>> ${t}</span>`).join('') + TIPS.map(t => `<span class="ticker-item">>>> ${t}</span>`).join('');
     sync();
   </script>

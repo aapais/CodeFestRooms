@@ -77,6 +77,7 @@ app.post('/final/api/score', (req, res) => {
   } catch (e) { res.status(500).json({ ok: false, error: "Erro no Monólito: " + e.message }); }
 });
 app.get('/final/api/source', (req, res) => res.json({ ok: true, source: fs.readFileSync(path.join(__dirname, '../rooms/final-modernisation/src/monolith.js'), 'utf8') }));
+app.get('/final/api/source-server', (req, res) => res.json({ ok: true, source: fs.readFileSync(path.join(__dirname, '../rooms/final-modernisation/src/server.js'), 'utf8') }));
 
 // --- 2. SERVIR FRONTENDS (DEPOIS DAS APIS) ---
 app.use('/room1', express.static(path.join(__dirname, '../rooms/room1-archaeology/public')));

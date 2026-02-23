@@ -140,9 +140,24 @@
       const btn = document.getElementById('finishBtn');
       btn.disabled = true; btn.textContent = "VERIFYING...";
       try {
-        const sourceRes = await fetch('/final/api/source');
-        const sourceData = await sourceRes.json();
-        const res = await fetch(`${API}/team/update`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ name: CFG.getTeamName(), token: CFG.getTeamToken(), completedRoom: ROOM_ID, sourceCode: sourceData.source }) });
+        const [srcRes, srvRes] = await Promise.all([
+          fetch('/final/api/source'),
+          fetch('/final/api/source-server')
+        ]);
+        const srcData = await srcRes.json();
+        const srvData = await srvRes.json();
+        
+        const res = await fetch(`${API}/team/update`, { 
+          method: 'POST', 
+          headers: {'Content-Type':'application/json'}, 
+          body: JSON.stringify({ 
+            name: CFG.getTeamName(), 
+            token: CFG.getTeamToken(), 
+            completedRoom: ROOM_ID, 
+            sourceCode: srcData.source,
+            serverCode: srvData.source
+          }) 
+        });
         const data = await res.json();
         if (data.ok) { 
           btn.style.background = 'var(--success)'; btn.textContent = "CONGRATULATIONS!";
