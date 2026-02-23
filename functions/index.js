@@ -1,5 +1,5 @@
 /**
- * Firebase Functions - Final Workshop Version
+ * Firebase Functions - Final High-Fidelity Version
  */
 
 const functions = require('firebase-functions');
@@ -8,6 +8,7 @@ const express = require('express');
 const cors = require('cors');
 const vm = require('vm');
 const crypto = require('crypto');
+const { Linter } = require('eslint');
 
 admin.initializeApp();
 const db = admin.firestore();
@@ -16,13 +17,15 @@ const app = express();
 app.use(cors({ origin: true }));
 app.use(express.json());
 
+const linter = new Linter();
 const ROOM_POINTS = { room1: 100, room2: 150, room3: 150, final: 200 };
 
-// --- ENGINES ---
+// --- VALIDATION ENGINES ---
+
 function validateRoom1(source) {
   try {
     const sandbox = { module: { exports: {} }, require: (m) => m === 'crypto' ? crypto : {}, console: { log: () => {} }, Date, Math, Number, String, JSON };
-    vm.createContext(sandbox); vm.runInContext(source, sandbox);
+    vm.createContext(sandbox); vm.runInContext(source, sandbox, { timeout: 1000 });
     const svc = sandbox.module.exports; svc.createUser('V', 'P'); const auth = svc.authenticate('V', 'P');
     const res = svc.placeOrder(auth.token, { items: [{ priceCents: 1000, qty: 5 }], discountCode: 'WELCOME10', shippingAddress: { country: 'PT' } });
     if (res?.order?.amounts?.taxCents === 1139) return { ok: true };
@@ -33,33 +36,54 @@ function validateRoom1(source) {
 function validateRoom2(source) {
   try {
     const sandbox = { module: { exports: {} }, console: { log: () => {} }, Math, Number, String, JSON, Array, Error };
-    vm.createContext(sandbox); vm.runInContext(source, sandbox);
+    vm.createContext(sandbox); vm.runInContext(source, sandbox, { timeout: 1000 });
     const engine = new sandbox.module.exports.InvoiceEngine();
     const res = engine.generateInvoice({ items: [{ sku: 'T', unitPrice: 100, qty: 2 }] }, { tier: 'VIP' });
-    if (res?.ok) {
-      const complexity = (source.match(/\b(if|else|switch|for|while|&&|\|\||\?)\b/g) || []).length;
-      return { ok: true, complexity };
-    }
-    return { ok: false, error: "Lógica Room 2 partida." };
+    if (!res?.ok) return { ok: false, error: "Lógica Room 2 partida." };
+    const messages = linter.verify(source, {
+      languageOptions: { ecmaVersion: 2022, sourceType: 'commonjs' },
+      rules: { complexity: ['error', 1] }
+    });
+    let maxComplexity = 0;
+    messages.forEach(m => {
+      const match = m.message.match(/complexity of (\d+)/);
+      if (match) maxComplexity = Math.max(maxComplexity, parseInt(match[1]));
+    });
+    if (maxComplexity > 10) return { ok: false, error: `Complexidade ${maxComplexity} superior a 10.` };
+    return { ok: true, complexity: maxComplexity };
   } catch (e) { return { ok: false, error: "Erro Room 2." }; }
 }
 
 function validateRoom3(source) {
-  // Verifica se pararam de usar concatenação de strings para queries
-  const isVulnerable = source.includes(" + password") || source.includes(" + username") || source.includes(" + search") || source.includes(" + '") || source.includes("' + ");
-  const isUsingParams = source.includes("?") || source.includes("$1");
-  
-  if (isVulnerable) return { ok: false, error: "Vulnerabilidade de SQL Injection ainda presente!" };
-  if (!isUsingParams) return { ok: false, error: "Precisas de usar Parameterized Queries (?) para fechar o cofre." };
-  
+  const isVulnerable = source.includes(" + password") || source.includes(" + username") || source.includes("' + ");
+  const isSafe = source.includes("?") || source.includes("$1");
+  if (isVulnerable || !isSafe) return { ok: false, error: "Vulnerabilidade SQL Injection ainda aberta." };
   return { ok: true, bonus: source.includes('bcrypt') || source.includes('.hash') };
 }
 
+function validateFinal(source) {
+  try {
+    const sandbox = { 
+      module: { exports: {} }, exports: {},
+      console: { log: () => {} }, Date, Math, Number, String, JSON, Array,
+      process: { argv: [], exit: () => {} }, require: () => ({})
+    };
+    vm.createContext(sandbox);
+    vm.runInContext(source, sandbox, { timeout: 1000 });
+    const svc = sandbox.module.exports.calcScore ? sandbox.module.exports : sandbox.exports;
+    // Teste funcional: perfil PT, 30 anos, 100 spent -> Score 15 + 2 = 17
+    const res = svc.calcScore({ age: 30, country: 'PT', spends: [100] });
+    if (res && res.score === 17) return { ok: true, bonus: source.includes('/health') || source.includes('uptime') };
+    return { ok: false, error: "O motor de cálculo do monólito não devolveu o resultado esperado." };
+  } catch (e) { return { ok: false, error: "Erro no Monólito: " + e.message }; }
+}
+
 // --- API ---
+
 app.get(['/state', '/api/state'], async (req, res) => {
   const snapshot = await db.collection('teams').get();
   const teams = []; snapshot.forEach(doc => teams.push(doc.data()));
-  teams.sort((a,b) => (b.score - a.score) || (a.updatedAt - b.updatedAt));
+  teams.sort((a, b) => (b.score - a.score) || (a.updatedAt - b.updatedAt));
   res.json({ ok: true, teams });
 });
 
@@ -96,6 +120,7 @@ app.post(['/team/update', '/api/team/update'], async (req, res) => {
     if (completedRoom === 'room1') v = validateRoom1(sourceCode);
     if (completedRoom === 'room2') v = validateRoom2(sourceCode);
     if (completedRoom === 'room3') v = validateRoom3(sourceCode);
+    if (completedRoom === 'final') v = validateFinal(sourceCode);
     
     if (!v.ok) return res.json({ ok: false, error: v.error });
 
@@ -105,6 +130,7 @@ app.post(['/team/update', '/api/team/update'], async (req, res) => {
     if (completedRoom === 'room1' && (sourceCode.match(/\/\*\*[\s\S]*?\*\//g) || []).length >= 3) { finalScore += 50; resultMsg = "✅ Room 1 + BÓNUS Doc!"; }
     if (completedRoom === 'room2' && v.complexity < 5) { finalScore += 75; resultMsg = `✅ Room 2 + BÓNUS Minimalist (${v.complexity})!`; }
     if (completedRoom === 'room3' && v.bonus) { finalScore += 100; resultMsg = "✅ Room 3 + BÓNUS Crypto!"; }
+    if (completedRoom === 'final' && v.bonus) { finalScore += 50; resultMsg = "✅ Missão Final + BÓNUS Ops!"; }
 
     await teamRef.update({ completedRooms: [...team.completedRooms, completedRoom], score: finalScore, updatedAt: Date.now(), lastResult: resultMsg });
   }

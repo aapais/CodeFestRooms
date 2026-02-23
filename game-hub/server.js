@@ -28,7 +28,7 @@ app.post('/room1/api/login', (req, res) => res.json({ ok: true }));
 app.post('/room1/api/checkout', (req, res) => {
   try {
     const source = fs.readFileSync(path.join(__dirname, '../rooms/room1-archaeology/src/legacyService.js'), 'utf8');
-    const sandbox = { module: { exports: {} }, require: (m) => m === 'crypto' ? crypto : {}, console };
+    const sandbox = { module: { exports: {} }, require: (m) => m === 'crypto' ? crypto : {}, console, Date, Math, Number, String, JSON, Array };
     vm.createContext(sandbox); vm.runInContext(source, sandbox);
     const svc = sandbox.module.exports; svc.createUser('U', 'P'); const auth = svc.authenticate('U', 'P');
     res.json(svc.placeOrder(auth.token, { items: [{ sku: 'MB', qty: 2, priceCents: 100000 }], discountCode: 'WELCOME10', shippingAddress: { country: 'PT' } }));
@@ -36,19 +36,16 @@ app.post('/room1/api/checkout', (req, res) => {
 });
 app.get('/room1/api/source', (req, res) => res.json({ ok: true, source: fs.readFileSync(path.join(__dirname, '../rooms/room1-archaeology/src/legacyService.js'), 'utf8') }));
 
-// --- API ROOM 2 (Fixing the 404 error) ---
+// --- API ROOM 2 ---
 app.post('/room2/api/invoice', (req, res) => {
   try {
     const source = fs.readFileSync(path.join(__dirname, '../rooms/room2-refactor-lab/src/invoiceEngine.js'), 'utf8');
-    const sandbox = { module: { exports: {} }, console };
-    vm.createContext(sandbox);
-    vm.runInContext(source, sandbox);
+    const sandbox = { module: { exports: {} }, console, Date, Math, Number, String, JSON, Array };
+    vm.createContext(sandbox); vm.runInContext(source, sandbox);
     const engine = new sandbox.module.exports.InvoiceEngine();
-    const invoice = engine.generateInvoice(req.body, { tier: 'VIP' });
-    res.json({ ok: true, invoice });
+    res.json({ ok: true, invoice: engine.generateInvoice(req.body, { tier: 'VIP' }) });
   } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
 });
-
 app.get('/room2/api/validate-complexity', (req, res) => {
   exec('npx eslint src/invoiceEngine.js --rule "complexity: [\'warn\', 1]" --format json', { cwd: path.join(__dirname, '../rooms/room2-refactor-lab') }, (err, stdout) => {
     try {
@@ -78,11 +75,22 @@ app.get('/final/status', (req, res) => res.json({ ok: true, uptime: process.upti
 app.post('/final/api/score', (req, res) => {
   try {
     const source = fs.readFileSync(path.join(__dirname, '../rooms/final-modernisation/src/monolith.js'), 'utf8');
-    const sandbox = { module: { exports: {} }, console };
-    vm.createContext(sandbox); vm.runInContext(source, sandbox);
-    const result = sandbox.module.exports.calcScore(req.body);
+    // Provide a more complete sandbox to avoid errors with require/process
+    const sandbox = { 
+      module: { exports: {} }, 
+      exports: {},
+      console, Date, Math, Number, String, JSON, Array,
+      require: (m) => ({}),
+      process: { argv: [], exit: () => {} }
+    };
+    vm.createContext(sandbox); 
+    vm.runInContext(source, sandbox);
+    const svc = sandbox.module.exports.calcScore ? sandbox.module.exports : sandbox.exports;
+    const result = svc.calcScore(req.body);
     res.json({ ok: true, ...result });
-  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+  } catch (e) {
+    res.status(500).json({ ok: false, error: "Erro no Monólito: " + e.message });
+  }
 });
 app.get('/final/api/source', (req, res) => res.json({ ok: true, source: fs.readFileSync(path.join(__dirname, '../rooms/final-modernisation/src/monolith.js'), 'utf8') }));
 
