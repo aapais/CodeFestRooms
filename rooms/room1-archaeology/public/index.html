@@ -45,10 +45,10 @@
     <aside class="briefing">
       <h1>MISSION: ARCHAEOLOGY</h1>
       <p>O checkout está a perder dinheiro. Corrige o erro de IVA.</p>
-      <div class="objective-card"><strong>Fix the IVA Bug:</strong><p>Imposto (23%) deve incidir sobre Subtotal - Desconto + Envio.</p></div>
+      <div class="objective-card"><strong>Fix the IVA Bug:</strong><p>Imposto deve incidir sobre Subtotal - Desconto + Envio.</p></div>
       <div class="bonus-card">
         <strong>The Documentarian (+50 pts):</strong>
-        <p>Usa o Gemini para gerar pelo menos 3 blocos de documentação <strong>JSDoc (/** ... */)</strong> dentro do ficheiro <code>legacyService.js</code>. O quartel-general vai validar a presença destes comentários no código.</p>
+        <p>Usa o Gemini para gerar pelo menos 3 blocos de documentação <strong>JSDoc (/** ... */)</strong> dentro do ficheiro <code>legacyService.js</code>.</p>
       </div>
       <button class="btn btn-success" id="submitBtn" style="width: 100%; padding: 12px;" onclick="markComplete()">SUBMIT & ESCAPE</button>
     </aside>
@@ -62,11 +62,11 @@
       </div>
       <div class="card" id="shop-section" style="display:none;">
         <h3>2. Checkout Terminal</h3>
-        <p style="font-size:12px; color:var(--text-muted); margin-bottom:20px;">Clica para simular uma compra de 2000.00€ com 10% de desconto.</p>
+        <p style="font-size:12px; color:var(--text-muted); margin-bottom:20px;">Simulação de compra: 2000.00€ + 10% Desconto.</p>
         <button class="btn btn-primary" onclick="doCheckout()">GENERATE INVOICE</button>
         <pre class="invoice-output" id="invoice-result" style="margin-top:20px;">Awaiting input...</pre>
         <div id="hint-box" style="display:none; margin-top:15px; font-size:12px; color:var(--warning); border: 1px dashed var(--warning); padding:10px; border-radius:4px;">
-          🕵️ DICA HQ: Os nossos analistas detetaram que o valor do IVA não corresponde à realidade fiscal. Algo está a ser ignorado no cálculo.
+          🕵️ DICA HQ: Os analistas detetaram que o IVA não bate certo. Algo está a ser ignorado no cálculo.
         </div>
       </div>
     </main>
@@ -103,16 +103,18 @@
     }
 
     async function doLogin() {
-      const res = await fetch('api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: 'Alice' }) });
+      // USAR CAMINHO ABSOLUTO /room1/api/login
+      const res = await fetch('/room1/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: 'Alice' }) });
       const data = await res.json();
       if (data.ok) {
-        document.getElementById('login-msg').innerHTML = '<span style="color:var(--success)">AUTH OK. Store unlocked.</span>';
+        document.getElementById('login-msg').innerHTML = '<span style="color:var(--success)">AUTH OK</span>';
         document.getElementById('shop-section').style.display = 'block';
       }
     }
 
     async function doCheckout() {
-      const res = await fetch('api/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items: [{qty:2, priceCents:100000}] }) });
+      // USAR CAMINHO ABSOLUTO /room1/api/checkout
+      const res = await fetch('/room1/api/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items: [{qty:2, priceCents:100000}] }) });
       const data = await res.json();
       if (data.ok) {
         const a = data.order.amounts;
@@ -131,7 +133,7 @@
       const btn = document.getElementById('submitBtn');
       btn.disabled = true; btn.textContent = "VERIFYING CODE...";
       try {
-        const sourceRes = await fetch('api/source');
+        const sourceRes = await fetch('/room1/api/source');
         const sourceData = await sourceRes.json();
         const res = await fetch(`${API}/team/update`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },

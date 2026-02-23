@@ -171,14 +171,35 @@
     }
 
     async function kickoffGame() {
+      const btn = document.getElementById('kickoffBtn');
+      btn.disabled = true; btn.textContent = 'STARTING...';
       const res = await fetch(`${API}/kickoff`, { method: 'POST' });
       if ((await res.json()).ok) sync();
+      btn.disabled = false; btn.textContent = 'Start Mission';
     }
 
     async function resetGame() {
-      if (confirm('TERMINATE MISSIONS?')) {
-        await fetch(`${API}/reset`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({clearTeams:true}) });
-        location.reload();
+      if (!confirm('TERMINATE ALL MISSIONS AND WIPE TEAMS?')) return;
+      
+      const btn = document.getElementById('resetBtn');
+      btn.disabled = true; btn.textContent = 'RESETTING...';
+      
+      try {
+        const res = await fetch(`${API}/reset`, { 
+          method: 'POST', 
+          headers: {'Content-Type':'application/json'}, 
+          body: JSON.stringify({clearTeams:true}) 
+        });
+        const data = await res.json();
+        if (data.ok) {
+          alert('SYSTEM RESET SUCCESSFUL');
+          location.reload();
+        } else {
+          throw new Error(data.error);
+        }
+      } catch (e) {
+        alert('RESET FAILED: ' + e.message);
+        btn.disabled = false; btn.textContent = 'Reset';
       }
     }
 
