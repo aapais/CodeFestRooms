@@ -61,17 +61,15 @@ function validateFinal(source) {
     // TESTE 1: Perfil normal (30 anos, PT, 100 spent) -> Score 17 (15 + 2)
     const res1 = svc.calcScore({ age: 30, country: 'PT', spends: [100] });
     
-    // TESTE 2: Perfil High Roller (Nova regra exigida: se gasto > 5000, +50 pontos)
-    // O código original daria 15 (age) + 2 (PT) + 10 (spent > 1000) = 27
-    // O código modernizado deve dar 15 + 2 + 50 = 67
+    // TESTE 2: Perfil High Roller (Nova regra exigida: se gasto > 5000, o score é FIXO em 50)
     const res2 = svc.calcScore({ age: 30, country: 'PT', spends: [6000] });
 
-    if (res1.score === 17 && res2.score === 67) {
+    if (res1.score === 17 && res2.score === 50) {
       return { ok: true, bonus: source.includes('/health') || source.includes('uptime') };
     }
     
-    if (res2.score === 27) {
-      return { ok: false, error: "A lógica de modernização falhou. O motor ainda usa as regras antigas para gastos elevados (> 5000)." };
+    if (res2.score === 67) {
+      return { ok: false, error: "A regra diz que o score deve ser FIXADO em 50, não somado (17+50)." };
     }
 
     return { ok: false, error: "O cálculo do score não corresponde às novas especificações de modernização." };
