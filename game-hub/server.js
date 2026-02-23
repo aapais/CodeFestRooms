@@ -3,6 +3,8 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
+const vm = require('vm');
+const crypto = require('crypto');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -20,7 +22,7 @@ app.use('/room2', express.static(path.join(__dirname, '../rooms/room2-refactor-l
 app.use('/room3', express.static(path.join(__dirname, '../rooms/room3-security-vault/public')));
 app.use('/final', express.static(path.join(__dirname, '../rooms/final-modernisation/public')));
 
-// --- API DE SINCRONIZAÇÃO (Dashboard & HQ) ---
+// --- API DE SINCRONIZAÇÃO ---
 app.get('/api/state', (req, res) => res.json({ ok: true, teams: Array.from(teams.values()) }));
 app.get('/api/timer', (req, res) => res.json({ ok: true, timer: gameTimer }));
 app.post('/api/kickoff', (req, res) => { gameTimer = { startTime: Date.now(), duration: 50 * 60 * 1000 }; res.json({ ok: true, startTime: gameTimer.startTime }); });
@@ -45,27 +47,47 @@ app.post('/api/team/update', (req, res) => {
   res.json({ ok: true });
 });
 
-// --- API ROOM 1 ---
+// --- API DINÂMICA DA ROOM 1 (Executa o código que o aluno está a editar) ---
 app.post('/room1/api/login', (req, res) => res.json({ ok: true }));
-app.post('/room1/api/checkout', (req, res) => res.json({ ok: true, order: { id: 'ORD-123', amounts: { subtotalCents: 200000, discountCents: 20000, shippingCents: 45000, taxCents: 41400, totalCents: 266400 } } }));
-app.get('/room1/api/source', (req, res) => res.json({ ok: true, source: fs.readFileSync(path.join(__dirname, '../rooms/room1-archaeology/src/legacyService.js'), 'utf8') }));
 
-// --- API ROOM 2 ---
+app.post('/room1/api/checkout', (req, res) => {
+  try {
+    // Ler o código atual do ficheiro que o aluno está a editar
+    const source = fs.readFileSync(path.join(__dirname, '../rooms/room1-archaeology/src/legacyService.js'), 'utf8');
+    const sandbox = { module: { exports: {} }, require: (m) => m === 'crypto' ? crypto : {}, console };
+    vm.createContext(sandbox);
+    vm.runInContext(source, sandbox);
+    
+    const svc = sandbox.module.exports;
+    svc.createUser('User', 'Pass');
+    const auth = svc.authenticate('User', 'Pass');
+    
+    // Simular o pedido do frontend
+    const result = svc.placeOrder(auth.token, {
+      items: [{ sku: 'Mystery Box', qty: 2, priceCents: 100000 }],
+      discountCode: 'WELCOME10',
+      shippingAddress: { country: 'PT' }
+    });
+    
+    res.json(result);
+  } catch (e) {
+    res.status(500).json({ ok: false, error: "Erro no teu código: " + e.message });
+  }
+});
+
+app.get('/room1/api/source', (req, res) => {
+  res.json({ ok: true, source: fs.readFileSync(path.join(__dirname, '../rooms/room1-archaeology/src/legacyService.js'), 'utf8') });
+});
+
+// APIs das outras salas (Mocks simples para funcionamento visual)
 app.post('/room2/api/invoice', (req, res) => res.json({ ok: true, invoice: { amounts: { total: 1180.8 } } }));
-app.get('/room2/api/validate-complexity', (req, res) => res.json({ ok: true, message: "Quality Scan OK." }));
+app.get('/room2/api/validate-complexity', (req, res) => res.json({ ok: true, message: "Scan OK." }));
 app.get('/room2/api/source', (req, res) => res.json({ ok: true, source: fs.readFileSync(path.join(__dirname, '../rooms/room2-refactor-lab/src/invoiceEngine.js'), 'utf8') }));
 
-// --- API ROOM 3 ---
 app.post('/room3/api/login', (req, res) => {
-  const { username, password } = req.body;
-  if (username === 'admin' && (password.includes("' OR '1'='1") || password === 'secret')) return res.json({ ok: true, msg: "🔓 ACCESS GRANTED" });
-  res.json({ ok: false, msg: "Access Denied" });
+  if (req.body.username === 'admin' && req.body.password.includes("' OR '1'='1")) return res.json({ ok: true, msg: "🔓 ACCESS GRANTED" });
+  res.json({ ok: false, msg: "Denied" });
 });
 app.get('/room3/api/source', (req, res) => res.json({ ok: true, source: fs.readFileSync(path.join(__dirname, '../rooms/room3-security-vault/src/userRepo.js'), 'utf8') }));
-
-// --- API FINAL ---
-app.get('/final/status', (req, res) => res.json({ ok: true, uptime: process.uptime() }));
-app.post('/final/api/score', (req, res) => res.json({ ok: true, score: 850, risk: "LOW" }));
-app.get('/final/api/source', (req, res) => res.json({ ok: true, source: fs.readFileSync(path.join(__dirname, '../rooms/final-modernisation/src/monolith.js'), 'utf8') }));
 
 app.listen(PORT, () => console.log(`🚀 WORKSHOP SERVER ONLINE ON PORT ${PORT}`));
