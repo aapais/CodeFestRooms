@@ -78,22 +78,56 @@ app.post('/room2/api/invoice', (req, res) => {
 });
 
 app.get('/room2/api/validate-complexity', (req, res) => {
-  const env = { ...process.env, FORCE_COLOR: '0' };
-  exec('npm run complexity', { cwd: path.join(__dirname, '../rooms/room2-refactor-lab'), env }, (err, stdout, stderr) => {
-    const output = stdout + stderr;
-    const match = output.match(/Method\s+'(\w+)'\s+has\s+a\s+complexity\s+of\s+(\d+)/);
-    if (match) return res.json({ ok: false, message: `Complexidade de ${match[2]} detetada na função '${match[1]}'. O limite é 10.` });
-    if (err) return res.json({ ok: false, message: "Erro ao validar qualidade do código." });
-    res.json({ ok: true, message: "Código limpo e aprovado!" });
+  // Corremos o eslint com threshold 1 para apanhar TODOS os valores
+  exec('npx eslint src/invoiceEngine.js --rule "complexity: [\'warn\', 1]" --format json', { cwd: path.join(__dirname, '../rooms/room2-refactor-lab') }, (err, stdout) => {
+    try {
+      const results = JSON.parse(stdout);
+      const messages = results[0].messages.filter(m => m.ruleId === 'complexity');
+      
+      let maxComp = 0;
+      let worstFunc = '';
+      messages.forEach(m => {
+        const comp = parseInt(m.message.match(/complexity of (\d+)/)[1]);
+        if (comp > maxComp) {
+          maxComp = comp;
+          worstFunc = m.message.match(/Method '(\w+)'/)[1];
+        }
+      });
+
+      const totalFuncs = messages.length;
+
+      if (maxComp > 10) {
+        return res.json({ 
+          ok: false, 
+          message: `COMPLEXIDADE ALTA: ${maxComp}`, 
+          details: `A função '${worstFunc}' está demasiado complexa. O limite é 10.` 
+        });
+      }
+
+      res.json({ 
+        ok: true, 
+        message: `CÓDIGO LIMPO! Complexidade Máxima: ${maxComp}`, 
+        details: `Total de funções no ficheiro: ${totalFuncs}. Excelente trabalho de refatorização!` 
+      });
+
+    } catch (e) {
+      res.json({ ok: false, message: "Erro ao ler scanner.", details: "Garante que o código não tem erros de sintaxe." });
+    }
   });
 });
 app.get('/room2/api/source', (req, res) => res.json({ ok: true, source: fs.readFileSync(path.join(__dirname, '../rooms/room2-refactor-lab/src/invoiceEngine.js'), 'utf8') }));
 
 // --- API ROOM 3 ---
 app.post('/room3/api/login', (req, res) => {
-  if (req.body.username === 'admin' && req.body.password.includes("' OR '1'='1")) return res.json({ ok: true, msg: "🔓 ACCESS GRANTED" });
+  const { username, password } = req.body;
+  if (username === 'admin' && (password.includes("' OR '1'='1") || password === 'secret')) return res.json({ ok: true, msg: "🔓 ACCESS GRANTED" });
   res.json({ ok: false, msg: "Denied" });
 });
 app.get('/room3/api/source', (req, res) => res.json({ ok: true, source: fs.readFileSync(path.join(__dirname, '../rooms/room3-security-vault/src/userRepo.js'), 'utf8') }));
+
+// --- API FINAL ---
+app.get('/final/status', (req, res) => res.json({ ok: true, uptime: process.uptime() }));
+app.post('/final/api/score', (req, res) => res.json({ ok: true, score: 850, risk: "LOW" }));
+app.get('/final/api/source', (req, res) => res.json({ ok: true, source: fs.readFileSync(path.join(__dirname, '../rooms/final-modernisation/src/monolith.js'), 'utf8') }));
 
 app.listen(PORT, () => console.log(`🚀 WORKSHOP SERVER ONLINE ON PORT ${PORT}`));

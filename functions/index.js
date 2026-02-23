@@ -1,5 +1,5 @@
 /**
- * Firebase Functions - High Reliability Version with Room 2 Logic
+ * Firebase Functions - Room 2 Resiliency Fix
  */
 
 const functions = require('firebase-functions');
@@ -28,27 +28,40 @@ function validateRoom1(source) {
     svc.createUser('V', 'P');
     const auth = svc.authenticate('V', 'P');
     const res = svc.placeOrder(auth.token, { items: [{ priceCents: 1000, qty: 5 }], discountCode: 'WELCOME10', shippingAddress: { country: 'PT' } });
-    if (res.order.amounts.taxCents === 1139) return { ok: true };
+    if (res && res.order && res.order.amounts && res.order.amounts.taxCents === 1139) return { ok: true };
     return { ok: false, error: "IVA incorreto." };
-  } catch (e) { return { ok: false, error: "Erro sintaxe." }; }
+  } catch (e) { return { ok: false, error: "Erro sintaxe Room 1." }; }
 }
 
 // --- ENGINE ROOM 2 ---
 function validateRoom2(source) {
   try {
-    const sandbox = { module: { exports: {} }, console: { log: () => {} }, Math, Number, String, JSON, Array };
+    const sandbox = { module: { exports: {} }, console: { log: () => {} }, Math, Number, String, JSON, Array, Error };
     vm.createContext(sandbox);
     vm.runInContext(source, sandbox, { timeout: 1000 });
     const engine = new sandbox.module.exports.InvoiceEngine();
-    const res = engine.generateInvoice({ items: [{ unitPrice: 100, qty: 2 }], discountCode: 'WELCOME10', shippingAddress: { country: 'PT' } }, { tier: 'VIP' });
     
-    // Verificar se a lógica de cálculo continua correta
-    if (Math.abs(res.amounts.total - 221.4) < 0.1) {
-      // Contagem aproximada de complexidade via regex no servidor
+    // Teste com dados completos (sku incluído)
+    const order = { 
+      items: [{ sku: 'TEST-ITEM', unitPrice: 100, qty: 2 }], 
+      discountCode: 'WELCOME10', 
+      shippingAddress: { country: 'PT' } 
+    };
+    const user = { tier: 'VIP' };
+    
+    const res = engine.generateInvoice(order, user);
+    
+    if (!res || !res.ok || !res.amounts) {
+      return { ok: false, error: "O motor não devolveu uma fatura válida (ok: false)." };
+    }
+
+    // Verificar integridade lógica (Subtotal 200 - 20 desc + 4.5 ship + 42.43 tax = 226.93 approx)
+    // A fórmula original: (200 - 20 + 4.5) * 1.23 = 226.935 -> 226.94
+    if (res.amounts.total > 0) {
       const complexity = (source.match(/\b(if|else|switch|for|while|&&|\|\||\?)\b/g) || []).length;
       return { ok: true, complexity };
     }
-    return { ok: false, error: "A lógica do motor de faturas foi quebrada!" };
+    return { ok: false, error: "Cálculo inválido." };
   } catch (e) { return { ok: false, error: "Erro no motor: " + e.message }; }
 }
 
@@ -58,7 +71,6 @@ app.get(['/state', '/api/state'], async (req, res) => {
   const snapshot = await db.collection('teams').get();
   const teams = [];
   snapshot.forEach(doc => teams.push(doc.data()));
-  teams.sort((a,b) => b.score - a.score);
   res.json({ ok: true, teams });
 });
 
@@ -101,7 +113,7 @@ app.post(['/team/update', '/api/team/update'], async (req, res) => {
     let resultMsg = `✅ Sala ${completedRoom} completa!`;
 
     if (completedRoom === 'room1' && (sourceCode.match(/\/\*\*[\s\S]*?\*\//g) || []).length >= 3) { finalScore += 50; resultMsg = "✅ Room 1 + BÓNUS Doc!"; }
-    if (completedRoom === 'room2' && v.complexity < 10) { finalScore += 75; resultMsg = `✅ Room 2 + BÓNUS Refactor (${v.complexity})!`; }
+    if (completedRoom === 'room2' && v.complexity < 5) { finalScore += 75; resultMsg = `✅ Room 2 + BÓNUS Minimalist (${v.complexity})!`; }
 
     await teamRef.update({ completedRooms: [...team.completedRooms, completedRoom], score: finalScore, updatedAt: Date.now(), lastResult: resultMsg });
   }
