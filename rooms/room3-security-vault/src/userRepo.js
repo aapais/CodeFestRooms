@@ -1,28 +1,46 @@
 'use strict';
 
-// Simula um “repositório” com problemas de segurança.
-// Não usa DB real para manter o desafio offline.
+/**
+ * Security Vault Repository
+ * -------------------------
+ * O objetivo é identificar e corrigir a vulnerabilidade de SQL Injection (simulada).
+ */
 
-// SECRET hardcoded (deve ir para env var)
 const JWT_SECRET = 'super-secret-not-for-prod';
 
-const _users = [
-  { id: '1', username: 'admin', password: 'admin' }, // weak auth
-  { id: '2', username: 'bob', password: 'pw' }
-];
-
 function login(username, password) {
-  // auth fraca: passwords em texto e comparação direta
-  const u = _users.find(x => x.username === username && x.password === password);
-  if (!u) return { ok: false, error: 'INVALID' };
-  // token fraco: previsível
-  const token = `${u.id}.${JWT_SECRET}`;
-  return { ok: true, token };
+  // --- VULNERABILIDADE CRÍTICA ---
+  // O programador original está a construir a query concatenando strings.
+  // Isto permite que um atacante use ' OR '1'='1 para entrar sem password.
+  const query = "SELECT * FROM users WHERE username = '" + username + "' AND password = '" + password + "';";
+  
+  console.log(">>> EXECUTING QUERY:", query);
+
+  // Simulação de execução de base de dados
+  // Se detetarmos o padrão clássico de bypass, permitimos o acesso (Vulnerabilidade!)
+  if (password.includes("' OR '1'='1")) {
+    return { 
+      ok: true, 
+      token: `hacked.${JWT_SECRET}`,
+      msg: "🔓 ACCESS GRANTED (SQL Injection detected!)" 
+    };
+  }
+
+  // Login legítimo (apenas para teste)
+  if (username === 'admin' && password === 'admin') {
+    return { ok: true, token: `1.${JWT_SECRET}` };
+  }
+
+  return { ok: false, error: 'INVALID_CREDENTIALS' };
 }
 
+/**
+ * Procura utilizadores pelo nome.
+ * @param {string} search - Termo de pesquisa.
+ * @returns {object} A query gerada.
+ */
 function findUsersByName(search) {
-  // SQL injection simulado: concatenação de query string
-  // (aqui só devolve a query para o teste, mas o padrão é o problema)
+  // Outro exemplo de vulnerabilidade para o Gemini analisar
   const query = "SELECT * FROM users WHERE username LIKE '%" + search + "%';";
   return { query };
 }
@@ -30,6 +48,5 @@ function findUsersByName(search) {
 module.exports = {
   login,
   findUsersByName,
-  // leaked
   JWT_SECRET
 };
