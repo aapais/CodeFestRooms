@@ -5,6 +5,7 @@ const path = require('path');
 const fs = require('fs');
 const vm = require('vm');
 const crypto = require('crypto');
+const { exec } = require('child_process');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -47,43 +48,48 @@ app.post('/api/team/update', (req, res) => {
   res.json({ ok: true });
 });
 
-// --- API DINÂMICA DA ROOM 1 (Executa o código que o aluno está a editar) ---
+// --- API ROOM 1 ---
 app.post('/room1/api/login', (req, res) => res.json({ ok: true }));
-
 app.post('/room1/api/checkout', (req, res) => {
   try {
-    // Ler o código atual do ficheiro que o aluno está a editar
     const source = fs.readFileSync(path.join(__dirname, '../rooms/room1-archaeology/src/legacyService.js'), 'utf8');
     const sandbox = { module: { exports: {} }, require: (m) => m === 'crypto' ? crypto : {}, console };
     vm.createContext(sandbox);
     vm.runInContext(source, sandbox);
-    
     const svc = sandbox.module.exports;
-    svc.createUser('User', 'Pass');
-    const auth = svc.authenticate('User', 'Pass');
-    
-    // Simular o pedido do frontend
-    const result = svc.placeOrder(auth.token, {
-      items: [{ sku: 'Mystery Box', qty: 2, priceCents: 100000 }],
-      discountCode: 'WELCOME10',
-      shippingAddress: { country: 'PT' }
-    });
-    
-    res.json(result);
-  } catch (e) {
-    res.status(500).json({ ok: false, error: "Erro no teu código: " + e.message });
-  }
+    svc.createUser('U', 'P');
+    const auth = svc.authenticate('U', 'P');
+    res.json(svc.placeOrder(auth.token, { items: [{ sku: 'MB', qty: 2, priceCents: 100000 }], discountCode: 'WELCOME10', shippingAddress: { country: 'PT' } }));
+  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+});
+app.get('/room1/api/source', (req, res) => res.json({ ok: true, source: fs.readFileSync(path.join(__dirname, '../rooms/room1-archaeology/src/legacyService.js'), 'utf8') }));
+
+// --- API ROOM 2 ---
+app.post('/room2/api/invoice', (req, res) => {
+  try {
+    const source = fs.readFileSync(path.join(__dirname, '../rooms/room2-refactor-lab/src/invoiceEngine.js'), 'utf8');
+    const sandbox = { module: { exports: {} }, console };
+    vm.createContext(sandbox);
+    vm.runInContext(source, sandbox);
+    const engine = new sandbox.module.exports.InvoiceEngine();
+    const invoice = engine.generateInvoice(req.body, { tier: 'VIP' });
+    res.json({ ok: true, invoice });
+  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
 });
 
-app.get('/room1/api/source', (req, res) => {
-  res.json({ ok: true, source: fs.readFileSync(path.join(__dirname, '../rooms/room1-archaeology/src/legacyService.js'), 'utf8') });
+app.get('/room2/api/validate-complexity', (req, res) => {
+  const env = { ...process.env, FORCE_COLOR: '0' };
+  exec('npm run complexity', { cwd: path.join(__dirname, '../rooms/room2-refactor-lab'), env }, (err, stdout, stderr) => {
+    const output = stdout + stderr;
+    const match = output.match(/Method\s+'(\w+)'\s+has\s+a\s+complexity\s+of\s+(\d+)/);
+    if (match) return res.json({ ok: false, message: `Complexidade de ${match[2]} detetada na função '${match[1]}'. O limite é 10.` });
+    if (err) return res.json({ ok: false, message: "Erro ao validar qualidade do código." });
+    res.json({ ok: true, message: "Código limpo e aprovado!" });
+  });
 });
-
-// APIs das outras salas (Mocks simples para funcionamento visual)
-app.post('/room2/api/invoice', (req, res) => res.json({ ok: true, invoice: { amounts: { total: 1180.8 } } }));
-app.get('/room2/api/validate-complexity', (req, res) => res.json({ ok: true, message: "Scan OK." }));
 app.get('/room2/api/source', (req, res) => res.json({ ok: true, source: fs.readFileSync(path.join(__dirname, '../rooms/room2-refactor-lab/src/invoiceEngine.js'), 'utf8') }));
 
+// --- API ROOM 3 ---
 app.post('/room3/api/login', (req, res) => {
   if (req.body.username === 'admin' && req.body.password.includes("' OR '1'='1")) return res.json({ ok: true, msg: "🔓 ACCESS GRANTED" });
   res.json({ ok: false, msg: "Denied" });
