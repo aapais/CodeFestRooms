@@ -10,10 +10,10 @@
   <style>
     :root {
       --bg: #0d1117; --panel: #161b22; --border: #30363d; --accent: #bc8cff;
-      --success: #3fb950; --warning: #d29922; --text: #c9d1d9; --text-muted: #8b949e;
+      --success: #3fb950; --warning: #d29922; --danger: #f85149; --text: #c9d1d9; --text-muted: #8b949e;
     }
     body { font-family: 'Space Grotesk', sans-serif; background-color: var(--bg); color: var(--text); margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-    .team-bar { background: #010409; border-bottom: 1px solid var(--border); padding: 10px 25px; display: flex; align-items: center; gap: 15px; z-index: 100; }
+    .team-bar { background: #010409; border-bottom: 1px solid var(--border); padding: 10px 25px; display: flex; align-items: center; gap: 15px; }
     .btn { padding: 8px 18px; border-radius: 4px; border: none; font-weight: 600; cursor: pointer; font-size: 13px; transition: all 0.2s; }
     .btn-primary { background: var(--accent); color: white; }
     .btn-success { background: var(--success); color: white; }
@@ -25,7 +25,7 @@
     .bonus-card { background: rgba(210, 153, 34, 0.05); border-left: 3px solid var(--warning); padding: 15px; margin: 15px 0; }
     .workspace { padding: 40px; overflow-y: auto; background-image: radial-gradient(circle at center, #1c162d 0%, #0d1117 100%); }
     .card { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 30px; max-width: 800px; margin: 0 auto 30px; }
-    .result-terminal { background: #010409; padding: 15px; border-radius: 4px; font-family: 'Fira Code', monospace; font-size: 12px; color: #7ee787; border: 1px solid var(--border); min-height: 100px; white-space: pre-wrap; margin-top: 20px; }
+    .result-terminal { background: #010409; padding: 15px; border-radius: 4px; font-family: 'Fira Code', monospace; font-size: 12px; color: #7ee787; border: 1px solid var(--border); min-height: 100px; white-space: pre-wrap; margin-top: 20px; line-height: 1.5; }
     .badge-dot { width: 10px; height: 10px; border-radius: 50%; background: #30363d; }
     .badge-dot.done { background: var(--success); box-shadow: 0 0 8px var(--success); }
   </style>
@@ -44,11 +44,13 @@
   <div class="container">
     <aside class="briefing">
       <h1>MISSION: REFACTOR LAB</h1>
-      <p>O motor de faturação tornou-se um pesadelo. É hora de usar o Gemini para limpar o caos.</p>
-      <div class="objective-card"><strong>Reduce Complexity:</strong><p>Nenhuma função com complexidade > 10.</p></div>
-      <div class="bonus-card"><strong>Minimalist (+75 pts):</strong><p>Complexidade < 5.</p></div>
+      <p>O motor de faturação está um caos. Limpa a complexidade.</p>
+      <div class="objective-card"><strong>Reduce Complexity:</strong><p>Garante que nenhuma função tem complexidade > 10.</p></div>
+      <div class="bonus-card"><strong>Minimalist (+75 pts):</strong><p>Complexidade < 10 (validado no QG).</p></div>
+      
       <button class="btn btn-primary" style="width: 100%; margin-bottom: 10px;" onclick="generateInvoice()">1. TEST LOGIC</button>
-      <button class="btn btn-success" id="verifyBtn" style="width: 100%;" onclick="validateCode()">2. VERIFY & SUBMIT</button>
+      <button class="btn btn-ghost" style="width: 100%; margin-bottom: 10px; border-color: var(--accent); color: var(--accent);" onclick="checkComplexity()">2. CHECK COMPLEXITY</button>
+      <button class="btn btn-success" id="verifyBtn" style="width: 100%;" onclick="validateCode()">3. VERIFY & SUBMIT</button>
     </aside>
     <main class="workspace">
       <div class="card">
@@ -91,22 +93,36 @@
 
     async function generateInvoice() {
       try {
-        const res = await fetch('api/invoice', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items: [{ unitPrice: 1200, qty: 1 }], discountCode: 'VIP20', shippingAddress: { country: 'PT' } }) });
+        const res = await fetch('api/invoice', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items: [{ sku: 'REF-01', unitPrice: 1200, qty: 1 }], discountCode: 'VIP20', shippingAddress: { country: 'PT' } }) });
         const data = await res.json();
         if (data.ok) document.getElementById('logic-result').innerHTML = `<div class="result-terminal" style="color:white; border-color:var(--accent)">INVOICE GENERATED\nTOTAL: ${data.invoice.amounts.total} EUR</div>`;
       } catch (e) { alert('Local server error'); }
     }
 
+    async function checkComplexity() {
+      const term = document.getElementById('quality-result');
+      term.textContent = ">>> SCANNING CODE FOR COMPLEXITY...";
+      term.style.color = "var(--accent)";
+      try {
+        const res = await fetch('api/validate-complexity');
+        const data = await res.json();
+        term.textContent = `>>> ${data.message}\n${data.details || ''}`;
+        term.style.color = data.ok ? "var(--success)" : "var(--warning)";
+      } catch (e) {
+        term.textContent = ">>> ERROR: Uplink to local scanner failed.";
+        term.style.color = "var(--danger)";
+      }
+    }
+
     async function validateCode() {
       const btn = document.getElementById('verifyBtn');
-      btn.disabled = true;
-      btn.textContent = "SCANNING CODE...";
+      btn.disabled = true; btn.textContent = "VERIFYING...";
       try {
         const localRes = await fetch('api/validate-complexity');
         const localData = await localRes.json();
         if (!localData.ok) { 
           document.getElementById('quality-result').textContent = localData.message; 
-          btn.disabled = false; btn.textContent = "2. VERIFY & SUBMIT";
+          btn.disabled = false; btn.textContent = "3. VERIFY & SUBMIT";
           return; 
         }
         const sourceRes = await fetch('api/source');
@@ -114,10 +130,9 @@
         const res = await fetch(`${API}/team/update`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: CFG.getTeamName(), token: CFG.getTeamToken(), completedRoom: ROOM_ID, sourceCode: sourceData.source }) });
         const data = await res.json();
         if (data.ok) { 
-          btn.style.background = 'var(--success)';
-          btn.textContent = "SUCCESS! REDIRECTING...";
+          btn.style.background = 'var(--success)'; btn.textContent = "SUCCESS! REDIRECTING...";
           setTimeout(() => { window.location.href = CFG.getRoomUrl('room3'); }, 1000);
-        } else { alert('Failed: ' + data.error); btn.disabled = false; }
+        } else { alert('Failed: ' + data.error); btn.disabled = false; btn.textContent = "3. VERIFY & SUBMIT"; }
       } catch (e) { alert('System error'); btn.disabled = false; }
     }
 
