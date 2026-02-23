@@ -1,5 +1,5 @@
 /**
- * Firebase Functions - Room 2 Resiliency Fix
+ * Firebase Functions - Final Workshop Version
  */
 
 const functions = require('firebase-functions');
@@ -18,59 +18,48 @@ app.use(express.json());
 
 const ROOM_POINTS = { room1: 100, room2: 150, room3: 150, final: 200 };
 
-// --- ENGINE ROOM 1 ---
+// --- ENGINES ---
 function validateRoom1(source) {
   try {
     const sandbox = { module: { exports: {} }, require: (m) => m === 'crypto' ? crypto : {}, console: { log: () => {} }, Date, Math, Number, String, JSON };
-    vm.createContext(sandbox);
-    vm.runInContext(source, sandbox, { timeout: 1000 });
-    const svc = sandbox.module.exports;
-    svc.createUser('V', 'P');
-    const auth = svc.authenticate('V', 'P');
+    vm.createContext(sandbox); vm.runInContext(source, sandbox);
+    const svc = sandbox.module.exports; svc.createUser('V', 'P'); const auth = svc.authenticate('V', 'P');
     const res = svc.placeOrder(auth.token, { items: [{ priceCents: 1000, qty: 5 }], discountCode: 'WELCOME10', shippingAddress: { country: 'PT' } });
-    if (res && res.order && res.order.amounts && res.order.amounts.taxCents === 1139) return { ok: true };
+    if (res?.order?.amounts?.taxCents === 1139) return { ok: true };
     return { ok: false, error: "IVA incorreto." };
-  } catch (e) { return { ok: false, error: "Erro sintaxe Room 1." }; }
+  } catch (e) { return { ok: false, error: "Erro Room 1." }; }
 }
 
-// --- ENGINE ROOM 2 ---
 function validateRoom2(source) {
   try {
     const sandbox = { module: { exports: {} }, console: { log: () => {} }, Math, Number, String, JSON, Array, Error };
-    vm.createContext(sandbox);
-    vm.runInContext(source, sandbox, { timeout: 1000 });
+    vm.createContext(sandbox); vm.runInContext(source, sandbox);
     const engine = new sandbox.module.exports.InvoiceEngine();
-    
-    // Teste com dados completos (sku incluído)
-    const order = { 
-      items: [{ sku: 'TEST-ITEM', unitPrice: 100, qty: 2 }], 
-      discountCode: 'WELCOME10', 
-      shippingAddress: { country: 'PT' } 
-    };
-    const user = { tier: 'VIP' };
-    
-    const res = engine.generateInvoice(order, user);
-    
-    if (!res || !res.ok || !res.amounts) {
-      return { ok: false, error: "O motor não devolveu uma fatura válida (ok: false)." };
-    }
-
-    // Verificar integridade lógica (Subtotal 200 - 20 desc + 4.5 ship + 42.43 tax = 226.93 approx)
-    // A fórmula original: (200 - 20 + 4.5) * 1.23 = 226.935 -> 226.94
-    if (res.amounts.total > 0) {
+    const res = engine.generateInvoice({ items: [{ sku: 'T', unitPrice: 100, qty: 2 }] }, { tier: 'VIP' });
+    if (res?.ok) {
       const complexity = (source.match(/\b(if|else|switch|for|while|&&|\|\||\?)\b/g) || []).length;
       return { ok: true, complexity };
     }
-    return { ok: false, error: "Cálculo inválido." };
-  } catch (e) { return { ok: false, error: "Erro no motor: " + e.message }; }
+    return { ok: false, error: "Lógica Room 2 partida." };
+  } catch (e) { return { ok: false, error: "Erro Room 2." }; }
 }
 
-// --- API ROUTES ---
+function validateRoom3(source) {
+  // Verifica se pararam de usar concatenação de strings para queries
+  const isVulnerable = source.includes(" + password") || source.includes(" + username") || source.includes(" + search") || source.includes(" + '") || source.includes("' + ");
+  const isUsingParams = source.includes("?") || source.includes("$1");
+  
+  if (isVulnerable) return { ok: false, error: "Vulnerabilidade de SQL Injection ainda presente!" };
+  if (!isUsingParams) return { ok: false, error: "Precisas de usar Parameterized Queries (?) para fechar o cofre." };
+  
+  return { ok: true, bonus: source.includes('bcrypt') || source.includes('.hash') };
+}
 
+// --- API ---
 app.get(['/state', '/api/state'], async (req, res) => {
   const snapshot = await db.collection('teams').get();
-  const teams = [];
-  snapshot.forEach(doc => teams.push(doc.data()));
+  const teams = []; snapshot.forEach(doc => teams.push(doc.data()));
+  teams.sort((a,b) => (b.score - a.score) || (a.updatedAt - b.updatedAt));
   res.json({ ok: true, teams });
 });
 
@@ -86,7 +75,7 @@ app.post(['/kickoff', '/api/kickoff'], async (req, res) => {
 });
 
 app.post(['/team/login', '/api/team/login'], async (req, res) => {
-  const name = String(req.body.name || 'Team').trim();
+  const name = String(req.body.name || 'Team').trim().slice(0, 20);
   const teamRef = db.collection('teams').doc(name);
   const doc = await teamRef.get();
   let team = doc.exists ? doc.data() : { name, token: Math.random().toString(36).slice(2), score: 0, completedRooms: [], updatedAt: Date.now() };
@@ -106,6 +95,7 @@ app.post(['/team/update', '/api/team/update'], async (req, res) => {
     let v = { ok: true };
     if (completedRoom === 'room1') v = validateRoom1(sourceCode);
     if (completedRoom === 'room2') v = validateRoom2(sourceCode);
+    if (completedRoom === 'room3') v = validateRoom3(sourceCode);
     
     if (!v.ok) return res.json({ ok: false, error: v.error });
 
@@ -114,6 +104,7 @@ app.post(['/team/update', '/api/team/update'], async (req, res) => {
 
     if (completedRoom === 'room1' && (sourceCode.match(/\/\*\*[\s\S]*?\*\//g) || []).length >= 3) { finalScore += 50; resultMsg = "✅ Room 1 + BÓNUS Doc!"; }
     if (completedRoom === 'room2' && v.complexity < 5) { finalScore += 75; resultMsg = `✅ Room 2 + BÓNUS Minimalist (${v.complexity})!`; }
+    if (completedRoom === 'room3' && v.bonus) { finalScore += 100; resultMsg = "✅ Room 3 + BÓNUS Crypto!"; }
 
     await teamRef.update({ completedRooms: [...team.completedRooms, completedRoom], score: finalScore, updatedAt: Date.now(), lastResult: resultMsg });
   }
@@ -124,9 +115,7 @@ app.post(['/reset', '/api/reset'], async (req, res) => {
   await db.collection('gameState').doc('timer').delete();
   if (req.body && req.body.clearTeams) {
     const snp = await db.collection('teams').get();
-    const batch = db.batch();
-    snp.forEach(d => batch.delete(d.ref));
-    await batch.commit();
+    const batch = db.batch(); snp.forEach(d => batch.delete(d.ref)); await batch.commit();
   }
   res.json({ ok: true });
 });

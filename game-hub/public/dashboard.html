@@ -6,246 +6,190 @@
   <title>Battle Station | Gemini Codefest</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Spline+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #05070a;
-      --card: rgba(13, 17, 23, 0.7);
-      --card-border: rgba(56, 139, 253, 0.2);
-      --text: #e6edf3;
-      --muted: #8b949e;
-      --accent: #58a6ff;
-      --accent-glow: rgba(88, 166, 255, 0.4);
-      --success: #3fb950;
-      --warning: #d29922;
-      --danger: #f85149;
-      --font: 'Space Grotesk', 'Spline Sans', system-ui, sans-serif;
+      --bg: #05070a; --card: rgba(13, 17, 23, 0.7); --card-border: rgba(56, 139, 253, 0.2);
+      --text: #e6edf3; --muted: #8b949e; --accent: #58a6ff; --accent-glow: rgba(88, 166, 255, 0.4);
+      --success: #3fb950; --warning: #d29922; --danger: #f85149; --font: 'Space Grotesk', sans-serif;
     }
-
     * { box-sizing: border-box; }
-
-    body, html {
-      margin: 0; padding: 0; height: 100vh; width: 100vw;
-      font-family: var(--font); color: var(--text); background-color: var(--bg);
-      background-image: radial-gradient(circle at 10% 20%, rgba(88, 166, 255, 0.05) 0%, transparent 40%), radial-gradient(circle at 90% 80%, rgba(139, 92, 246, 0.05) 0%, transparent 40%);
-      overflow: hidden;
-    }
-
-    .dashboard-layout { display: grid; grid-template-columns: 380px 1fr; height: 100vh; width: 100vw; }
-
-    .mission-control { background: rgba(10, 12, 16, 0.95); border-right: 1px solid var(--border); padding: 30px; display: flex; flex-direction: column; height: 100vh; overflow-y: auto; backdrop-filter: blur(10px); }
-    .logo-glow { font-size: 26px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); text-shadow: 0 0 15px var(--accent-glow); text-align: center; margin-bottom: 30px; }
-
-    .mission-card { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
-    .mission-card h3 { margin: 0 0 8px; font-size: 16px; color: var(--accent); display: flex; align-items: center; gap: 10px; }
-    .mission-card p { margin: 0; font-size: 13px; color: var(--muted); line-height: 1.4; }
-    .mission-points { display: inline-block; margin-top: 10px; font-size: 11px; font-weight: 700; color: var(--warning); text-transform: uppercase; }
-
-    .main-view { padding: 40px; height: 100vh; overflow-y: auto; display: flex; flex-direction: column; }
-    .header-stats { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 40px; }
-    .big-timer { font-family: monospace; font-size: 72px; font-weight: 800; line-height: 1; text-shadow: 0 0 20px rgba(255, 255, 255, 0.1); }
-
-    .kickoff-bar { background: var(--card); border: 1px solid var(--card-border); padding: 12px 20px; border-radius: 12px; display: flex; align-items: center; gap: 15px; }
+    body { margin: 0; padding: 0; height: 100vh; width: 100vw; font-family: var(--font); color: var(--text); background-color: var(--bg); overflow: hidden; }
     
-    .team-row { background: var(--card); border: 1px solid var(--card-border); border-radius: 16px; margin-bottom: 12px; padding: 15px 25px; display: grid; grid-template-columns: 60px 2fr 1fr 1fr 200px; align-items: center; transition: all 0.3s; }
-    .team-row:hover { border-color: var(--accent); transform: scale(1.01); }
-    .score-val { font-size: 28px; font-weight: 800; color: var(--success); }
-    
+    .dashboard-layout { display: grid; grid-template-columns: 380px 1fr; height: 100vh; padding-bottom: 60px; }
+
+    /* Barra Lateral */
+    .mission-control { background: rgba(10, 12, 16, 0.95); border-right: 1px solid var(--card-border); padding: 25px; display: flex; flex-direction: column; overflow-y: auto; }
+    .logo-glow { font-size: 22px; font-weight: 800; color: var(--accent); text-shadow: 0 0 15px var(--accent-glow); margin-bottom: 25px; text-align: center; text-transform: uppercase; }
+
+    .mission-card { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 14px; margin-bottom: 12px; }
+    .mission-card h3 { margin: 0 0 5px; font-size: 15px; color: var(--accent); display: flex; align-items: center; gap: 8px; }
+    .mission-card p { margin: 0; font-size: 12px; color: var(--muted); line-height: 1.4; }
+    .mission-points { display: inline-block; margin-top: 8px; font-size: 10px; font-weight: 700; color: var(--warning); text-transform: uppercase; }
+
+    /* Área Principal */
+    .main-view { padding: 40px; display: flex; flex-direction: column; overflow-y: auto; }
+    .header-stats { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; }
+    .big-timer { font-family: monospace; font-size: 84px; font-weight: 800; line-height: 1; color: white; text-shadow: 0 0 20px rgba(255,255,255,0.1); }
+    .kickoff-bar { background: var(--card); border: 1px solid var(--card-border); padding: 15px 25px; border-radius: 12px; display: flex; align-items: center; gap: 20px; }
+
+    /* Leaderboard */
+    .team-row { background: var(--card); border: 1px solid var(--card-border); border-radius: 16px; margin-bottom: 12px; padding: 15px 25px; display: grid; grid-template-columns: 60px 2fr 100px 120px 180px; align-items: center; transition: all 0.5s; }
+    .score-val { font-size: 32px; font-weight: 800; color: var(--success); }
+    .mission-time { font-family: monospace; color: var(--muted); font-size: 16px; font-weight: 600; }
     .progress-dots { display: flex; gap: 10px; }
-    .dot { width: 35px; height: 35px; border-radius: 50%; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); display: flex; align-items: center; justify-content: center; font-size: 16px; filter: grayscale(1); }
+    .dot { width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-size: 14px; filter: grayscale(1); }
     .dot.active { background: var(--accent-glow); border-color: var(--accent); filter: grayscale(0); box-shadow: 0 0 10px var(--accent-glow); }
 
-    .btn { padding: 8px 16px; border-radius: 6px; border: none; font-weight: 700; cursor: pointer; text-transform: uppercase; font-size: 12px; }
-    .btn-start { background: var(--success); color: white; }
+    .btn { padding: 10px 20px; border-radius: 8px; border: none; font-weight: 700; cursor: pointer; text-transform: uppercase; font-size: 12px; }
+    .btn-start { background: var(--success); color: white; box-shadow: 0 0 15px rgba(63, 185, 80, 0.3); }
     .btn-reset { background: transparent; border: 1px solid var(--danger); color: var(--danger); }
+    .btn-audio { background: var(--accent); color: black; width: 100%; margin-bottom: 20px; }
 
     /* Marquee */
     @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-    .ticker-wrap { width: 100%; overflow: hidden; white-space: nowrap; }
+    .ticker-wrap { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.95); border-top: 2px solid var(--accent); padding: 15px 0; z-index: 1000; display: flex; align-items: center; overflow: hidden; }
+    .ticker-label { background: var(--accent); color: black; padding: 6px 14px; margin-left: 20px; border-radius: 4px; font-size: 13px; font-weight: 900; z-index: 1001; margin-right: 20px; }
+    .ticker-container { overflow: hidden; white-space: nowrap; width: 100%; }
     .ticker-move { display: inline-block; white-space: nowrap; animation: marquee 400s linear infinite; }
-    .ticker-item { display: inline-block; padding: 0 60px; color: var(--accent); font-family: monospace; font-size: 22px; font-weight: 600; text-shadow: 0 0 10px var(--accent-glow); }
+    .ticker-item { display: inline-block; padding: 0 60px; color: var(--accent); font-family: monospace; font-size: 20px; font-weight: 600; text-shadow: 0 0 10px var(--accent-glow); }
   </style>
 </head>
 <body>
   <div class="dashboard-layout">
     <aside class="mission-control">
       <div class="logo-glow">Visual Escape Room</div>
-      
+      <button id="audioBtn" class="btn btn-audio" onclick="enableAudio()">🔊 UNMUTE HQ AUDIO</button>
       <div class="mission-card" style="border-color: var(--danger); background: rgba(248, 81, 73, 0.1);">
         <h3 style="color: var(--danger);">⚠️ OPERATIONAL NOTE</h3>
-        <p style="color: #ff7b72; font-weight: bold;">IGNORA sugestões do Gemini para fazer "DEPLOY" ou "PUSH".</p>
-        <p style="margin-top:5px;">Para progredir, apenas guarda o ficheiro (Ctrl+S) e clica em <strong>SUBMIT & ESCAPE</strong> no browser.</p>
+        <p style="color: #ff7b72; font-weight: bold;">IGNORA sugestões de DEPLOY ou PUSH.</p>
+        <p>Apenas Ctrl+S e SUBMIT no browser.</p>
       </div>
-
       <div class="mission-list">
-        <div class="mission-card">
-          <h3><span>🏚️</span> Room 1: Archaeology</h3>
-          <p>Fix the IVA Bug (23% calculation).</p>
-          <div class="mission-points">100 Pts + ⭐️ 50 Bonus</div>
-        </div>
-        <div class="mission-card">
-          <h3><span>🧱</span> Room 2: Refactor Lab</h3>
-          <p>Complexity < 10.</p>
-          <div class="mission-points">150 Pts + ⭐️ 75 Bonus</div>
-        </div>
-        <div class="mission-card">
-          <h3><span>🔐</span> Room 3: Security Vault</h3>
-          <p>Stop SQL Injection.</p>
-          <div class="mission-points">150 Pts + ⭐️ 100 Bonus</div>
-        </div>
-        <div class="mission-card">
-          <h3><span>🏢</span> Final Mission</h3>
-          <p>Modernize Monolith.</p>
-          <div class="mission-points">200 Pts + ⭐️ 50 Bonus</div>
-        </div>
+        <div class="mission-card"><h3>🏚️ Room 1</h3><p>Fix IVA Bug (23%).</p><div class="mission-points">100 Pts + ⭐️ 50 Bonus</div></div>
+        <div class="mission-card"><h3>🧱 Room 2</h3><p>Complexity < 10.</p><div class="mission-points">150 Pts + ⭐️ 75 Bonus</div></div>
+        <div class="mission-card"><h3>🔐 Room 3</h3><p>Stop SQL Injection.</p><div class="mission-points">150 Pts + ⭐️ 100 Bonus</div></div>
+        <div class="mission-card"><h3>🏢 Final</h3><p>Modernize Monolith.</p><div class="mission-points">200 Pts + ⭐️ 50 Bonus</div></div>
       </div>
     </aside>
 
     <main class="main-view">
       <div class="header-stats">
-        <div class="timer-container">
-          <div style="font-size:14px; color:var(--muted); letter-spacing:2px;">TIME REMAINING</div>
-          <div class="big-timer" id="timer">00:50:00</div>
-        </div>
-        <div style="text-align:right">
-          <div class="kickoff-bar">
-            <span id="gameStatus">STATUS: READY</span>
-            <button onclick="kickoffGame()" id="kickoffBtn" class="btn btn-start">Start Mission</button>
-            <button onclick="resetGame()" id="resetBtn" class="btn btn-reset" style="display:none">Reset</button>
+        <div><div style="font-size:14px; color:var(--muted); letter-spacing:2px; margin-bottom:5px;">MISSION ELAPSED</div><div class="big-timer" id="timer">00:50:00</div></div>
+        <div class="kickoff-bar">
+          <div style="text-align:right">
+            <div id="gameStatus" style="font-size:11px; font-weight:800; color:var(--accent); margin-bottom:4px;">STATUS: READY</div>
+            <div id="conn" style="font-size:10px; color:var(--muted)">CONNECTING TO HQ...</div>
           </div>
-          <div id="conn" style="font-size:11px; margin-top:10px;">CONNECTING TO HQ...</div>
+          <button onclick="kickoffGame()" id="kickoffBtn" class="btn btn-start">Start Mission</button>
+          <button onclick="resetGame()" id="resetBtn" class="btn btn-reset" style="display:none">Reset</button>
         </div>
       </div>
       <div id="rows"></div>
     </main>
   </div>
 
-  <div id="intelTicker" style="position:fixed; bottom:0; left:0; right:0; background:rgba(0,0,0,0.95); border-top:2px solid var(--accent); padding:15px 0; z-index:1000; display:flex; align-items:center;">
-    <div style="background:var(--accent); color:black; padding:6px 14px; margin-left:20px; border-radius:4px; font-size:13px; font-weight:900; z-index:1001;">ENCRYPTED TRANSMISSION</div>
-    <div class="ticker-wrap"><div class="ticker-move" id="tickerContent"></div></div>
+  <div class="ticker-wrap">
+    <div class="ticker-label">ENCRYPTED TRANSMISSION</div>
+    <div class="ticker-container"><div class="ticker-move" id="tickerContent"></div></div>
   </div>
 
   <script src="/config.js"></script>
   <script src="/timingConfig.js"></script>
   <script>
-    const CFG = window.ESCAPE_ROOM_CONFIG;
-    const API = CFG.getGlobalApiUrl(); 
+    const API = window.ESCAPE_ROOM_CONFIG.getGlobalApiUrl();
     const TIMING = window.GAME_TIMING;
+    let lastRankOrder = [];
+    let audioEnabled = false;
+    let gameStartTime = null;
+
+    function enableAudio() { audioEnabled = true; document.getElementById('audioBtn').style.display = 'none'; }
+
+    function playRankSound() {
+      if (!audioEnabled) return;
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'square'; osc.frequency.setValueAtTime(440, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.1);
+      gain.gain.setValueAtTime(0.1, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.start(); osc.stop(ctx.currentTime + 0.3);
+    }
 
     async function sync() {
       try {
         const [sRes, tRes] = await Promise.all([fetch(`${API}/state`), fetch(`${API}/timer`)]);
         const sData = await sRes.json();
         const tData = await tRes.json();
-        
-        if (sData.ok) render(sData.teams);
-        if (tData.ok && tData.timer && tData.timer.startTime) {
-          TIMING.startTimer(tData.timer.startTime);
+        if (tData.ok && tData.timer?.startTime) {
+          gameStartTime = tData.timer.startTime;
+          TIMING.startTimer(gameStartTime);
           document.getElementById('kickoffBtn').style.display = 'none';
           document.getElementById('resetBtn').style.display = 'inline-block';
           document.getElementById('gameStatus').textContent = 'STATUS: ACTIVE';
-        } else {
-          TIMING.resetTimer();
-          document.getElementById('kickoffBtn').style.display = 'inline-block';
-          document.getElementById('resetBtn').style.display = 'none';
-          document.getElementById('gameStatus').textContent = 'STATUS: READY';
+          document.getElementById('gameStatus').style.color = 'var(--success)';
         }
-        document.getElementById('conn').textContent = 'CONNECTED TO CLOUD HQ';
-        document.getElementById('conn').style.color = 'var(--success)';
-      } catch (e) { 
-        document.getElementById('conn').textContent = 'OFFLINE (SYNC ERROR)'; 
-        document.getElementById('conn').style.color = 'var(--danger)';
-      }
+        if (sData.ok) render(sData.teams);
+        document.getElementById('conn').textContent = '📡 HQ LINK ACTIVE';
+      } catch (e) { document.getElementById('conn').textContent = '⚠️ SYNC ERROR'; }
+    }
+
+    function formatDuration(ms) {
+      if (!ms || ms < 0) return "00:00";
+      const totalSec = Math.floor(ms / 1000);
+      const m = Math.floor(totalSec / 60).toString().padStart(2, '0');
+      const s = (totalSec % 60).toString().padStart(2, '0');
+      return `${m}:${s}`;
     }
 
     function render(teams) {
+      const currentOrder = teams.map(t => t.name).join('|');
+      if (lastRankOrder.length > 0 && lastRankOrder !== currentOrder) playRankSound();
+      lastRankOrder = currentOrder;
       const rows = document.getElementById('rows');
-      if (!teams || teams.length === 0) { rows.innerHTML = '<div style="text-align:center;padding-top:100px;color:var(--muted)">AWAITING OPERATIVES...</div>'; return; }
-      rows.innerHTML = teams.map((t, i) => `
-        <div class="team-row">
-          <div style="font-size:24px;font-weight:800;">#${i+1}</div>
-          <div><h2 style="margin:0">${t.name}</h2><span style="font-size:10px">${t.room || 'Lobby'}</span></div>
-          <div class="score-val">${t.score}</div>
-          <div class="progress-dots">
-            <div class="dot ${t.completedRooms.includes('room1') ? 'active' : ''}">🏚️</div>
-            <div class="dot ${t.completedRooms.includes('room2') ? 'active' : ''}">🧱</div>
-            <div class="dot ${t.completedRooms.includes('room3') ? 'active' : ''}">🔐</div>
-            <div class="dot ${t.completedRooms.includes('final') ? 'active' : ''}">🏢</div>
+      if (!teams.length) { rows.innerHTML = '<div style="text-align:center;padding-top:100px;color:var(--muted)">AWAITING OPERATIVES...</div>'; return; }
+      rows.innerHTML = teams.map((t, i) => {
+        const duration = (gameStartTime && t.updatedAt > gameStartTime) ? (t.updatedAt - gameStartTime) : 0;
+        return `
+          <div class="team-row">
+            <div style="font-size:24px; font-weight:800; color:var(--muted)">#${i+1}</div>
+            <div><h2 style="margin:0">${t.name}</h2><span style="font-size:10px; color:var(--accent)">${t.lastResult || 'Active'}</span></div>
+            <div class="score-val">${t.score}</div>
+            <div class="mission-time">⏱️ ${formatDuration(duration)}</div>
+            <div class="progress-dots">
+              <div class="dot ${t.completedRooms.includes('room1') ? 'active' : ''}">🏚️</div>
+              <div class="dot ${t.completedRooms.includes('room2') ? 'active' : ''}">🧱</div>
+              <div class="dot ${t.completedRooms.includes('room3') ? 'active' : ''}">🔐</div>
+              <div class="dot ${t.completedRooms.includes('final') ? 'active' : ''}">🏢</div>
+            </div>
           </div>
-          <div style="font-size:11px;color:var(--muted)">${t.lastResult || 'Standby'}</div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
     }
 
-    async function kickoffGame() {
-      const btn = document.getElementById('kickoffBtn');
-      btn.disabled = true; btn.textContent = 'STARTING...';
-      const res = await fetch(`${API}/kickoff`, { method: 'POST' });
-      if ((await res.json()).ok) sync();
-      btn.disabled = false; btn.textContent = 'Start Mission';
-    }
-
-    async function resetGame() {
-      if (!confirm('TERMINATE ALL MISSIONS AND WIPE TEAMS?')) return;
-      
-      const btn = document.getElementById('resetBtn');
-      btn.disabled = true; btn.textContent = 'RESETTING...';
-      
-      try {
-        const res = await fetch(`${API}/reset`, { 
-          method: 'POST', 
-          headers: {'Content-Type':'application/json'}, 
-          body: JSON.stringify({clearTeams:true}) 
-        });
-        const data = await res.json();
-        if (data.ok) {
-          alert('SYSTEM RESET SUCCESSFUL');
-          location.reload();
-        } else {
-          throw new Error(data.error);
-        }
-      } catch (e) {
-        alert('RESET FAILED: ' + e.message);
-        btn.disabled = false; btn.textContent = 'Reset';
-      }
-    }
+    async function kickoffGame() { await fetch(`${API}/kickoff`, { method: 'POST' }); sync(); }
+    async function resetGame() { if (confirm('RESET ALL MISSIONS?')) { await fetch(`${API}/reset`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({clearTeams:true}) }); location.reload(); } }
 
     setInterval(sync, 3000);
     setInterval(() => {
       const rem = TIMING.getTimeRemaining();
-      const el = document.getElementById('timer');
-      if (rem === null) el.textContent = '00:50:00';
-      else {
-        const h = Math.floor(rem/3600).toString().padStart(2,'0');
-        const m = Math.floor((rem%3600)/60).toString().padStart(2,'0');
-        const s = (rem%60).toString().padStart(2,'0');
-        el.textContent = `${h}:${m}:${s}`;
-        el.style.color = TIMING.getTimeStatus() === 'red' ? 'var(--danger)' : (TIMING.getTimeStatus() === 'yellow' ? 'var(--warning)' : 'white');
+      if (rem !== null) {
+        const m = Math.floor(rem/60), s = rem%60;
+        document.getElementById('timer').textContent = `00:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
       }
     }, 1000);
 
     const TIPS = [
-      "SISTEMA: A detetar anomalias no checkout... o IVA parece estar a flutuar entre o desconto e o shipping.",
-      "LOG: O que é que todos os programadores têm, mas ninguém vê sem um ecrã? Cuidado com o Room 1.",
-      "RUMOR: Dizem que a Arqueologia falha porque alguém se esqueceu da ordem das operações matemáticas.",
-      "TRANSMISSÃO: Um programador foi ao mercado e trouxe 6 pacotes de leite. Revê a tua lógica condicional.",
-      "ALERTA: Complexidade ciclomática crítica detetada no Lab. O sistema prefere funções curtas e limpas.",
-      "SISTEMA: O Lab de Refactor odeia IFs aninhados. Cláusulas de guarda são o teu escudo contra o caos.",
-      "LOG: Um programador faliu porque usava o 'break' em todo o lado. Não deixes o teu código parar assim.",
-      "RUMOR: Se disseres ao Vault que '1' é igual a '1', ele pode deixar-te entrar sem convite.",
-      "ALERTA: Parameterized Queries são a única forma de evitar que o Vault seja exposto ao mundo.",
-      "SISTEMA: Strings concatenadas diretamente em queries SQL são como deixar a chave na porta do cofre.",
-      "LOG: Um SQL entrou num bar e perguntou se podia fazer um JOIN com as mesas. Talvez falte um índice.",
-      "RUMOR: O Monólito está instável. Sem health checks, é como voar às cegas num cockpit sem instrumentos.",
-      "ALERTA: A API de Credit Score está a devolver 500. Modernizar é a única solução.",
-      "LOG: !false... é engraçado porque é verdadeiro, tal como a necessidade de refactorizar.",
-      "SISTEMA: Detetado excesso de cafeína no terminal 4. A performance pode variar.",
-      "AVISO: O teu código não tem bugs. Ele apenas desenvolveu características inesperadas.",
-      "TRANSMISSÃO: Em caso de pânico: git commit, git push e sai a correr.",
-      "LOG: Programar é como escrever um livro... exceto que se te esqueceres de uma vírgula, o livro explode.",
-      "RUMOR: Consta que o rubber ducking com um colega resolve 50% dos problemas de lógica."
+      "SISTEMA: IVA instável na Room 1.","LOG: SQL Injection detetado no Vault.","ENIGMA: !false é verdadeiro.",
+      "DICA: O motor de faturas odeia duplicados.","AVISO: O tempo é o teu único desempate.",
+      "RUMOR: Dizem que a Arqueologia falha por falta de atenção aos portes.",
+      "ALERTA: Complexidade crítica no Lab. O sistema prefere funções curtas.",
+      "TRANSMISSÃO: strings concatenadas em SQL são um perigo!",
+      "LOG: Programar é como escrever um livro... se te esqueceres de uma vírgula, ele explode.",
+      "SISTEMA:Rubber ducking com um colega resolve 50% dos problemas."
     ];
-    
     document.getElementById('tickerContent').innerHTML = TIPS.sort(() => Math.random() - 0.5).map(t => `<span class="ticker-item">>>> ${t}</span>`).join('') + TIPS.map(t => `<span class="ticker-item">>>> ${t}</span>`).join('');
     sync();
   </script>
