@@ -64,9 +64,7 @@ app.get('/api/validate-complexity', (req, res) => {
     const rawOutput = (stdout || '') + (stderr || '');
 
     // Remove ANSI escape sequences and control chars (keep newlines and tabs)
-    // eslint-disable-next-line no-control-regex
     let cleanOutput = rawOutput.replace(/\x1B\[[0-9;]*[a-zA-Z]/g, '');
-    // eslint-disable-next-line no-control-regex
     cleanOutput = cleanOutput.replace(/[\x00-\x09\x0B-\x1F\x7F]/g, '');
 
     const complexityMatch = cleanOutput.match(/Method\s+'(\w+)'\s+has\s+a\s+complexity\s+of\s+(\d+)/);
