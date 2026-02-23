@@ -23,9 +23,6 @@ app.use('/room2', express.static(path.join(__dirname, '../rooms/room2-refactor-l
 app.use('/room3', express.static(path.join(__dirname, '../rooms/room3-security-vault/public')));
 app.use('/final', express.static(path.join(__dirname, '../rooms/final-modernisation/public')));
 
-// --- API GERAL ---
-app.get('/api/state', (req, res) => res.json({ ok: true, teams: Array.from(new Map().values()) })); // Placeholder local
-
 // --- API ROOM 1 ---
 app.post('/room1/api/login', (req, res) => res.json({ ok: true }));
 app.post('/room1/api/checkout', (req, res) => {
@@ -39,7 +36,19 @@ app.post('/room1/api/checkout', (req, res) => {
 });
 app.get('/room1/api/source', (req, res) => res.json({ ok: true, source: fs.readFileSync(path.join(__dirname, '../rooms/room1-archaeology/src/legacyService.js'), 'utf8') }));
 
-// --- API ROOM 2 ---
+// --- API ROOM 2 (Fixing the 404 error) ---
+app.post('/room2/api/invoice', (req, res) => {
+  try {
+    const source = fs.readFileSync(path.join(__dirname, '../rooms/room2-refactor-lab/src/invoiceEngine.js'), 'utf8');
+    const sandbox = { module: { exports: {} }, console };
+    vm.createContext(sandbox);
+    vm.runInContext(source, sandbox);
+    const engine = new sandbox.module.exports.InvoiceEngine();
+    const invoice = engine.generateInvoice(req.body, { tier: 'VIP' });
+    res.json({ ok: true, invoice });
+  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+});
+
 app.get('/room2/api/validate-complexity', (req, res) => {
   exec('npx eslint src/invoiceEngine.js --rule "complexity: [\'warn\', 1]" --format json', { cwd: path.join(__dirname, '../rooms/room2-refactor-lab') }, (err, stdout) => {
     try {
@@ -64,24 +73,17 @@ app.post('/room3/api/login', (req, res) => {
 });
 app.get('/room3/api/source', (req, res) => res.json({ ok: true, source: fs.readFileSync(path.join(__dirname, '../rooms/room3-security-vault/src/userRepo.js'), 'utf8') }));
 
-// --- API FINAL MISSION (Correção de Rotas) ---
+// --- API FINAL MISSION ---
 app.get('/final/status', (req, res) => res.json({ ok: true, uptime: process.uptime() }));
-
 app.post('/final/api/score', (req, res) => {
   try {
     const source = fs.readFileSync(path.join(__dirname, '../rooms/final-modernisation/src/monolith.js'), 'utf8');
     const sandbox = { module: { exports: {} }, console };
-    vm.createContext(sandbox);
-    vm.runInContext(source, sandbox);
+    vm.createContext(sandbox); vm.runInContext(source, sandbox);
     const result = sandbox.module.exports.calcScore(req.body);
     res.json({ ok: true, ...result });
-  } catch (e) {
-    res.status(500).json({ ok: false, error: "Erro no Monólito: " + e.message });
-  }
+  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
 });
-
-app.get('/final/api/source', (req, res) => {
-  res.json({ ok: true, source: fs.readFileSync(path.join(__dirname, '../rooms/final-modernisation/src/monolith.js'), 'utf8') });
-});
+app.get('/final/api/source', (req, res) => res.json({ ok: true, source: fs.readFileSync(path.join(__dirname, '../rooms/final-modernisation/src/monolith.js'), 'utf8') }));
 
 app.listen(PORT, () => console.log(`🚀 UNIFIED WORKSHOP SERVER ONLINE ON PORT ${PORT}`));
