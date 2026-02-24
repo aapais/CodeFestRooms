@@ -19,7 +19,15 @@ app.post('/room1/api/login', (req, res) => res.json({ ok: true }));
 app.post('/room1/api/checkout', (req, res) => {
   try {
     const src = fs.readFileSync(path.join(__dirname, '../rooms/room1-archaeology/src/legacyService.js'), 'utf8');
-    const sandbox = { module: { exports: {} }, require: (m) => m === 'crypto' ? crypto : {}, console, Date, Math, Number, String, JSON, Array, Object };
+    const sandbox = { 
+      module: { exports: {} }, 
+      require: (m) => {
+        if (m === 'crypto') return crypto;
+        if (m === 'bcrypt') return require('bcrypt');
+        return {};
+      },
+      console, Date, Math, Number, String, JSON, Array, Object 
+    };
     vm.createContext(sandbox); vm.runInContext(src, sandbox);
     const svc = sandbox.module.exports; svc.createUser('U', 'P'); const auth = svc.authenticate('U', 'P');
     res.json(svc.placeOrder(auth.token, { items: [{ sku: 'X', qty: 2, priceCents: 100000 }], discountCode: 'WELCOME10' }));

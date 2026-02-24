@@ -16,7 +16,16 @@ const TIMER_DOC = 'settings/game_timer';
 function validateRoomCode(roomId, sourceCode) {
   if (!sourceCode) return { ok: false, error: "Código vazio." };
   try {
-    const sandbox = { module: { exports: {} }, exports: {}, console, Date, Math, Number, String, JSON, Array, Object, Error, require: (m) => m === 'crypto' ? require('crypto') : {} };
+    const sandbox = { 
+      module: { exports: {} }, 
+      exports: {}, 
+      console, Date, Math, Number, String, JSON, Array, Object, Error, 
+      require: (m) => {
+        if (m === 'crypto') return require('crypto');
+        if (m === 'bcrypt') return require('bcrypt');
+        return {};
+      } 
+    };
     vm.createContext(sandbox);
     vm.runInContext(sourceCode, sandbox, { timeout: 2000 });
     const svc = sandbox.module.exports || sandbox.exports || sandbox;
@@ -59,8 +68,13 @@ function validateRoomCode(roomId, sourceCode) {
     }
 
     if (roomId === 'room3') {
-      if (/['"`]\s*\+\s*\w+|\w+\s*\+\s*['"`]/.test(sourceCode)) return { ok: false, error: "SQL Injection detetada." };
-      return { ok: true, points: 150, bonus: 0 };
+      // 1. Verificar SQL Injection (Concatenação)
+      if (/['"`]\s*\+\s*\w+|\w+\s*\+\s*['"`]/.test(sourceCode)) {
+        return { ok: false, error: "BRECHA DE SEGURANÇA: Concatenação de strings detetada em query SQL. Usa Prepared Statements." };
+      }
+      // 2. Bónus: Uso de hashing (bcrypt ou crypto.hash)
+      const hasHashing = sourceCode.includes('bcrypt') || sourceCode.includes('hashSync') || sourceCode.includes('pbkdf2');
+      return { ok: true, points: 150, bonus: hasHashing ? 100 : 0 };
     }
 
     if (roomId === 'final') {
@@ -87,7 +101,7 @@ router.post('/reset', async (req, res) => {
   batch.delete(db.doc(TIMER_DOC));
   if (req.body.clearTeams) {
     const snap = await db.collection('teams').get();
-    snap.forEach(d => batch.delete(d.ref));
+    snap.docs.forEach(d => batch.delete(d.ref));
   }
   await batch.commit();
   res.json({ ok: true });
@@ -103,7 +117,7 @@ router.post('/team/login', async (req, res) => {
   try {
     const snap = await db.collection('teams').where('name', '==', name).limit(1).get();
     if (!snap.empty) {
-      const teamDoc = snap.docs[0];
+      const teamDoc = snapshot.docs[0];
       const d = teamDoc.data();
       return res.json({ ok: true, team: { id: teamDoc.id, name: d.name, token: d.token } });
     }
