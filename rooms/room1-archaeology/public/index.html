@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Room 1: Archaeology | Gemini Escape Room</title>
+  <title>Region EMEA - Finance Terminal | Escape Room</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg: #0d1117; --panel: #161b22; --border: #30363d; --accent: #58a6ff;
-      --success: #3fb950; --warning: #d29922; --text: #c9d1d9; --text-muted: #8b949e;
+      --success: #3fb950; --warning: #d29922; --danger: #f85149; --text: #c9d1d9; --text-muted: #8b949e;
     }
     body { font-family: 'Space Grotesk', sans-serif; background-color: var(--bg); color: var(--text); margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
     .team-bar { background: #010409; border-bottom: 1px solid var(--border); padding: 10px 25px; display: flex; align-items: center; gap: 15px; z-index: 100; }
@@ -19,55 +19,52 @@
     .btn-success { background: var(--success); color: white; }
     .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text-muted); }
     .timer-box { margin-left: auto; font-family: 'Fira Code', monospace; color: var(--warning); font-weight: 700; background: rgba(210, 153, 34, 0.1); padding: 5px 12px; border-radius: 4px; border: 1px solid rgba(210, 153, 34, 0.2); min-width: 80px; text-align: center; }
-    .container { display: grid; grid-template-columns: 350px 1fr; flex-grow: 1; overflow: hidden; }
+    .container { display: grid; grid-template-columns: 380px 1fr; flex-grow: 1; overflow: hidden; }
     .briefing { background: var(--panel); border-right: 1px solid var(--border); padding: 25px; overflow-y: auto; }
     .objective-card { background: rgba(88, 166, 255, 0.05); border-left: 3px solid var(--accent); padding: 15px; margin: 15px 0; }
-    .bonus-card { background: rgba(210, 153, 34, 0.05); border-left: 3px solid var(--warning); padding: 15px; margin: 15px 0; }
+    .danger-card { background: rgba(248, 81, 73, 0.05); border-left: 3px solid var(--danger); padding: 15px; margin: 15px 0; }
     .workspace { padding: 40px; overflow-y: auto; background-image: radial-gradient(circle at center, #161b22 0%, #0d1117 100%); }
     .card { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 25px; max-width: 700px; margin: 0 auto 30px; }
     .invoice-output { background: #010409; padding: 20px; border-radius: 6px; font-family: 'Fira Code', monospace; font-size: 13px; color: #7ee787; border: 1px solid var(--border); line-height: 1.6; }
-    .badge-dot { width: 10px; height: 10px; border-radius: 50%; background: #30363d; }
-    .badge-dot.done { background: var(--success); box-shadow: 0 0 8px var(--success); }
     input { width: 100%; background: #010409; border: 1px solid var(--border); color: white; padding: 10px; border-radius: 4px; margin-bottom: 15px; }
   </style>
 </head>
 <body>
   <div class="team-bar">
-    <strong style="color: var(--accent);">OPERATIVE:</strong>
-    <span id="displayTeamName" style="font-weight: 700;">...</span>
-    <button class="btn btn-ghost" style="font-size: 10px; padding: 2px 8px;" onclick="logout()">LOGOUT</button>
-    <div style="display:flex; gap:8px; margin-left:15px;" id="badges"><div class="badge-dot"></div><div class="badge-dot"></div><div class="badge-dot"></div><div class="badge-dot"></div></div>
-    <span id="teamStatus" style="font-size: 12px; color: var(--success); margin-left: 10px;"></span>
+    <strong style="color: var(--accent);">OPERATIVE:</strong> <span id="displayTeamName" style="font-weight: 700;">...</span>
     <div class="timer-box" id="timer">--:--</div>
   </div>
 
   <div class="container">
     <aside class="briefing">
-      <h1>MISSION: ARCHAEOLOGY</h1>
-      <p>O checkout está a perder dinheiro. Corrige o erro de IVA.</p>
-      <div class="objective-card"><strong>Fix the IVA Bug:</strong><p>Imposto deve incidir sobre Subtotal - Desconto + Envio.</p></div>
-      <div class="bonus-card">
-        <strong>The Documentarian (+50 pts):</strong>
-        <p>Usa o Gemini para gerar pelo menos 3 blocos de documentação <strong>JSDoc (/** ... */)</strong> dentro do ficheiro <code>legacyService.js</code>.</p>
+      <h1 style="font-size: 20px; color: var(--accent);">AUDIT LOG: #402-TAX</h1>
+      <p style="font-size: 13px;">O sistema de faturação internacional está a gerar discrepâncias nos impostos de exportação.</p>
+      
+      <div class="danger-card">
+        <strong>ALERTA TRIBUTÁRIO:</strong>
+        <p style="font-size: 12px; margin-top:5px;">A Autoridade Fiscal detetou que a base tributável está a ignorar os custos acessórios de expedição. O sistema deve estar em conformidade total com a Lei do IVA.</p>
       </div>
-      <button class="btn btn-success" id="submitBtn" style="width: 100%; padding: 12px;" onclick="markComplete()">SUBMIT & ESCAPE</button>
+
+      <div class="objective-card">
+        <strong>Mission:</strong>
+        <p style="font-size: 12px; margin-top:5px;">Identifica no código qual a variável de custo que está fora da base do IVA e corrige a fórmula de cálculo.</p>
+      </div>
+
+      <button class="btn btn-success" id="submitBtn" style="width: 100%; padding: 12px; margin-top: 20px;" onclick="markComplete()">SUBMIT TO AUDITORS</button>
     </aside>
     <main class="workspace">
       <div class="card">
-        <h3>1. System Authentication</h3>
+        <h3>System Authentication</h3>
         <input type="text" id="username" value="Alice" />
         <input type="password" id="password" value="secret123" />
-        <button class="btn btn-primary" onclick="doLogin()">AUTHENTICATE</button>
+        <button class="btn btn-primary" onclick="doLogin()">OPEN TERMINAL</button>
         <div id="login-msg" style="margin-top:10px;"></div>
       </div>
       <div class="card" id="shop-section" style="display:none;">
-        <h3>2. Checkout Terminal</h3>
-        <p style="font-size:12px; color:var(--text-muted); margin-bottom:20px;">Simulação de compra: 2000.00€ + 10% Desconto.</p>
-        <button class="btn btn-primary" onclick="doCheckout()">GENERATE INVOICE</button>
+        <h3>Transaction Simulator</h3>
+        <p style="font-size:12px; color:var(--text-muted); margin-bottom:20px;">Gera um rascunho de fatura para validação visual dos valores.</p>
+        <button class="btn btn-primary" onclick="doCheckout()">GENERATE AUDIT DRAFT</button>
         <pre class="invoice-output" id="invoice-result" style="margin-top:20px;">Awaiting input...</pre>
-        <div id="hint-box" style="display:none; margin-top:15px; font-size:12px; color:var(--warning); border: 1px dashed var(--warning); padding:10px; border-radius:4px;">
-          🕵️ DICA HQ: Os analistas detetaram que o IVA não bate certo. Algo está a ser ignorado no cálculo.
-        </div>
       </div>
     </main>
   </div>
@@ -78,76 +75,50 @@
     const ROOM_ID = 'room1';
     const CFG = window.ESCAPE_ROOM_CONFIG;
     const API = CFG.getApiUrl();
-    let teamState = { completedRooms: [] };
 
     document.addEventListener('DOMContentLoaded', async () => {
       const name = CFG.getTeamName();
       if (!name) { window.location.href = CFG.getUrl('gameHub'); return; }
       if (!(await CFG.checkGameStart())) return;
       document.getElementById('displayTeamName').textContent = name;
-      fetchTeamState();
       setInterval(() => CFG.syncClock(), 10000);
     });
 
-    async function fetchTeamState() {
-      try {
-        const res = await fetch(`${API}/state`);
-        const data = await res.json();
-        const me = data.teams?.find(t => t.name === CFG.getTeamName());
-        if (me) {
-          teamState = me;
-          const dots = document.querySelectorAll('.badge-dot');
-          ['room1','room2','room3','final'].forEach((id, i) => { if (teamState.completedRooms.includes(id)) dots[i].classList.add('done'); });
-        }
-      } catch (e) {}
-    }
-
     async function doLogin() {
-      // USAR CAMINHO ABSOLUTO /room1/api/login
-      const res = await fetch('/room1/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: 'Alice' }) });
-      const data = await res.json();
-      if (data.ok) {
-        document.getElementById('login-msg').innerHTML = '<span style="color:var(--success)">AUTH OK</span>';
-        document.getElementById('shop-section').style.display = 'block';
-      }
+      document.getElementById('login-msg').innerHTML = '<span style="color:var(--success)">ACCESS GRANTED.</span>';
+      document.getElementById('shop-section').style.display = 'block';
     }
 
     async function doCheckout() {
-      // USAR CAMINHO ABSOLUTO /room1/api/checkout
       const res = await fetch('/room1/api/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items: [{qty:2, priceCents:100000}] }) });
       const data = await res.json();
       if (data.ok) {
         const a = data.order.amounts;
         document.getElementById('invoice-result').innerText = 
           `SUBTOTAL:  ${(a.subtotalCents/100).toFixed(2)} EUR\n` +
-          `DESCONTO: -${(a.discountCents/100).toFixed(2)} EUR\n` +
-          `ENVIO:    +${(a.shippingCents/100).toFixed(2)} EUR\n` +
+          `DISCOUNT: -${(a.discountCents/100).toFixed(2)} EUR\n` +
+          `LOGISTICS: +${(a.shippingCents/100).toFixed(2)} EUR\n` +
           `---------------------------\n` +
-          `IVA (23%):  ${(a.taxCents/100).toFixed(2)} EUR\n` +
+          `TAX (23%):  ${(a.taxCents/100).toFixed(2)} EUR\n` +
           `TOTAL:      ${(a.totalCents/100).toFixed(2)} EUR`;
-        document.getElementById('hint-box').style.display = 'block';
       }
     }
 
     async function markComplete() {
       const btn = document.getElementById('submitBtn');
-      btn.disabled = true; btn.textContent = "VERIFYING CODE...";
+      btn.disabled = true; btn.textContent = "VERIFYING COMPLIANCE...";
       try {
         const sourceRes = await fetch('/room1/api/source');
         const sourceData = await sourceRes.json();
-        const res = await fetch(`${API}/team/update`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: CFG.getTeamName(), token: CFG.getTeamToken(), completedRoom: ROOM_ID, sourceCode: sourceData.source })
-        });
+        const res = await fetch(`${API}/team/update`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: CFG.getTeamName(), token: CFG.getTeamToken(), completedRoom: ROOM_ID, sourceCode: sourceData.source }) });
         const data = await res.json();
         if (data.ok) { 
-          btn.style.background = 'var(--success)'; btn.textContent = "SUCCESS! REDIRECTING...";
+          btn.style.background = 'var(--success)'; btn.textContent = "AUDIT PASSED! REDIRECTING...";
           setTimeout(() => { window.location.href = CFG.getRoomUrl('room2'); }, 1000);
-        } else { alert('Falha na Validação: ' + data.error); btn.disabled = false; btn.textContent = "SUBMIT & ESCAPE"; }
+        } else { alert('Audit Rejected: ' + data.error); btn.disabled = false; btn.textContent = "SUBMIT TO AUDITORS"; }
       } catch (e) { alert('System error'); btn.disabled = false; }
     }
 
-    function logout() { CFG.logout(); }
     setInterval(() => {
       const rem = window.GAME_TIMING.getTimeRemaining();
       if (rem !== null) {
@@ -155,7 +126,6 @@
         document.getElementById('timer').textContent = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
       }
     }, 1000);
-    setInterval(fetchTeamState, 5000);
   </script>
 </body>
 </html>

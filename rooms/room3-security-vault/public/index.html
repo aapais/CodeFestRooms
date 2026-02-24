@@ -3,62 +3,61 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Room 3: Security Vault | Gemini Escape Room</title>
+  <title>Cyber Defense SOC - Access Monitor | Escape Room</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg: #0d1117; --panel: #161b22; --border: #30363d; --accent: #f85149;
-      --success: #3fb950; --warning: #d29922; --text: #c9d1d9; --text-muted: #8b949e;
+      --success: #3fb950; --warning: #d29922; --danger: #f85149; --text: #c9d1d9; --text-muted: #8b949e;
     }
     body { font-family: 'Space Grotesk', sans-serif; background-color: var(--bg); color: var(--text); margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
     .team-bar { background: #010409; border-bottom: 1px solid var(--border); padding: 10px 25px; display: flex; align-items: center; gap: 15px; }
     .btn { padding: 8px 18px; border-radius: 4px; border: none; font-weight: 600; cursor: pointer; font-size: 13px; transition: all 0.2s; }
     .btn-primary { background: var(--accent); color: white; }
+    .btn-success { background: var(--success); color: white; }
     .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text-muted); }
     .timer-box { margin-left: auto; font-family: 'Fira Code', monospace; color: var(--warning); font-weight: 700; background: rgba(210, 153, 34, 0.1); padding: 5px 12px; border-radius: 4px; border: 1px solid rgba(210, 153, 34, 0.2); min-width: 80px; text-align: center; }
-    .container { display: grid; grid-template-columns: 350px 1fr; flex-grow: 1; overflow: hidden; }
+    .container { display: grid; grid-template-columns: 380px 1fr; flex-grow: 1; overflow: hidden; }
     .briefing { background: var(--panel); border-right: 1px solid var(--border); padding: 25px; overflow-y: auto; }
     .objective-card { background: rgba(248, 81, 73, 0.05); border-left: 3px solid var(--accent); padding: 15px; margin: 15px 0; }
-    .bonus-card { background: rgba(210, 153, 34, 0.05); border-left: 3px solid var(--warning); padding: 15px; margin: 15px 0; }
-    .workspace { padding: 40px; display: flex; align-items: center; justify-content: center; background-image: radial-gradient(circle at center, #2d1616 0%, #0d1117 100%); overflow-y: auto; }
-    .login-box { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 40px; width: 100%; max-width: 450px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); position: relative; }
-    .vault-status { position: absolute; top: -15px; right: 20px; background: var(--accent); color: white; padding: 4px 12px; border-radius: 4px; font-size: 11px; font-weight: 800; text-transform: uppercase; }
-    input { width: 100%; background: #010409; border: 1px solid var(--border); color: white; padding: 12px; border-radius: 6px; margin-bottom: 20px; font-family: 'Fira Code', monospace; }
-    .terminal-msg { background: #010409; padding: 15px; border-radius: 4px; font-family: 'Fira Code', monospace; font-size: 13px; margin-top: 20px; border: 1px solid var(--border); min-height: 60px; text-align: center; }
-    .badge-dot { width: 10px; height: 10px; border-radius: 50%; background: #30363d; }
-    .badge-dot.done { background: var(--success); box-shadow: 0 0 8px var(--success); }
+    .workspace { padding: 40px; overflow-y: auto; background-image: radial-gradient(circle at center, #2d1616 0%, #0d1117 100%); }
+    .card { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 30px; max-width: 600px; margin: 0 auto 30px; }
+    input { width: 100%; background: #010409; border: 1px solid var(--border); color: white; padding: 12px; border-radius: 4px; margin-bottom: 15px; font-family: 'Fira Code', monospace; }
+    .log-terminal { background: #010409; padding: 15px; border-radius: 4px; font-family: 'Fira Code', monospace; font-size: 12px; color: #f85149; border: 1px solid var(--border); min-height: 80px; }
   </style>
 </head>
 <body>
   <div class="team-bar">
-    <strong style="color: var(--accent);">OPERATIVE:</strong>
-    <span id="displayTeamName" style="font-weight: 700;">...</span>
-    <button class="btn btn-ghost" style="font-size: 10px; padding: 2px 8px;" onclick="logout()">LOGOUT</button>
-    <div style="display:flex; gap:8px; margin-left:15px;" id="badges"><div class="badge-dot"></div><div class="badge-dot"></div><div class="badge-dot"></div><div class="badge-dot"></div></div>
-    <span id="teamStatus" style="font-size: 12px; color: var(--success); margin-left: 10px;"></span>
+    <strong style="color: var(--accent);">SOC ANALYST:</strong> <span id="displayTeamName" style="font-weight: 700;">...</span>
     <div class="timer-box" id="timer">--:--</div>
-    <button class="btn btn-ghost" style="margin-left:10px" onclick="goPrevRoom()">← PREV</button>
   </div>
 
   <div class="container">
     <aside class="briefing">
-      <h1>MISSION: SECURITY VAULT</h1>
-      <p>O cofre está vulnerável a injeção SQL. Fecha a brecha.</p>
-      <div class="objective-card"><strong>Stop SQL Injection:</strong><p>Usa Parameterized Queries em <code>userRepo.js</code>.</p></div>
-      <div class="bonus-card"><strong>Security Pro (+100 pts):</strong><p>Implementa Hashing (bcrypt).</p></div>
+      <h1 style="font-size: 20px; color: var(--accent);">INTRUSION DETECTED</h1>
+      <p style="font-size: 13px;">Um atacante explorou uma brecha lógica no repositório de utilizadores e obteve privilégios de ROOT.</p>
+      
+      <div class="objective-card">
+        <strong>Vulnerability Report:</strong>
+        <p style="font-size: 12px; margin-top:5px;">A falha reside na <strong>Construção Dinâmica de Pedidos</strong>. O sistema permite a manipulação de predicados lógicos através do campo de credenciais.</p>
+      </div>
+
+      <div class="objective-card" style="border-color: var(--warning);">
+        <strong>Mission:</strong>
+        <p style="font-size: 12px; margin-top:5px;">Identifica a técnica de bypass usada e blinda o repositório <code>userRepo.js</code> usando <strong>Prepared Statements</strong>.</p>
+      </div>
+
+      <button class="btn btn-primary" id="submitBtn" style="width: 100%; padding: 15px; margin-top: 20px;" onclick="validateCode()">PATCH SYSTEM & SUBMIT</button>
     </aside>
     <main class="workspace">
-      <div class="login-box" id="vault-ui">
-        <div class="vault-status" id="lock-label">Locked</div>
-        <h2 style="text-align:center;">Secure Terminal</h2>
-        <form id="loginForm">
-          <input type="text" name="username" placeholder="Username" required autocomplete="off">
-          <input type="password" name="password" placeholder="Password" required>
-          <button type="submit" class="btn btn-primary" id="unlockBtn" style="width:100%; padding:14px;">UNLOCK VAULT</button>
-        </form>
-        <div id="message" class="terminal-msg">Standby...</div>
+      <div class="card">
+        <h3>Bridge Authentication</h3>
+        <input type="text" id="username" placeholder="Username" value="admin" />
+        <input type="text" id="password" placeholder="Credential String" />
+        <button class="btn btn-primary" style="width: 100%;" onclick="doLogin()">TEST ACCESS BRIDGE</button>
+        <div id="log-result" class="log-terminal" style="margin-top:20px;">Awaiting probe...</div>
       </div>
     </main>
   </div>
@@ -69,59 +68,40 @@
     const ROOM_ID = 'room3';
     const CFG = window.ESCAPE_ROOM_CONFIG;
     const API = CFG.getApiUrl();
-    let teamState = { completedRooms: [] };
 
     document.addEventListener('DOMContentLoaded', async () => {
       const name = CFG.getTeamName();
       if (!name) { window.location.href = CFG.getUrl('gameHub'); return; }
       if (!(await CFG.checkGameStart())) return;
       document.getElementById('displayTeamName').textContent = name;
-      fetchTeamState();
       setInterval(() => CFG.syncClock(), 10000);
     });
 
-    async function fetchTeamState() {
-      try {
-        const res = await fetch(`${API}/state`);
-        const data = await res.json();
-        const me = data.teams?.find(t => t.name === CFG.getTeamName());
-        if (me) {
-          teamState = me;
-          const dots = document.querySelectorAll('.badge-dot');
-          ['room1','room2','room3','final'].forEach((id, i) => { if (teamState.completedRooms.includes(id)) dots[i].classList.add('done'); });
-        }
-      } catch (e) {}
+    async function doLogin() {
+      const u = document.getElementById('username').value;
+      const p = document.getElementById('password').value;
+      const res = await fetch('/room3/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: u, password: p }) });
+      const data = await res.json();
+      const term = document.getElementById('log-result');
+      term.textContent = `>>> ${data.msg || 'ACCESS DENIED'}`;
+      term.style.color = data.ok ? "#7ee787" : "#f85149";
     }
 
-    document.getElementById('loginForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const btn = document.getElementById('unlockBtn');
-      const msg = document.getElementById('message');
-      btn.disabled = true; btn.textContent = "VERIFYING...";
-      const formData = new FormData(e.target);
-      const payload = Object.fromEntries(formData.entries());
-
+    async function validateCode() {
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = true; btn.textContent = "PATCHING...";
       try {
-        const res = await fetch('api/login', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
-        const result = await res.json();
-        if (result.ok && (result.msg || '').includes('ACCESS GRANTED')) {
-          msg.textContent = ">>> ACCESS GRANTED. VERIFYING SECURITY...";
-          const sourceRes = await fetch('api/source');
-          const sourceData = await sourceRes.json();
-          const remoteRes = await fetch(`${API}/team/update`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ name: CFG.getTeamName(), token: CFG.getTeamToken(), completedRoom: ROOM_ID, sourceCode: sourceData.source }) });
-          const remoteData = await remoteRes.json();
-          if (remoteData.ok) {
-            msg.style.color = 'var(--success)';
-            msg.textContent = ">>> SECURED! REDIRECTING...";
-            document.getElementById('lock-label').textContent = "UNLOCKED";
-            setTimeout(() => { window.location.href = CFG.getRoomUrl('final'); }, 1000);
-          } else { msg.textContent = ">>> REJECTED: " + remoteData.error; btn.disabled = false; btn.textContent = "UNLOCK VAULT"; }
-        } else { msg.textContent = ">>> DENIED: " + (result.msg || "Invalid Key"); btn.disabled = false; btn.textContent = "UNLOCK VAULT"; }
-      } catch (err) { msg.textContent = ">>> SYSTEM ERROR"; btn.disabled = false; }
-    });
+        const sourceRes = await fetch('/room3/api/source');
+        const sourceData = await sourceRes.json();
+        const res = await fetch(`${API}/team/update`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: CFG.getTeamName(), token: CFG.getTeamToken(), completedRoom: ROOM_ID, sourceCode: sourceData.source }) });
+        const data = await res.json();
+        if (data.ok) { 
+          btn.style.background = 'var(--success)'; btn.textContent = "SYSTEM SECURED!";
+          setTimeout(() => { window.location.href = CFG.getRoomUrl('final'); }, 1000);
+        } else { alert('Patch Rejected: ' + data.error); btn.disabled = false; btn.textContent = "PATCH SYSTEM & SUBMIT"; }
+      } catch (e) { alert('System error'); btn.disabled = false; }
+    }
 
-    function logout() { CFG.logout(); }
-    function goPrevRoom() { window.location.href = CFG.getRoomUrl('room2'); }
     setInterval(() => {
       const rem = window.GAME_TIMING.getTimeRemaining();
       if (rem !== null) {
@@ -129,7 +109,6 @@
         document.getElementById('timer').textContent = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
       }
     }, 1000);
-    setInterval(fetchTeamState, 5000);
   </script>
 </body>
 </html>

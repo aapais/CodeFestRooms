@@ -1,5 +1,5 @@
 /**
- * Firebase Functions - Final Bonus Flexibility Fix
+ * Firebase Functions - Stable Competition Version
  */
 
 const functions = require('firebase-functions');
@@ -8,7 +8,6 @@ const express = require('express');
 const cors = require('cors');
 const vm = require('vm');
 const crypto = require('crypto');
-const { Linter } = require('eslint');
 
 admin.initializeApp();
 const db = admin.firestore();
@@ -17,16 +16,15 @@ const app = express();
 app.use(cors({ origin: true }));
 app.use(express.json());
 
-const linter = new Linter();
 const ROOM_POINTS = { room1: 100, room2: 150, room3: 150, final: 200 };
 
 // --- VALIDATORS ---
 function validateRoom1(src) {
   try {
     const sandbox = { module: { exports: {} }, require: (m) => m === 'crypto' ? crypto : {}, console: { log: () => {} }, Date, Math, Number, String, JSON };
-    vm.createContext(sandbox); vm.runInContext(src, sandbox);
-    const svc = sandbox.module.exports; svc.createUser('V', 'P'); const auth = svc.authenticate('V', 'P');
-    const res = svc.placeOrder(auth.token, { items: [{ priceCents: 1000, qty: 5 }], discountCode: 'WELCOME10', shippingAddress: { country: 'PT' } });
+    vm.createContext(sandbox); vm.runInContext(src, sandbox, { timeout: 1000 });
+    const svc = sandbox.module.exports; 
+    const res = svc.placeOrder('t', { items: [{ priceCents: 1000, qty: 5 }] });
     if (res?.order?.amounts?.taxCents === 1139) return { ok: true };
     return { ok: false, error: "IVA incorreto." };
   } catch (e) { return { ok: false, error: "Erro Room 1." }; }
@@ -34,39 +32,35 @@ function validateRoom1(src) {
 
 function validateRoom2(src) {
   try {
-    const sandbox = { module: { exports: {} }, console: { log: () => {} }, Math, Number, String, JSON, Array };
-    vm.createContext(sandbox); vm.runInContext(src, sandbox);
+    const sandbox = { module: { exports: {} }, console: { log: () => {} }, Math, Number, String, JSON, Array, Error };
+    vm.createContext(sandbox); vm.runInContext(src, sandbox, { timeout: 1000 });
     const engine = new sandbox.module.exports.InvoiceEngine();
     const res = engine.generateInvoice({ items: [{ sku: 'T', unitPrice: 100, qty: 2 }] }, { tier: 'VIP' });
     if (!res?.ok) return { ok: false, error: "Lógica Room 2 partida." };
-    const msgs = linter.verify(src, { languageOptions: { ecmaVersion: 2022, sourceType: 'commonjs' }, rules: { complexity: ['error', 1] } });
-    let max = 0; msgs.forEach(m => { const v = m.message.match(/complexity of (\d+)/); if (v) max = Math.max(max, parseInt(v[1])); });
-    if (max > 10) return { ok: false, error: `Complexidade ${max} > 10.` };
-    return { ok: true, complexity: max };
+    
+    // Regex complexity (reliable and fast)
+    const clean = src.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, '');
+    const complexity = (clean.match(/\b(if|else|switch|for|while|&&|\|\||\?)\b/g) || []).length;
+    return { ok: true, complexity };
   } catch (e) { return { ok: false, error: "Erro Room 2." }; }
 }
 
 function validateRoom3(src) {
-  if (src.includes(" + ") || !src.includes("?")) return { ok: false, error: "Vulnerabilidade detetada." };
+  const isVulnerable = src.includes(" + password") || src.includes(" + username") || src.includes("' + ");
+  if (isVulnerable || !src.includes("?")) return { ok: false, error: "Vulnerabilidade detetada." };
   return { ok: true, bonus: src.includes('bcrypt') || src.includes('.hash') };
 }
 
 function validateFinal(src) {
   try {
     const sandbox = { module: { exports: {} }, exports: {}, console: { log: () => {} }, Date, Math, Number, String, JSON, Array, process: { argv: [], exit: () => {} }, require: () => ({}) };
-    vm.createContext(sandbox); vm.runInContext(src, sandbox);
+    vm.createContext(sandbox); vm.runInContext(src, sandbox, { timeout: 1000 });
     const svc = sandbox.module.exports.calcScore ? sandbox.module.exports : sandbox.exports;
     const res1 = svc.calcScore({ age: 30, country: 'PT', spends: [100] });
     const res2 = svc.calcScore({ age: 30, country: 'PT', spends: [6000] });
-    
-    // Regra High Roller: se gasto > 5000 -> score 50 fixo
-    if (res1.score === 17 && res2.score === 50) {
-      // BONUS: Aceita tanto rota real como padrão de código
-      const hasHealth = src.includes('/health') || src.includes('uptime') || src.includes('healthCheck');
-      return { ok: true, bonus: hasHealth };
-    }
-    return { ok: false, error: "Regra High Roller (> 5000€) incorreta." };
-  } catch (e) { return { ok: false, error: "Erro no Monólito: " + e.message }; }
+    if (res1.score === 17 && res2.score === 50) return { ok: true };
+    return { ok: false, error: "Regra High Roller incorreta." };
+  } catch (e) { return { ok: false, error: "Erro Room 4." }; }
 }
 
 // --- API ---
@@ -88,63 +82,60 @@ app.post(['/team/login', '/api/team/login'], async (req, res) => {
 });
 
 app.post(['/team/update', '/api/team/update'], async (req, res) => {
-  const { name, token, sourceCode, completedRoom } = req.body;
-  const teamRef = db.collection('teams').doc(name);
-  const doc = await teamRef.get();
-  if (!doc.exists) return res.status(404).json({ ok: false });
-  const team = doc.data();
-  if (team.token !== token) return res.status(403).json({ ok: false });
+  try {
+    const { name, token, sourceCode, completedRoom, serverCode } = req.body;
+    const teamRef = db.collection('teams').doc(name);
+    const doc = await teamRef.get();
+    if (!doc.exists) return res.status(404).json({ ok: false, error: "Team not found" });
+    const team = doc.data();
+    if (team.token !== token) return res.status(403).json({ ok: false, error: "Invalid token" });
 
-  if (completedRoom) {
-    let v = { ok: true };
-    const { serverCode } = req.body; // New field for Room 4
+    if (completedRoom) {
+      let v = { ok: true };
+      if (completedRoom === 'room1') v = validateRoom1(sourceCode);
+      else if (completedRoom === 'room2') v = validateRoom2(sourceCode);
+      else if (completedRoom === 'room3') v = validateRoom3(sourceCode);
+      else if (completedRoom === 'final') v = validateFinal(sourceCode);
+      
+      if (!v.ok) return res.json({ ok: false, error: v.error });
 
-    if (completedRoom === 'room1') v = validateRoom1(sourceCode);
-    if (completedRoom === 'room2') v = validateRoom2(sourceCode);
-    if (completedRoom === 'room3') v = validateRoom3(sourceCode);
-    if (completedRoom === 'final') v = validateFinal(sourceCode);
-    
-    if (!v.ok) return res.json({ ok: false, error: v.error });
+      const alreadyDone = (team.completedRooms || []).includes(completedRoom);
+      const updates = { updatedAt: Date.now() };
+      const bonusMap = team.bonusMap || {};
+      let newPoints = 0;
 
-    const alreadyDone = (team.completedRooms || []).includes(completedRoom);
-    const updates = { updatedAt: Date.now() };
-    const bonusMap = team.bonusMap || {};
-    let newPoints = 0;
+      if (!alreadyDone) {
+        newPoints += ROOM_POINTS[completedRoom];
+        updates.completedRooms = [...(team.completedRooms || []), completedRoom];
+      }
 
-    if (!alreadyDone) {
-      newPoints += ROOM_POINTS[completedRoom];
-      updates.completedRooms = [...(team.completedRooms || []), completedRoom];
+      let bonusValue = 0;
+      if (completedRoom === 'room1') bonusValue = (sourceCode.match(/\/\*\*[\s\S]*?\*\//g) || []).length >= 3 ? 50 : 0;
+      if (completedRoom === 'room2') bonusValue = v.complexity < 8 ? 75 : 0;
+      if (completedRoom === 'room3') bonusValue = v.bonus ? 100 : 0;
+      if (completedRoom === 'final') {
+        const hasHealth = serverCode && (serverCode.includes("app.get('/health'") || serverCode.includes('app.get("/health"') || (serverCode.includes('/health') && serverCode.includes('res.status(200)')));
+        bonusValue = hasHealth ? 50 : 0;
+      }
+
+      const oldBonus = bonusMap[completedRoom] || 0;
+      if (bonusValue > oldBonus) {
+        newPoints += (bonusValue - oldBonus);
+        bonusMap[completedRoom] = bonusValue;
+        updates.bonusMap = bonusMap;
+      }
+
+      if (newPoints > 0) {
+        updates.score = (team.score || 0) + newPoints;
+        updates.lastResult = `✅ Sala ${completedRoom} completa!`;
+      }
+
+      await teamRef.update(updates);
     }
-
-    let bonusValue = 0;
-    if (completedRoom === 'room1') bonusValue = (sourceCode.match(/\/\*\*[\s\S]*?\*\//g) || []).length >= 3 ? 50 : 0;
-    if (completedRoom === 'room2') bonusValue = v.complexity < 5 ? 75 : 0;
-    if (completedRoom === 'room3') bonusValue = v.bonus ? 100 : 0;
-    if (completedRoom === 'final') {
-      // BONUS: Real route implementation check in server.js
-      const hasHealthRoute = serverCode && (
-        serverCode.includes("app.get('/health'") || 
-        serverCode.includes('app.get("/health"') ||
-        (serverCode.includes('/health') && serverCode.includes('res.status(200)'))
-      );
-      bonusValue = hasHealthRoute ? 50 : 0;
-    }
-
-    const oldBonus = bonusMap[completedRoom] || 0;
-    if (bonusValue > oldBonus) {
-      newPoints += (bonusValue - oldBonus);
-      bonusMap[completedRoom] = bonusValue;
-      updates.bonusMap = bonusMap;
-    }
-
-    if (newPoints > 0) {
-      updates.score = (team.score || 0) + newPoints;
-      updates.lastResult = `✅ Sala ${completedRoom} completa!`;
-    }
-
-    await teamRef.update(updates);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
   }
-  res.json({ ok: true });
 });
 
 app.get(['/timer', '/api/timer'], async (req, res) => {

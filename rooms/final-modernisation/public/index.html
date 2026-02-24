@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Final Mission: Modernize | Gemini Escape Room</title>
+  <title>Cloud Migration Terminal | Escape Room</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
@@ -19,67 +19,55 @@
     .btn-success { background: var(--success); color: white; }
     .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text-muted); }
     .timer-box { margin-left: auto; font-family: 'Fira Code', monospace; color: var(--warning); font-weight: 700; background: rgba(210, 153, 34, 0.1); padding: 5px 12px; border-radius: 4px; border: 1px solid rgba(210, 153, 34, 0.2); min-width: 80px; text-align: center; }
-    .container { display: grid; grid-template-columns: 350px 1fr; flex-grow: 1; overflow: hidden; }
+    .container { display: grid; grid-template-columns: 380px 1fr; flex-grow: 1; overflow: hidden; }
     .briefing { background: var(--panel); border-right: 1px solid var(--border); padding: 25px; overflow-y: auto; }
     .objective-card { background: rgba(63, 185, 80, 0.05); border-left: 3px solid var(--accent); padding: 15px; margin: 15px 0; }
-    .bonus-card { background: rgba(210, 153, 34, 0.05); border-left: 3px solid var(--warning); padding: 15px; margin: 15px 0; }
     .workspace { padding: 40px; background-image: radial-gradient(circle at center, #162d1c 0%, #0d1117 100%); overflow-y: auto; }
     .card { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 25px; max-width: 800px; margin: 0 auto 30px; }
     .status-monitor { display: flex; align-items: center; justify-content: center; gap: 20px; padding: 30px; background: #010409; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 30px; }
     .status-light { width: 20px; height: 20px; border-radius: 50%; background: var(--danger); box-shadow: 0 0 10px var(--danger); }
     .status-light.online { background: var(--success); box-shadow: 0 0 15px var(--success); }
-    .badge-dot { width: 10px; height: 10px; border-radius: 50%; background: #30363d; }
-    .badge-dot.done { background: var(--success); box-shadow: 0 0 8px var(--success); }
     textarea { width: 100%; background: #010409; border: 1px solid var(--border); color: #7ee787; padding: 15px; border-radius: 6px; font-family: 'Fira Code', monospace; font-size: 13px; margin-bottom: 15px; }
   </style>
 </head>
 <body>
   <div class="team-bar">
-    <strong style="color: var(--accent);">OPERATIVE:</strong>
-    <span id="displayTeamName" style="font-weight: 700;">...</span>
-    <button class="btn btn-ghost" style="font-size: 10px; padding: 2px 8px;" onclick="logout()">LOGOUT</button>
-    <div style="display:flex; gap:8px; margin-left:15px;" id="badges"><div class="badge-dot"></div><div class="badge-dot"></div><div class="badge-dot"></div><div class="badge-dot"></div></div>
-    <span id="teamStatus" style="font-size: 12px; color: var(--success); margin-left: 10px;"></span>
+    <strong style="color: var(--accent);">SRE LEAD:</strong> <span id="displayTeamName" style="font-weight: 700;">...</span>
     <div class="timer-box" id="timer">--:--</div>
-    <button class="btn btn-ghost" style="margin-left:10px" onclick="goPrevRoom()">← PREV</button>
   </div>
 
   <div class="container">
     <aside class="briefing">
-      <h1>FINAL MISSION: THE MONOLITH</h1>
-      <p>O núcleo do sistema está obsoleto. A tua missão é converter este código legado numa infraestrutura moderna e resiliente.</p>
+      <h1 style="font-size: 20px; color: var(--accent);">MIGRATION LOG: CORE-V4</h1>
+      <p style="font-size: 13px;">Estamos a mover o núcleo de decisão financeira para um orquestrador resiliente.</p>
       
-      <h2>Main Objective: Modernize & Scale</h2>
       <div class="objective-card">
-        <strong>1. Implement New Business Logic:</strong>
-        <p>O QG exige uma nova regra: Se o gasto total (<code>totalSpent</code>) for <strong>superior a 5000 EUR</strong>, o <code>score</code> deve ser fixado em <strong>50</strong> (independente da idade ou país).</p>
+        <strong>1. Elite Policy:</strong>
+        <p style="font-size: 12px; margin-top:5px;">A nova política para clientes "High Roller" (gasto > 5000 EUR) exige que o <code>score</code> de prestígio seja fixado em <strong>50</strong>.</p>
+      </div>
+
+      <div class="objective-card" style="border-color: var(--warning);">
+        <strong>2. Resilience First:</strong>
+        <p style="font-size: 12px; margin-top:5px;">O sistema está instável. Implementa uma rota de <strong>Health Check</strong> em <code>server.js</code> que reporte o <code>uptime</code> real.</p>
       </div>
 
       <div class="objective-card">
-        <strong>2. Keep it Monolithic:</strong>
-        <p style="color: var(--warning); font-weight: bold;">AVISO: Todo o código deve permanecer exclusivamente no ficheiro <code>monolith.js</code>. Não cries ficheiros novos (ex: engine.js).</p>
+        <strong>3. Strict Monolith:</strong>
+        <p style="font-size: 12px; margin-top:5px; font-weight:bold;">AVISO: Mantém todo o código no <code>monolith.js</code>. Não cries ficheiros novos.</p>
       </div>
 
-      <h2>Secondary Quest (Bonus)</h2>
-      <div class="bonus-card">
-        <strong>Ops Master (+50 pts):</strong>
-        <p>Adiciona um padrão de <strong>Health Check</strong>. O código deve conter referências a um endpoint <code>/health</code> ou retornar o <code>uptime</code> do sistema.</p>
-      </div>
-
-      <div style="margin-top: 40px;">
-        <button class="btn btn-success" id="finishBtn" style="width: 100%; padding: 15px; font-size: 16px;" onclick="markComplete()">ACTIVATE MODERN CORE</button>
-      </div>
+      <button class="btn btn-success" id="finishBtn" style="width: 100%; padding: 15px; font-size: 16px; margin-top: 20px;" onclick="markComplete()">ACTIVATE MODERN CORE</button>
     </aside>
     <main class="workspace">
       <div class="card">
         <div class="status-monitor">
           <div id="statusLight" class="status-light"></div>
-          <div id="statusText" style="font-family:'Fira Code', monospace;">STATUS: OFFLINE</div>
-          <button class="btn btn-ghost" onclick="checkHealth()" style="margin-left:auto;">PING SYSTEM</button>
+          <div id="statusText" style="font-family:'Fira Code', monospace;">NODE STATUS: UNKNOWN</div>
+          <button class="btn btn-ghost" onclick="checkHealth()" style="margin-left:auto;">PROBE NODE</button>
         </div>
-        <textarea id="payload" rows="5">{"age": 30, "country": "PT", "spends": [100, 500]}</textarea>
-        <button class="btn btn-primary" onclick="calcScore()">CALCULATE RISK</button>
-        <pre id="scoreResult" style="background:#010409; padding:15px; border-radius:6px; margin-top:15px; font-family:'Fira Code', monospace; font-size:12px; color:#7ee787; border:1px solid var(--border);">Awaiting...</pre>
+        <textarea id="payload" rows="5">{"age": 30, "country": "PT", "spends": [6000]}</textarea>
+        <button class="btn btn-primary" onclick="calcScore()">TEST DECISION LOGIC</button>
+        <pre id="scoreResult" style="background:#010409; padding:15px; border-radius:6px; margin-top:15px; font-family:'Fira Code', monospace; font-size:12px; color:#7ee787; border:1px solid var(--border);">Awaiting probe...</pre>
       </div>
     </main>
   </div>
@@ -90,30 +78,14 @@
     const ROOM_ID = 'final';
     const CFG = window.ESCAPE_ROOM_CONFIG;
     const API = CFG.getApiUrl();
-    let teamState = { completedRooms: [] };
 
     document.addEventListener('DOMContentLoaded', async () => {
       const name = CFG.getTeamName();
       if (!name) { window.location.href = CFG.getUrl('gameHub'); return; }
       if (!(await CFG.checkGameStart())) return;
       document.getElementById('displayTeamName').textContent = name;
-      fetchTeamState();
-      checkHealth();
       setInterval(() => CFG.syncClock(), 10000);
     });
-
-    async function fetchTeamState() {
-      try {
-        const res = await fetch(`${API}/state`);
-        const data = await res.json();
-        const me = data.teams?.find(t => t.name === CFG.getTeamName());
-        if (me) {
-          teamState = me;
-          const dots = document.querySelectorAll('.badge-dot');
-          ['room1','room2','room3','final'].forEach((id, i) => { if (teamState.completedRooms.includes(id)) dots[i].classList.add('done'); });
-        }
-      } catch (e) {}
-    }
 
     async function checkHealth() {
       try {
@@ -121,11 +93,11 @@
         const light = document.getElementById('statusLight'), text = document.getElementById('statusText');
         if (res.ok) {
           const data = await res.json();
-          light.classList.add('online'); text.textContent = `STATUS: ONLINE`; text.style.color = 'var(--success)';
+          light.classList.add('online'); text.textContent = `STATUS: ONLINE (Uptime: ${Math.floor(data.uptime)}s)`; text.style.color = 'var(--success)';
         } else { throw new Error(); }
       } catch (e) {
         document.getElementById('statusLight').classList.remove('online');
-        document.getElementById('statusText').textContent = "STATUS: UNSTABLE";
+        document.getElementById('statusText').textContent = "STATUS: 503 SERVICE UNAVAILABLE";
         document.getElementById('statusText').style.color = 'var(--danger)';
       }
     }
@@ -138,36 +110,19 @@
 
     async function markComplete() {
       const btn = document.getElementById('finishBtn');
-      btn.disabled = true; btn.textContent = "VERIFYING...";
+      btn.disabled = true; btn.textContent = "SYNCHRONIZING CORE...";
       try {
-        const [srcRes, srvRes] = await Promise.all([
-          fetch('/final/api/source'),
-          fetch('/final/api/source-server')
-        ]);
-        const srcData = await srcRes.json();
-        const srvData = await srvRes.json();
-        
-        const res = await fetch(`${API}/team/update`, { 
-          method: 'POST', 
-          headers: {'Content-Type':'application/json'}, 
-          body: JSON.stringify({ 
-            name: CFG.getTeamName(), 
-            token: CFG.getTeamToken(), 
-            completedRoom: ROOM_ID, 
-            sourceCode: srcData.source,
-            serverCode: srvData.source
-          }) 
-        });
+        const [srcRes, srvRes] = await Promise.all([fetch('/final/api/source'), fetch('/final/api/source-server')]);
+        const srcData = await srcRes.json(); const srvData = await srvRes.json();
+        const res = await fetch(`${API}/team/update`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ name: CFG.getTeamName(), token: CFG.getTeamToken(), completedRoom: ROOM_ID, sourceCode: srcData.source, serverCode: srvData.source }) });
         const data = await res.json();
         if (data.ok) { 
-          btn.style.background = 'var(--success)'; btn.textContent = "CONGRATULATIONS!";
+          btn.style.background = 'var(--success)'; btn.textContent = "CORE ACTIVE! ESCAPING...";
           setTimeout(() => { window.location.href = CFG.getUrl('gameHub'); }, 1000);
-        } else { alert('Failed: ' + data.error); btn.disabled = false; btn.textContent = "FINISH MISSION"; }
-      } catch (e) { alert('Error'); btn.disabled = false; }
+        } else { alert('Migration Failed: ' + data.error); btn.disabled = false; btn.textContent = "ACTIVATE MODERN CORE"; }
+      } catch (e) { alert('System error'); btn.disabled = false; }
     }
 
-    function logout() { CFG.logout(); }
-    function goPrevRoom() { window.location.href = CFG.getRoomUrl('room3'); }
     setInterval(() => {
       const rem = window.GAME_TIMING.getTimeRemaining();
       if (rem !== null) {
@@ -175,7 +130,6 @@
         document.getElementById('timer').textContent = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
       }
     }, 1000);
-    setInterval(fetchTeamState, 5000);
   </script>
 </body>
 </html>
