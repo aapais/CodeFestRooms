@@ -15,7 +15,6 @@ const TIMER_DOC = 'settings/game_timer';
 
 function validateRoomCode(roomId, sourceCode) {
   if (!sourceCode) return { ok: false, error: "Código vazio." };
-
   try {
     const sandbox = { module: { exports: {} }, exports: {}, console, Date, Math, Number, String, JSON, Array, Object, Error, require: (m) => m === 'crypto' ? require('crypto') : {} };
     vm.createContext(sandbox);
@@ -36,11 +35,8 @@ function validateRoomCode(roomId, sourceCode) {
       const Engine = svc.InvoiceEngine || svc;
       const engine = new Engine();
       engine.generateInvoice({ items: [{ sku: 'A', unitPrice: 10, qty: 1 }] }, { tier: 'VIP' });
-      
-      // ANÁLISE DE COMPLEXIDADE POR FUNÇÃO (ACORN)
       const tree = acorn.parse(sourceCode, { ecmaVersion: 2022, sourceType: 'script' });
       let maxComplexity = 1;
-
       walk.full(tree, node => {
         if (['FunctionDeclaration', 'FunctionExpression', 'ArrowFunctionExpression', 'MethodDefinition'].includes(node.type)) {
           let currentFnComplexity = 1;
@@ -58,11 +54,8 @@ function validateRoomCode(roomId, sourceCode) {
           if (currentFnComplexity > maxComplexity) maxComplexity = currentFnComplexity;
         }
       });
-
-      const complexity = maxComplexity;
-      if (complexity > 10) return { ok: false, error: `REJEITADO: A função mais complexa tem nível ${complexity}. Divide a lógica!` };
-      const bonus = complexity < 5 ? 75 : 0;
-      return { ok: true, points: 150, bonus };
+      if (maxComplexity > 10) return { ok: false, error: `Complexidade ${maxComplexity} acima do limite.` };
+      return { ok: true, points: 150, bonus: maxComplexity < 5 ? 75 : 0 };
     }
 
     if (roomId === 'room3') {
@@ -94,53 +87,59 @@ router.post('/reset', async (req, res) => {
   batch.delete(db.doc(TIMER_DOC));
   if (req.body.clearTeams) {
     const snap = await db.collection('teams').get();
-    snap.docs.forEach(d => batch.delete(d.ref));
+    snap.forEach(d => batch.delete(d.ref));
   }
   await batch.commit();
   res.json({ ok: true });
 });
 router.get('/state', async (req, res) => {
   const snap = await db.collection('teams').orderBy('score', 'desc').get();
-  res.json({ ok: true, teams: snap.docs.map(d => ({ id: d.id, ...d.data(), updatedAt: d.data().updatedAt?.toMillis() || 0 })) });
+  const teams = []; snap.forEach(d => teams.push({ id: d.id, ...d.data(), updatedAt: d.data().updatedAt?.toMillis() || 0 }));
+  res.json({ ok: true, teams });
 });
 router.post('/team/login', async (req, res) => {
   const { name } = req.body;
   if (!name) return res.status(400).json({ ok: false, error: "Nome obrigatório" });
-  const snap = await db.collection('teams').where('name', '==', name).limit(1).get();
-  if (!snapshot.empty) {
-    const d = snapshot.docs[0].data();
-    return res.json({ ok: true, team: { id: snapshot.docs[0].id, name: d.name, token: d.token } });
-  }
-  const id = `team-${Date.now()}`, token = Math.random().toString(36).substr(2);
-  const data = { id, token, name, score: 0, completedRooms: [], bonusMap: {}, status: 'in-progress', updatedAt: admin.firestore.FieldValue.serverTimestamp() };
-  await db.collection('teams').doc(id).set(data);
-  res.json({ ok: true, team: { id, name, token } });
+  try {
+    const snap = await db.collection('teams').where('name', '==', name).limit(1).get();
+    if (!snap.empty) {
+      const teamDoc = snap.docs[0];
+      const d = teamDoc.data();
+      return res.json({ ok: true, team: { id: teamDoc.id, name: d.name, token: d.token } });
+    }
+    const id = `team-${Date.now()}`, token = Math.random().toString(36).substr(2);
+    const data = { id, token, name, score: 0, completedRooms: [], bonusMap: {}, status: 'in-progress', updatedAt: admin.firestore.FieldValue.serverTimestamp() };
+    await db.collection('teams').doc(id).set(data);
+    res.json({ ok: true, team: { id, name, token } });
+  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
 });
 router.post('/team/update', async (req, res) => {
   const { name, token, completedRoom, sourceCode, status, result } = req.body;
-  const snap = await db.collection('teams').where('name', '==', name).limit(1).get();
-  if (snap.empty) return res.status(404).json({ ok: false, error: "Equipa não encontrada" });
-  const teamDoc = snap.docs[0], teamData = teamDoc.data();
-  if (token && teamData.token !== token) return res.status(403).json({ ok: false, error: "Token inválido" });
-  let pts = 0, bonus = 0, msg = result || "";
-  if (completedRoom && sourceCode) {
-    if (teamData.completedRooms && teamData.completedRooms.includes(completedRoom)) return res.json({ ok: true, message: "Já concluído." });
-    const v = validateRoomCode(completedRoom, sourceCode);
-    if (!v.ok) return res.status(400).json({ ok: false, error: v.error });
-    pts = v.points; bonus = v.bonus || 0;
-    msg = `Missão cumprida! (+${pts + bonus} pts)`;
-  }
-  const upd = { updatedAt: admin.firestore.FieldValue.serverTimestamp() };
-  if (status) upd.status = status;
-  if (msg) upd.lastResult = msg;
-  if (pts > 0) {
-    upd.score = admin.firestore.FieldValue.increment(pts + bonus);
-    upd.completedRooms = admin.firestore.FieldValue.arrayUnion(completedRoom);
-    if (bonus > 0) upd[`bonusMap.${completedRoom}`] = bonus;
-    upd.status = 'completed-' + completedRoom;
-  }
-  await teamDoc.ref.update(upd);
-  res.json({ ok: true, pointsAdded: pts + bonus });
+  try {
+    const snap = await db.collection('teams').where('name', '==', name).limit(1).get();
+    if (snap.empty) return res.status(404).json({ ok: false, error: "Equipa não encontrada" });
+    const teamDoc = snap.docs[0], teamData = teamDoc.data();
+    if (token && teamData.token !== token) return res.status(403).json({ ok: false, error: "Token inválido" });
+    let pts = 0, bonus = 0, msg = result || "";
+    if (completedRoom && sourceCode) {
+      if (teamData.completedRooms && teamData.completedRooms.includes(completedRoom)) return res.json({ ok: true, message: "Já concluído." });
+      const v = validateRoomCode(completedRoom, sourceCode);
+      if (!v.ok) return res.status(400).json({ ok: false, error: v.error });
+      pts = v.points; bonus = v.bonus || 0;
+      msg = `Missão cumprida! (+${pts + bonus} pts)`;
+    }
+    const upd = { updatedAt: admin.firestore.FieldValue.serverTimestamp() };
+    if (status) upd.status = status;
+    if (msg) upd.lastResult = msg;
+    if (pts > 0) {
+      upd.score = admin.firestore.FieldValue.increment(pts + bonus);
+      upd.completedRooms = admin.firestore.FieldValue.arrayUnion(completedRoom);
+      if (bonus > 0) upd[`bonusMap.${completedRoom}`] = bonus;
+      upd.status = 'completed-' + completedRoom;
+    }
+    await teamDoc.ref.update(upd);
+    res.json({ ok: true, pointsAdded: pts + bonus });
+  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
 });
 app.use('/api', router);
 app.use('/', router);
