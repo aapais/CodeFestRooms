@@ -44,21 +44,33 @@ app.get('/room2/api/validate-complexity', (req, res) => {
     const walk = require('acorn-walk');
 
     const tree = acorn.parse(src, { ecmaVersion: 2022, sourceType: 'script' });
-    let complexity = 1;
+    let maxComplexity = 1;
 
-    walk.simple(tree, {
-      IfStatement() { complexity++; },
-      ForStatement() { complexity++; },
-      WhileStatement() { complexity++; },
-      DoWhileStatement() { complexity++; },
-      CatchClause() { complexity++; },
-      SwitchCase(node) { if (node.test) complexity++; },
-      LogicalExpression(node) { if (node.operator === '&&' || node.operator === '||') complexity++; },
-      ConditionalExpression() { complexity++; } // Operadores ternários também contam!
+    // Analisar cada função/método individualmente
+    walk.full(tree, node => {
+      if (['FunctionDeclaration', 'FunctionExpression', 'ArrowFunctionExpression', 'MethodDefinition'].includes(node.type)) {
+        let currentFnComplexity = 1;
+        const targetNode = node.type === 'MethodDefinition' ? node.value : node;
+        
+        walk.simple(targetNode, {
+          IfStatement() { currentFnComplexity++; },
+          ForStatement() { currentFnComplexity++; },
+          WhileStatement() { currentFnComplexity++; },
+          DoWhileStatement() { currentFnComplexity++; },
+          CatchClause() { currentFnComplexity++; },
+          SwitchCase(n) { if (n.test) currentFnComplexity++; },
+          LogicalExpression(n) { if (n.operator === '&&' || n.operator === '||') currentFnComplexity++; },
+          ConditionalExpression() { currentFnComplexity++; }
+        });
+        
+        if (currentFnComplexity > maxComplexity) maxComplexity = currentFnComplexity;
+      }
     });
     
+    const complexity = maxComplexity;
+    
     if (complexity > 10) {
-      res.json({ ok: false, message: `RISCO ESTRUTURAL: ${complexity}`, details: `O limite de segurança para o Green Tier é 10. Reduz o número de condições e loops.` });
+      res.json({ ok: false, message: `RISCO ESTRUTURAL: ${complexity}`, details: `A função mais complexa tem nível ${complexity}. Divide a lógica em funções mais pequenas para baixar de 10.` });
     } else {
       const bonus = complexity < 5 ? " (Mestre Arquitecto!)" : "";
       res.json({ ok: true, message: `CÓDIGO LIMPO! Complexidade: ${complexity}${bonus}`, details: "O sistema está agora otimizado e seguro para o QG." });

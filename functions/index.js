@@ -37,21 +37,30 @@ function validateRoomCode(roomId, sourceCode) {
       const engine = new Engine();
       engine.generateInvoice({ items: [{ sku: 'A', unitPrice: 10, qty: 1 }] }, { tier: 'VIP' });
       
-      // ANÁLISE DE COMPLEXIDADE VIA AST (ACORN)
+      // ANÁLISE DE COMPLEXIDADE POR FUNÇÃO (ACORN)
       const tree = acorn.parse(sourceCode, { ecmaVersion: 2022, sourceType: 'script' });
-      let complexity = 1;
-      walk.simple(tree, {
-        IfStatement() { complexity++; },
-        ForStatement() { complexity++; },
-        WhileStatement() { complexity++; },
-        DoWhileStatement() { complexity++; },
-        CatchClause() { complexity++; },
-        SwitchCase(node) { if (node.test) complexity++; },
-        LogicalExpression(node) { if (node.operator === '&&' || node.operator === '||') complexity++; },
-        ConditionalExpression() { complexity++; }
+      let maxComplexity = 1;
+
+      walk.full(tree, node => {
+        if (['FunctionDeclaration', 'FunctionExpression', 'ArrowFunctionExpression', 'MethodDefinition'].includes(node.type)) {
+          let currentFnComplexity = 1;
+          const targetNode = node.type === 'MethodDefinition' ? node.value : node;
+          walk.simple(targetNode, {
+            IfStatement() { currentFnComplexity++; },
+            ForStatement() { currentFnComplexity++; },
+            WhileStatement() { currentFnComplexity++; },
+            DoWhileStatement() { currentFnComplexity++; },
+            CatchClause() { currentFnComplexity++; },
+            SwitchCase(n) { if (n.test) currentFnComplexity++; },
+            LogicalExpression(n) { if (n.operator === '&&' || n.operator === '||') currentFnComplexity++; },
+            ConditionalExpression() { currentFnComplexity++; }
+          });
+          if (currentFnComplexity > maxComplexity) maxComplexity = currentFnComplexity;
+        }
       });
 
-      if (complexity > 10) return { ok: false, error: `Complexidade ${complexity} acima do limite.` };
+      const complexity = maxComplexity;
+      if (complexity > 10) return { ok: false, error: `REJEITADO: A função mais complexa tem nível ${complexity}. Divide a lógica!` };
       const bonus = complexity < 5 ? 75 : 0;
       return { ok: true, points: 150, bonus };
     }
@@ -98,9 +107,9 @@ router.post('/team/login', async (req, res) => {
   const { name } = req.body;
   if (!name) return res.status(400).json({ ok: false, error: "Nome obrigatório" });
   const snap = await db.collection('teams').where('name', '==', name).limit(1).get();
-  if (!snap.empty) {
-    const d = snap.docs[0].data();
-    return res.json({ ok: true, team: { id: snap.docs[0].id, name: d.name, token: d.token } });
+  if (!snapshot.empty) {
+    const d = snapshot.docs[0].data();
+    return res.json({ ok: true, team: { id: snapshot.docs[0].id, name: d.name, token: d.token } });
   }
   const id = `team-${Date.now()}`, token = Math.random().toString(36).substr(2);
   const data = { id, token, name, score: 0, completedRooms: [], bonusMap: {}, status: 'in-progress', updatedAt: admin.firestore.FieldValue.serverTimestamp() };
