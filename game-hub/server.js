@@ -23,7 +23,7 @@ app.post('/room1/api/checkout', (req, res) => {
       module: { exports: {} }, 
       require: (m) => {
         if (m === 'crypto') return crypto;
-        if (m === 'bcrypt') return require('bcrypt');
+        if (m === 'bcrypt' || m === 'bcryptjs') return require('bcryptjs');
         return {};
       },
       console, Date, Math, Number, String, JSON, Array, Object 

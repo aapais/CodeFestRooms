@@ -22,7 +22,7 @@ function validateRoomCode(roomId, sourceCode) {
       console, Date, Math, Number, String, JSON, Array, Object, Error, 
       require: (m) => {
         if (m === 'crypto') return require('crypto');
-        if (m === 'bcrypt') return require('bcrypt');
+        if (m === 'bcrypt' || m === 'bcryptjs') return require('bcryptjs');
         return {};
       } 
     };
