@@ -51,6 +51,7 @@ app.get('/room2/api/validate-complexity', (req, res) => {
       ForStatement() { complexity++; },
       WhileStatement() { complexity++; },
       DoWhileStatement() { complexity++; },
+      CatchClause() { complexity++; },
       SwitchCase(node) { if (node.test) complexity++; },
       LogicalExpression(node) { if (node.operator === '&&' || node.operator === '||') complexity++; },
       ConditionalExpression() { complexity++; } // Operadores ternários também contam!
