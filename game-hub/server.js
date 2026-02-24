@@ -40,23 +40,31 @@ app.post('/room2/api/invoice', (req, res) => {
 app.get('/room2/api/validate-complexity', (req, res) => {
   try {
     const src = fs.readFileSync(path.join(__dirname, '../rooms/room2-refactor-lab/src/invoiceEngine.js'), 'utf8');
-    // USAR MOTOR REAL LOCALMENTE TAMBÉM
-    const msgs = linter.verify(src, {
-      languageOptions: { ecmaVersion: 2022, sourceType: 'commonjs' },
-      rules: { complexity: ['error', 1] }
-    });
-    let max = 0;
-    msgs.forEach(m => {
-      const match = m.message.match(/complexity of (\d+)/);
-      if (match) max = Math.max(max, parseInt(match[1]));
+    const acorn = require('acorn');
+    const walk = require('acorn-walk');
+
+    const tree = acorn.parse(src, { ecmaVersion: 2022, sourceType: 'script' });
+    let complexity = 1;
+
+    walk.simple(tree, {
+      IfStatement() { complexity++; },
+      ForStatement() { complexity++; },
+      WhileStatement() { complexity++; },
+      DoWhileStatement() { complexity++; },
+      SwitchCase(node) { if (node.test) complexity++; },
+      LogicalExpression(node) { if (node.operator === '&&' || node.operator === '||') complexity++; },
+      ConditionalExpression() { complexity++; } // Operadores ternários também contam!
     });
     
-    if (max > 10) {
-      res.json({ ok: false, message: `RISCO ESTRUTURAL: ${max}`, details: `O limite de segurança é 10.` });
+    if (complexity > 10) {
+      res.json({ ok: false, message: `RISCO ESTRUTURAL: ${complexity}`, details: `O limite de segurança para o Green Tier é 10. Reduz o número de condições e loops.` });
     } else {
-      res.json({ ok: true, message: `CÓDIGO LIMPO! Complexidade: ${max}`, details: "O sistema está agora otimizado para o QG." });
+      const bonus = complexity < 5 ? " (Mestre Arquitecto!)" : "";
+      res.json({ ok: true, message: `CÓDIGO LIMPO! Complexidade: ${complexity}${bonus}`, details: "O sistema está agora otimizado e seguro para o QG." });
     }
-  } catch (e) { res.json({ ok: false, message: "Erro ao ler ficheiro." }); }
+  } catch (e) { 
+    res.json({ ok: false, message: "Erro de Análise", details: e.message }); 
+  }
 });
 app.get('/room2/api/source', (req, res) => res.json({ ok: true, source: fs.readFileSync(path.join(__dirname, '../rooms/room2-refactor-lab/src/invoiceEngine.js'), 'utf8') }));
 
