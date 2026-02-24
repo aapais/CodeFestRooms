@@ -68,11 +68,9 @@ function validateRoomCode(roomId, sourceCode) {
     }
 
     if (roomId === 'room3') {
-      // 1. Verificar SQL Injection (Concatenação)
       if (/['"`]\s*\+\s*\w+|\w+\s*\+\s*['"`]/.test(sourceCode)) {
         return { ok: false, error: "BRECHA DE SEGURANÇA: Concatenação de strings detetada em query SQL. Usa Prepared Statements." };
       }
-      // 2. Bónus: Uso de hashing (bcrypt ou crypto.hash)
       const hasHashing = sourceCode.includes('bcrypt') || sourceCode.includes('hashSync') || sourceCode.includes('pbkdf2');
       return { ok: true, points: 150, bonus: hasHashing ? 100 : 0 };
     }
@@ -101,7 +99,7 @@ router.post('/reset', async (req, res) => {
   batch.delete(db.doc(TIMER_DOC));
   if (req.body.clearTeams) {
     const snap = await db.collection('teams').get();
-    snap.docs.forEach(d => batch.delete(d.ref));
+    snap.forEach(d => batch.delete(d.ref));
   }
   await batch.commit();
   res.json({ ok: true });
@@ -117,7 +115,7 @@ router.post('/team/login', async (req, res) => {
   try {
     const snap = await db.collection('teams').where('name', '==', name).limit(1).get();
     if (!snap.empty) {
-      const teamDoc = snapshot.docs[0];
+      const teamDoc = snap.docs[0];
       const d = teamDoc.data();
       return res.json({ ok: true, team: { id: teamDoc.id, name: d.name, token: d.token } });
     }
