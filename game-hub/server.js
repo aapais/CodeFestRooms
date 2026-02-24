@@ -5,24 +5,23 @@ const path = require('path');
 const fs = require('fs');
 const vm = require('vm');
 const crypto = require('crypto');
-const { exec } = require('child_process');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
 
 app.use(express.json());
 
-// --- 1. APIS DE LÓGICA (PRIORIDADE MÁXIMA) ---
+// --- 1. APIS DE LÓGICA (Prioridade Máxima) ---
 
 // Room 1 API
 app.post('/room1/api/login', (req, res) => res.json({ ok: true }));
 app.post('/room1/api/checkout', (req, res) => {
   try {
-    const source = fs.readFileSync(path.join(__dirname, '../rooms/room1-archaeology/src/legacyService.js'), 'utf8');
+    const src = fs.readFileSync(path.join(__dirname, '../rooms/room1-archaeology/src/legacyService.js'), 'utf8');
     const sandbox = { module: { exports: {} }, require: (m) => m === 'crypto' ? crypto : {}, console, Date, Math, Number, String, JSON, Array, Object };
-    vm.createContext(sandbox); vm.runInContext(source, sandbox);
+    vm.createContext(sandbox); vm.runInContext(src, sandbox);
     const svc = sandbox.module.exports; svc.createUser('U', 'P'); const auth = svc.authenticate('U', 'P');
-    res.json(svc.placeOrder(auth.token, { items: [{ sku: 'MB', qty: 2, priceCents: 100000 }], discountCode: 'WELCOME10', shippingAddress: { country: 'PT' } }));
+    res.json(svc.placeOrder(auth.token, { items: [{ sku: 'X', qty: 2, priceCents: 100000 }], discountCode: 'WELCOME10' }));
   } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
 });
 app.get('/room1/api/source', (req, res) => res.json({ ok: true, source: fs.readFileSync(path.join(__dirname, '../rooms/room1-archaeology/src/legacyService.js'), 'utf8') }));
@@ -30,22 +29,38 @@ app.get('/room1/api/source', (req, res) => res.json({ ok: true, source: fs.readF
 // Room 2 API
 app.post('/room2/api/invoice', (req, res) => {
   try {
-    const source = fs.readFileSync(path.join(__dirname, '../rooms/room2-refactor-lab/src/invoiceEngine.js'), 'utf8');
+    const src = fs.readFileSync(path.join(__dirname, '../rooms/room2-refactor-lab/src/invoiceEngine.js'), 'utf8');
     const sandbox = { module: { exports: {} }, console, Date, Math, Number, String, JSON, Array, Object };
-    vm.createContext(sandbox); vm.runInContext(source, sandbox);
+    vm.createContext(sandbox); vm.runInContext(src, sandbox);
     const engine = new sandbox.module.exports.InvoiceEngine();
     res.json({ ok: true, invoice: engine.generateInvoice(req.body, { tier: 'VIP' }) });
   } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
 });
+
 app.get('/room2/api/validate-complexity', (req, res) => {
-  exec('npx eslint src/invoiceEngine.js --rule "complexity: [\'warn\', 1]" --format json', { cwd: path.join(__dirname, '../rooms/room2-refactor-lab') }, (err, stdout) => {
-    try {
-      const results = JSON.parse(stdout);
-      const messages = results[0].messages.filter(m => m.ruleId === 'complexity');
-      let maxComp = 0; messages.forEach(m => { const c = parseInt(m.message.match(/complexity of (\d+)/)[1]); if (c > maxComp) maxComp = c; });
-      res.json({ ok: maxComp <= 10, message: maxComp <= 10 ? `Código Limpo! Max: ${maxComp}` : `Complexidade Alta: ${maxComp}` });
-    } catch (e) { res.json({ ok: false, message: "Erro no scanner." }); }
-  });
+  try {
+    const src = fs.readFileSync(path.join(__dirname, '../rooms/room2-refactor-lab/src/invoiceEngine.js'), 'utf8');
+    // UNIFICAÇÃO: Usar a mesma lógica de Regex do Firebase
+    const clean = src.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, '');
+    const complexity = (clean.match(/\b(if|else|switch|for|while|&&|\|\||\?)\b/g) || []).length;
+    
+    // Mapeamento visual para manter o objetivo de "10"
+    const displayComplexity = Math.max(0, complexity - 2); 
+
+    if (complexity > 12) {
+      res.json({ 
+        ok: false, 
+        message: `COMPLEXIDADE: ${displayComplexity}`, 
+        details: `O QG detetou que a arquitetura ainda é demasiado complexa. Tenta simplificar ou remover blocos redundantes.` 
+      });
+    } else {
+      res.json({ 
+        ok: true, 
+        message: `CÓDIGO LIMPO! Complexidade: ${displayComplexity}`, 
+        details: "O sistema está agora otimizado e pronto para submissão ao QG." 
+      });
+    }
+  } catch (e) { res.json({ ok: false, message: "Erro ao ler ficheiro." }); }
 });
 app.get('/room2/api/source', (req, res) => res.json({ ok: true, source: fs.readFileSync(path.join(__dirname, '../rooms/room2-refactor-lab/src/invoiceEngine.js'), 'utf8') }));
 
@@ -53,41 +68,36 @@ app.get('/room2/api/source', (req, res) => res.json({ ok: true, source: fs.readF
 app.post('/room3/api/login', (req, res) => {
   try {
     const { username, password } = req.body;
-    const source = fs.readFileSync(path.join(__dirname, '../rooms/room3-security-vault/src/userRepo.js'), 'utf8');
-    if (password.includes("' OR '1'='1") && (source.includes(" + password") || source.includes("' + "))) return res.json({ ok: true, msg: "🔓 ACCESS GRANTED (Exploited)" });
-    if (username === 'admin' && password === 'admin') return res.json({ ok: true, msg: "🔓 ACCESS GRANTED" });
+    const src = fs.readFileSync(path.join(__dirname, '../rooms/room3-security-vault/src/userRepo.js'), 'utf8');
+    if (password.includes("' OR '1'='1") && (src.includes(" + password") || src.includes("' + "))) return res.json({ ok: true, msg: "🔓 ACCESS GRANTED (Vulnerability Exploited!)" });
+    if (username === 'admin' && password === 'admin') return res.json({ ok: true, msg: "🔓 ACCESS GRANTED (Authorized)" });
     res.json({ ok: false, msg: "Denied" });
   } catch (e) { res.status(500).json({ ok: false, msg: "System Error" }); }
 });
 app.get('/room3/api/source', (req, res) => res.json({ ok: true, source: fs.readFileSync(path.join(__dirname, '../rooms/room3-security-vault/src/userRepo.js'), 'utf8') }));
 
 // Room 4 API (Final)
-app.get('/final/status', (req, res) => res.json({ ok: true, uptime: process.uptime() }));
+app.get('/final/status', (req, res) => {
+  if (Math.random() < 0.2) return res.status(503).json({ ok: false });
+  res.json({ ok: true, uptime: process.uptime() });
+});
 app.post('/final/api/score', (req, res) => {
   try {
-    const source = fs.readFileSync(path.join(__dirname, '../rooms/final-modernisation/src/monolith.js'), 'utf8');
-    const sandbox = { 
-      module: { exports: {} }, exports: {}, console, Date, Math, Number, String, JSON, Array, Object, Error,
-      require: () => ({}), process: { argv: [], exit: () => {} }
-    };
-    vm.createContext(sandbox); vm.runInContext(source, sandbox);
+    const src = fs.readFileSync(path.join(__dirname, '../rooms/final-modernisation/src/monolith.js'), 'utf8');
+    const sandbox = { module: { exports: {} }, exports: {}, console, Date, Math, Number, String, JSON, Array, Object, Error, require: () => ({}), process: { argv: [], exit: () => {} } };
+    vm.createContext(sandbox); vm.runInContext(src, sandbox);
     const svc = sandbox.module.exports.calcScore ? sandbox.module.exports : (sandbox.exports.calcScore ? sandbox.exports : sandbox);
-    if (typeof svc.calcScore !== 'function') throw new Error("A função calcScore não foi exportada corretamente.");
     res.json({ ok: true, ...svc.calcScore(req.body) });
-  } catch (e) { res.status(500).json({ ok: false, error: "Erro no Monólito: " + e.message }); }
+  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
 });
 app.get('/final/api/source', (req, res) => res.json({ ok: true, source: fs.readFileSync(path.join(__dirname, '../rooms/final-modernisation/src/monolith.js'), 'utf8') }));
 app.get('/final/api/source-server', (req, res) => res.json({ ok: true, source: fs.readFileSync(path.join(__dirname, '../rooms/final-modernisation/src/server.js'), 'utf8') }));
 
-// --- 2. SERVIR FRONTENDS (DEPOIS DAS APIS) ---
+// --- 2. SERVIR FRONTENDS ---
 app.use('/room1', express.static(path.join(__dirname, '../rooms/room1-archaeology/public')));
 app.use('/room2', express.static(path.join(__dirname, '../rooms/room2-refactor-lab/public')));
 app.use('/room3', express.static(path.join(__dirname, '../rooms/room3-security-vault/public')));
 app.use('/final', express.static(path.join(__dirname, '../rooms/final-modernisation/public')));
 app.use(express.static(path.join(__dirname, 'public')));
-
-// API DE SINCRONIZAÇÃO DASHBOARD
-app.get('/api/state', (req, res) => res.json({ ok: true, teams: [] }));
-app.get('/api/timer', (req, res) => res.json({ ok: true, timer: null }));
 
 app.listen(PORT, () => console.log(`🚀 UNIFIED SERVER ONLINE ON PORT ${PORT}`));
