@@ -37,11 +37,11 @@ function validateRoom2(src) {
     vm.createContext(sandbox); vm.runInContext(src, sandbox, { timeout: 1000 });
     const engine = new sandbox.module.exports.InvoiceEngine();
     
-    // TESTE DE INTEGRIDADE: 200€ subtotal, 0€ desc, 4.5€ ship, 23% IVA = 251.54€
+    // TESTE DE INTEGRIDADE: 200€ subtotal, 0€ desc, 0€ ship (free > 50), 23% IVA = 246€
     const res = engine.generateInvoice({ items: [{ sku: 'T', unitPrice: 100, qty: 2 }] }, { tier: 'VIP' });
     
-    if (!res?.ok || !res.amounts || res.amounts.total !== 251.54) {
-      return { ok: false, error: "Integrity Failed: A lógica de cálculo foi alterada ou está incorreta." };
+    if (!res?.ok || !res.amounts || res.amounts.total !== 246) {
+      return { ok: false, error: "Integrity Failed: A lógica de cálculo (IVA/Portes) está incorreta." };
     }
 
     // TESTE DE COMPLEXIDADE (Regex)

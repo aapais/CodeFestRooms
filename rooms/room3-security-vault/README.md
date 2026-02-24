@@ -1,32 +1,15 @@
-# 🔐 Room 3 — Security Vault
-“Compliance audit in 24 hours.”
+# 🔐 SOC ALERT: ACCESS BRIDGE BREACH
 
-## Challenge
-Código com problemas comuns:
-- SQL injection (simulado)
-- auth fraca
-- secrets hardcoded
-- falta de validação de input
+## 📑 Contexto de Negócio
+Um intruso conseguiu obter acesso ROOT ao cofre de ativos do NeoBank usando uma técnica de "Bypass de Predicados Lógicos". O Centro de Operações de Segurança (SOC) exige o fecho imediato da brecha.
 
-## Tasks
-Usar Copilot para:
-- detetar vulnerabilidades
-- reescrever queries inseguras (evitar concatenação)
-- mover secrets para env vars
-- adicionar validação de input
+## 🎯 Objetivo Principal
+Identifica e corrige a vulnerabilidade de construção dinâmica de queries no ficheiro `src/userRepo.js`. 
+**Solução Exigida:** Implementar o uso de **Prepared Statements** (parâmetros `?`) em todas as consultas ao repositório.
 
-## Unlock condition
-Passar no “security scanner” do repo:
-```bash
-npm run scan
-```
+## ⭐️ Bónus: Crypto Expert (+100 pts)
+Substitui o armazenamento de passwords em texto limpo por uma lógica de **Hashing/Bcrypt**.
 
-## Nota sobre o scanner
-Para ser fácil no CODEFEST (sem ferramentas externas), o scanner aqui é um script que falha se encontrar padrões inseguros no código.
-Numa stack real poderias usar Semgrep/Snyk/CodeQL, mas isto já dá um gate automatizado.
-
-## Como correr
-```bash
-npm test
-npm run scan
-```
+## 🛠 Comandos Úteis
+- **Test Access Bridge**: Simula um probe de login para ver se o sistema ainda está vulnerável.
+- **Patch System**: Envia a correção para auditoria do QG.

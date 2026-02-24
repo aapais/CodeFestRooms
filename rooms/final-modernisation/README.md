@@ -1,26 +1,17 @@
-# 🚀 Final Room — The Modernisation Chamber
-“Turn this monolith into something deployable.”
+# 🏢 MIGRATION LOG: CORE-V4 (The Monolith)
 
-## Challenge
-Tens um módulo monolítico que hoje é basicamente um script/serviço local.
-A missão é transformar em algo “cloud/deploy ready”.
+## 📑 Contexto de Negócio
+O banco está a migrar o seu núcleo de risco para uma infraestrutura Cloud moderna. Para ativar o novo nó de decisão, temos de alinhar a lógica com a nova "Elite Policy".
 
-## Tasks (com Copilot)
-- Criar `Dockerfile`
-- Criar pipeline CI (GitHub Actions) a correr testes
-- Converter a lógica principal para uma REST API (ex: Express)
-- Adicionar observabilidade básica (ex: endpoint `/health`, logs estruturados mínimos)
+## 🎯 Objetivo Principal
+Atualiza o ficheiro `src/monolith.js` com a nova regra de negócio:
+**High Roller Policy:** Para qualquer cliente com gasto total (`totalSpent`) superior a **5000 EUR**, o `score` de risco deve ser fixado em **50**, independentemente de outras variáveis.
 
-## Escape condition
-- App corre em container
-- Pipeline passa
+## ⭐️ Bónus: Ops Master (+50 pts)
+Implementa um padrão de resiliência no ficheiro `src/server.js`.
+- Cria um endpoint `/health` (GET) que retorne `{ ok: true, uptime: process.uptime() }`.
 
-## O que existe hoje
-- `src/monolith.js` — um monólito com lógica misturada
-- `test/monolith.test.js` — testes simples
-
-## Como correr local
-```bash
-npm test
-npm start
-```
+## 🛠 Comandos Úteis
+- **Probe Node**: Verifica a estabilidade do sistema (pode falhar até o bónus ser aplicado).
+- **Test Decision Logic**: Verifica se a regra do High Roller está ativa.
+- **Activate Modern Core**: Finaliza a missão e o Escape Room.
