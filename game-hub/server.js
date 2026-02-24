@@ -5,14 +5,15 @@ const path = require('path');
 const fs = require('fs');
 const vm = require('vm');
 const crypto = require('crypto');
-const { exec } = require('child_process');
+const { Linter } = require('eslint');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
+const linter = new Linter();
 
 app.use(express.json());
 
-// --- 1. APIS DE LÓGICA (Prioridade Máxima) ---
+// --- 1. APIS DE LÓGICA ---
 
 app.post('/room1/api/login', (req, res) => res.json({ ok: true }));
 app.post('/room1/api/checkout', (req, res) => {
@@ -26,43 +27,39 @@ app.post('/room1/api/checkout', (req, res) => {
 });
 app.get('/room1/api/source', (req, res) => res.json({ ok: true, source: fs.readFileSync(path.join(__dirname, '../rooms/room1-archaeology/src/legacyService.js'), 'utf8') }));
 
-// Room 2 API - Robust Implementation
 app.post('/room2/api/invoice', (req, res) => {
   try {
     const src = fs.readFileSync(path.join(__dirname, '../rooms/room2-refactor-lab/src/invoiceEngine.js'), 'utf8');
-    const sandbox = { module: { exports: {} }, exports: {}, console, Date, Math, Number, String, JSON, Array, Object, Error };
-    vm.createContext(sandbox);
-    vm.runInContext(src, sandbox);
-    
-    // Tenta encontrar a classe InvoiceEngine em vários locais possíveis
-    const EngineClass = sandbox.module.exports.InvoiceEngine || sandbox.exports.InvoiceEngine || sandbox.InvoiceEngine;
-    
-    if (!EngineClass) throw new Error("A classe 'InvoiceEngine' não foi exportada corretamente.");
-    
-    const engine = new EngineClass();
-    const result = engine.generateInvoice(req.body, { tier: 'VIP' });
-    res.json({ ok: true, invoice: result });
-  } catch (e) {
-    console.error("[ROOM2_API_ERR]", e.message);
-    res.status(500).json({ ok: false, error: "Erro no Motor de Faturação: " + e.message });
-  }
+    const sandbox = { module: { exports: {} }, console, Date, Math, Number, String, JSON, Array, Object };
+    vm.createContext(sandbox); vm.runInContext(src, sandbox);
+    const engine = new sandbox.module.exports.InvoiceEngine();
+    res.json({ ok: true, invoice: engine.generateInvoice(req.body, { tier: 'VIP' }) });
+  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
 });
 
 app.get('/room2/api/validate-complexity', (req, res) => {
   try {
     const src = fs.readFileSync(path.join(__dirname, '../rooms/room2-refactor-lab/src/invoiceEngine.js'), 'utf8');
-    const clean = src.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, '');
-    const complexity = (clean.match(/\b(if|else|switch|for|while|&&|\|\||\?)\b/g) || []).length;
-    if (complexity > 12) {
-      res.json({ ok: false, message: `RISCO ESTRUTURAL: ${complexity}`, details: `O limite para esta missão é 12.` });
+    // USAR MOTOR REAL LOCALMENTE TAMBÉM
+    const msgs = linter.verify(src, {
+      languageOptions: { ecmaVersion: 2022, sourceType: 'commonjs' },
+      rules: { complexity: ['error', 1] }
+    });
+    let max = 0;
+    msgs.forEach(m => {
+      const match = m.message.match(/complexity of (\d+)/);
+      if (match) max = Math.max(max, parseInt(match[1]));
+    });
+    
+    if (max > 10) {
+      res.json({ ok: false, message: `RISCO ESTRUTURAL: ${max}`, details: `O limite de segurança é 10.` });
     } else {
-      res.json({ ok: true, message: `CÓDIGO LIMPO! Complexidade: ${complexity}`, details: "O sistema está otimizado para o QG." });
+      res.json({ ok: true, message: `CÓDIGO LIMPO! Complexidade: ${max}`, details: "O sistema está agora otimizado para o QG." });
     }
   } catch (e) { res.json({ ok: false, message: "Erro ao ler ficheiro." }); }
 });
 app.get('/room2/api/source', (req, res) => res.json({ ok: true, source: fs.readFileSync(path.join(__dirname, '../rooms/room2-refactor-lab/src/invoiceEngine.js'), 'utf8') }));
 
-// Room 3 API
 app.post('/room3/api/login', (req, res) => {
   try {
     const { username, password } = req.body;
@@ -74,7 +71,6 @@ app.post('/room3/api/login', (req, res) => {
 });
 app.get('/room3/api/source', (req, res) => res.json({ ok: true, source: fs.readFileSync(path.join(__dirname, '../rooms/room3-security-vault/src/userRepo.js'), 'utf8') }));
 
-// Room 4 API (Final)
 app.get('/final/status', (req, res) => {
   if (Math.random() < 0.2) return res.status(503).json({ ok: false });
   res.json({ ok: true, uptime: process.uptime() });
@@ -98,4 +94,4 @@ app.use('/room3', express.static(path.join(__dirname, '../rooms/room3-security-v
 app.use('/final', express.static(path.join(__dirname, '../rooms/final-modernisation/public')));
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.listen(PORT, () => console.log(`🚀 UNIFIED SERVER ONLINE ON PORT ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 BATTLE-READY UNIFIED SERVER ONLINE ON PORT ${PORT}`));

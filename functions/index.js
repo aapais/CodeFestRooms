@@ -1,144 +1,127 @@
 /**
- * Firebase Functions - Synchronized Raw Complexity Version
+ * Firebase Functions - High-Fidelity Validation with Real ESLint
  */
 
 const functions = require('firebase-functions');
-const admin = require('firebase-admin');
-const express = require('express');
-const cors = require('cors');
-const vm = require('vm');
-const crypto = require('crypto');
 
-admin.initializeApp();
-const db = admin.firestore();
+exports.api = functions.https.onRequest(async (req, res) => {
+  const admin = require('firebase-admin');
+  const express = require('express');
+  const cors = require('cors');
+  const vm = require('vm');
+  const { Linter } = require('eslint');
 
-const app = express();
-app.use(cors({ origin: true }));
-app.use(express.json());
+  if (!admin.apps.length) admin.initializeApp();
+  const db = admin.firestore();
+  const linter = new Linter();
 
-const ROOM_POINTS = { room1: 100, room2: 150, room3: 150, final: 200 };
+  const app = express();
+  app.use(cors({ origin: true }));
+  app.use(express.json());
 
-function validateRoom1(src) {
-  try {
-    const sandbox = { module: { exports: {} }, require: (m) => m === 'crypto' ? crypto : {}, console: { log: () => {} }, Date, Math, Number, String, JSON };
-    vm.createContext(sandbox); vm.runInContext(src, sandbox, { timeout: 500 });
-    const res = sandbox.module.exports.placeOrder('t', { items: [{ priceCents: 1000, qty: 5 }], discountCode: 'WELCOME10' });
-    return res?.order?.amounts?.taxCents === 1139 ? { ok: true } : { ok: false, error: "Audit Rejected: IVA incorreto." };
-  } catch (e) { return { ok: false, error: "Erro Room 1." }; }
-}
+  const ROOM_POINTS = { room1: 100, room2: 150, room3: 150, final: 200 };
 
-function validateRoom2(src) {
-  try {
-    const sandbox = { module: { exports: {} }, console: { log: () => {} }, Math, Number, String, JSON, Array, Error };
-    vm.createContext(sandbox); vm.runInContext(src, sandbox, { timeout: 500 });
-    const engine = new sandbox.module.exports.InvoiceEngine();
-    const res = engine.generateInvoice({ items: [{ sku: 'T', unitPrice: 100, qty: 2 }] }, { tier: 'VIP' });
-    
-    if (!res?.ok || !res.amounts || res.amounts.total !== 246) {
-      return { ok: false, error: "Integrity Failed: Lógica de cálculo incorreta." };
-    }
+  app.post('/api/team/update', async (req, res) => {
+    try {
+      const { name, token, sourceCode, completedRoom, serverCode } = req.body;
+      const teamRef = db.collection('teams').doc(name);
+      const doc = await teamRef.get();
+      if (!doc.exists) return res.status(404).json({ ok: false });
+      const team = doc.data();
+      if (team.token !== token) return res.status(403).json({ ok: false });
 
-    const clean = src.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, '');
-    const complexity = (clean.match(/\b(if|else|switch|for|while|&&|\|\||\?)\b/g) || []).length;
-    
-    if (complexity > 12) {
-      return { ok: false, error: `Risk Too High: A complexidade bruta (${complexity}) excede o limite de 12.` };
-    }
+      if (completedRoom) {
+        let vRes = { ok: true };
+        const sandbox = { module: { exports: {} }, exports: {}, console: { log: () => {} }, Date, Math, Number, String, JSON, Array, Error, require: (m) => m === 'crypto' ? require('crypto') : {}, process: { argv: [], exit: () => {} } };
+        vm.createContext(sandbox);
 
-    return { ok: true, complexity };
-  } catch (e) { return { ok: false, error: "Erro Room 2." }; }
-}
+        if (completedRoom === 'room1') {
+          vm.runInContext(sourceCode, sandbox, { timeout: 1000 });
+          const fn = sandbox.module.exports.placeOrder || sandbox.placeOrder;
+          const r = fn('t', { items: [{ priceCents: 1000, qty: 5 }], discountCode: 'WELCOME10' });
+          if (r?.order?.amounts?.taxCents !== 1139) vRes = { ok: false, error: "IVA incorreto." };
+        } else if (completedRoom === 'room2') {
+          // 1. Validar Lógica
+          vm.runInContext(sourceCode, sandbox, { timeout: 1000 });
+          const engine = new sandbox.module.exports.InvoiceEngine();
+          const r = engine.generateInvoice({ items: [{ sku: 'T', unitPrice: 100, qty: 2 }] }, { tier: 'VIP' });
+          if (!r?.ok || r.amounts?.total !== 246) {
+            vRes = { ok: false, error: "Integrity Failed: A lógica matemática foi quebrada." };
+          } else {
+            // 2. Validar Complexidade com ESLint REAL
+            const msgs = linter.verify(sourceCode, {
+              languageOptions: { ecmaVersion: 2022, sourceType: 'commonjs' },
+              rules: { complexity: ['error', 1] }
+            });
+            let max = 0;
+            msgs.forEach(m => {
+              const match = m.message.match(/complexity of (\d+)/);
+              if (match) max = Math.max(max, parseInt(match[1]));
+            });
+            vRes.complexity = max;
+            if (max > 10) vRes = { ok: false, error: `Complexidade de ${max} detetada. O limite é 10.` };
+          }
+        } else if (completedRoom === 'room3') {
+          if (sourceCode.includes(" + password") || !sourceCode.includes("?")) vRes = { ok: false, error: "Brecha de segurança ativa." };
+          else vRes.bonus = sourceCode.includes('bcrypt') || sourceCode.includes('.hash');
+        } else if (completedRoom === 'final') {
+          vm.runInContext(sourceCode, sandbox, { timeout: 1000 });
+          const svc = sandbox.module.exports.calcScore || sandbox.exports.calcScore || sandbox.calcScore;
+          const r1 = svc({ age: 30, country: 'PT', spends: [100] });
+          const r2 = svc({ age: 30, country: 'PT', spends: [6000] });
+          if (r1.score !== 17 || r2.score !== 50) vRes = { ok: false, error: "Lógica High Roller incorreta." };
+        }
 
-function validateRoom3(src) {
-  if (src.includes(" + password") || src.includes(" + username") || !src.includes("?")) return { ok: false, error: "Vulnerabilidade detetada." };
-  return { ok: true, bonus: src.includes('bcrypt') || src.includes('.hash') };
-}
+        if (!vRes.ok) return res.json({ ok: false, error: vRes.error });
 
-function validateFinal(src) {
-  try {
-    const sandbox = { module: { exports: {} }, exports: {}, console: { log: () => {} }, Date, Math, Number, String, JSON, Array, process: { argv: [], exit: () => {} }, require: () => ({}) };
-    vm.createContext(sandbox); vm.runInContext(src, sandbox, { timeout: 500 });
-    const svc = sandbox.module.exports.calcScore ? sandbox.module.exports : sandbox.exports;
-    const res1 = svc.calcScore({ age: 30, country: 'PT', spends: [100] });
-    const res2 = svc.calcScore({ age: 30, country: 'PT', spends: [6000] });
-    return (res1.score === 17 && res2.score === 50) ? { ok: true } : { ok: false, error: "Lógica High Roller incorreta." };
-  } catch (e) { return { ok: false, error: "Erro Room 4." }; }
-}
+        const updates = { updatedAt: Date.now() };
+        let newPts = 0;
+        if (!(team.completedRooms || []).includes(completedRoom)) {
+          newPts += ROOM_POINTS[completedRoom];
+          updates.completedRooms = [...(team.completedRooms || []), completedRoom];
+        }
+        
+        let bVal = 0;
+        if (completedRoom === 'room1' && (sourceCode.match(/\/\*\*[\s\S]*?\*\//g) || []).length >= 3) bVal = 50;
+        if (completedRoom === 'room2' && vRes.complexity < 5) bVal = 75; // Limite original restaurado!
+        if (completedRoom === 'room3' && vRes.bonus) bVal = 100;
+        if (completedRoom === 'final' && serverCode?.includes("get('/health'")) bVal = 50;
 
-app.post('/api/team/update', async (req, res) => {
-  try {
-    const { name, token, sourceCode, completedRoom, serverCode } = req.body;
-    const teamRef = db.collection('teams').doc(name);
-    const doc = await teamRef.get();
-    if (!doc.exists) return res.status(404).json({ ok: false });
-    const team = doc.data();
-    if (team.token !== token) return res.status(403).json({ ok: false });
+        const oldB = team.bonusMap?.[completedRoom] || 0;
+        if (bVal > oldB) { newPts += (bVal - oldB); if(!updates.bonusMap) updates.bonusMap = team.bonusMap || {}; updates.bonusMap[completedRoom] = bVal; }
+        if (newPts > 0) { updates.score = (team.score || 0) + newPts; updates.lastResult = `✅ Missão ${completedRoom} Atualizada`; }
+        await teamRef.update(updates);
+      }
+      res.json({ ok: true });
+    } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+  });
 
-    if (completedRoom) {
-      let v = { ok: true };
-      if (completedRoom === 'room1') v = validateRoom1(sourceCode);
-      else if (completedRoom === 'room2') v = validateRoom2(sourceCode);
-      else if (completedRoom === 'room3') v = validateRoom3(sourceCode);
-      else if (completedRoom === 'final') v = validateFinal(sourceCode);
-      if (!v.ok) return res.status(200).json({ ok: false, error: v.error });
+  app.get(['/state', '/api/state'], async (req, res) => {
+    const snp = await db.collection('teams').get();
+    const teams = []; snp.forEach(doc => teams.push(doc.data()));
+    teams.sort((a,b) => (b.score - a.score) || (a.updatedAt - b.updatedAt));
+    res.json({ ok: true, teams });
+  });
 
-      const updates = { updatedAt: Date.now() };
-      const alreadyDone = (team.completedRooms || []).includes(completedRoom);
-      const bonusMap = team.bonusMap || {};
-      let newPoints = 0;
+  app.get(['/timer', '/api/timer'], async (req, res) => {
+    const doc = await db.collection('gameState').doc('timer').get();
+    res.json({ ok: true, timer: doc.exists ? doc.data() : null });
+  });
 
-      if (!alreadyDone) { newPoints += ROOM_POINTS[completedRoom]; updates.completedRooms = [...(team.completedRooms || []), completedRoom]; }
+  app.post(['/kickoff', '/api/kickoff'], async (req, res) => {
+    const startTime = Date.now();
+    await db.collection('gameState').doc('timer').set({ startTime, duration: 50*60*1000 });
+    res.json({ ok: true, startTime });
+  });
 
-      let bonusVal = 0;
-      if (completedRoom === 'room1' && (sourceCode.match(/\/\*\*[\s\S]*?\*\//g) || []).length >= 3) bonusVal = 50;
-      if (completedRoom === 'room2' && v.complexity < 7) bonusVal = 75; // 5 + 2 = 7
-      if (completedRoom === 'room3' && v.bonus) bonusVal = 100;
-      if (completedRoom === 'final' && serverCode && (serverCode.includes("get('/health'") || serverCode.includes("res.status(200)"))) bonusVal = 50;
-
-      const oldBonus = bonusMap[completedRoom] || 0;
-      if (bonusVal > oldBonus) { newPoints += (bonusVal - oldBonus); bonusMap[completedRoom] = bonusVal; updates.bonusMap = bonusMap; }
-
-      if (newPoints > 0) { updates.score = (team.score || 0) + newPoints; updates.lastResult = `✅ Mission ${completedRoom} Updated`; }
-      await teamRef.update(updates);
+  app.post(['/reset', '/api/reset'], async (req, res) => {
+    await db.collection('gameState').doc('timer').delete();
+    if (req.body?.clearTeams) {
+      const snp = await db.collection('teams').get();
+      const batch = db.batch(); snp.forEach(d => batch.delete(d.ref)); await batch.commit();
     }
     res.json({ ok: true });
-  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
-});
+  });
 
-app.get('/api/state', async (req, res) => {
-  const snp = await db.collection('teams').get();
-  const teams = []; snp.forEach(doc => teams.push(doc.data()));
-  teams.sort((a,b) => (b.score - a.score) || (a.updatedAt - b.updatedAt));
-  res.json({ ok: true, teams });
+  return app(req, res);
 });
-
-app.post('/api/team/login', async (req, res) => {
-  const name = String(req.body.name || 'Team').trim().slice(0, 20);
-  const teamRef = db.collection('teams').doc(name);
-  const doc = await teamRef.get();
-  let team = doc.exists ? doc.data() : { name, token: Math.random().toString(36).slice(2), score: 0, completedRooms: [], bonusMap: {}, updatedAt: Date.now() };
-  if (!doc.exists) await teamRef.set(team);
-  res.json({ ok: true, team });
-});
-
-app.get('/api/timer', async (req, res) => {
-  const doc = await db.collection('gameState').doc('timer').get();
-  res.json({ ok: true, timer: doc.exists ? doc.data() : null });
-});
-
-app.post('/api/kickoff', async (req, res) => {
-  const startTime = Date.now();
-  await db.collection('gameState').doc('timer').set({ startTime, duration: 50*60*1000 });
-  res.json({ ok: true });
-});
-
-app.post('/api/reset', async (req, res) => {
-  await db.collection('gameState').doc('timer').delete();
-  if (req.body?.clearTeams) {
-    const snp = await db.collection('teams').get();
-    const batch = db.batch(); snp.forEach(d => batch.delete(d.ref)); await batch.commit();
-  }
-  res.json({ ok: true });
-});
-
-exports.api = functions.https.onRequest(app);
