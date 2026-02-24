@@ -5,6 +5,7 @@ const path = require('path');
 const fs = require('fs');
 const vm = require('vm');
 const crypto = require('crypto');
+const { exec } = require('child_process');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -13,7 +14,6 @@ app.use(express.json());
 
 // --- 1. APIS DE LÓGICA (Prioridade Máxima) ---
 
-// Room 1 API
 app.post('/room1/api/login', (req, res) => res.json({ ok: true }));
 app.post('/room1/api/checkout', (req, res) => {
   try {
@@ -26,39 +26,37 @@ app.post('/room1/api/checkout', (req, res) => {
 });
 app.get('/room1/api/source', (req, res) => res.json({ ok: true, source: fs.readFileSync(path.join(__dirname, '../rooms/room1-archaeology/src/legacyService.js'), 'utf8') }));
 
-// Room 2 API
+// Room 2 API - Robust Implementation
 app.post('/room2/api/invoice', (req, res) => {
   try {
     const src = fs.readFileSync(path.join(__dirname, '../rooms/room2-refactor-lab/src/invoiceEngine.js'), 'utf8');
-    const sandbox = { module: { exports: {} }, console, Date, Math, Number, String, JSON, Array, Object };
-    vm.createContext(sandbox); vm.runInContext(src, sandbox);
-    const engine = new sandbox.module.exports.InvoiceEngine();
-    res.json({ ok: true, invoice: engine.generateInvoice(req.body, { tier: 'VIP' }) });
-  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+    const sandbox = { module: { exports: {} }, exports: {}, console, Date, Math, Number, String, JSON, Array, Object, Error };
+    vm.createContext(sandbox);
+    vm.runInContext(src, sandbox);
+    
+    // Tenta encontrar a classe InvoiceEngine em vários locais possíveis
+    const EngineClass = sandbox.module.exports.InvoiceEngine || sandbox.exports.InvoiceEngine || sandbox.InvoiceEngine;
+    
+    if (!EngineClass) throw new Error("A classe 'InvoiceEngine' não foi exportada corretamente.");
+    
+    const engine = new EngineClass();
+    const result = engine.generateInvoice(req.body, { tier: 'VIP' });
+    res.json({ ok: true, invoice: result });
+  } catch (e) {
+    console.error("[ROOM2_API_ERR]", e.message);
+    res.status(500).json({ ok: false, error: "Erro no Motor de Faturação: " + e.message });
+  }
 });
 
 app.get('/room2/api/validate-complexity', (req, res) => {
   try {
     const src = fs.readFileSync(path.join(__dirname, '../rooms/room2-refactor-lab/src/invoiceEngine.js'), 'utf8');
-    // UNIFICAÇÃO: Usar a mesma lógica de Regex do Firebase
     const clean = src.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, '');
     const complexity = (clean.match(/\b(if|else|switch|for|while|&&|\|\||\?)\b/g) || []).length;
-    
-    // Mapeamento visual para manter o objetivo de "10"
-    const displayComplexity = Math.max(0, complexity - 2); 
-
     if (complexity > 12) {
-      res.json({ 
-        ok: false, 
-        message: `COMPLEXIDADE: ${displayComplexity}`, 
-        details: `O QG detetou que a arquitetura ainda é demasiado complexa. Tenta simplificar ou remover blocos redundantes.` 
-      });
+      res.json({ ok: false, message: `RISCO ESTRUTURAL: ${complexity}`, details: `O limite para esta missão é 12.` });
     } else {
-      res.json({ 
-        ok: true, 
-        message: `CÓDIGO LIMPO! Complexidade: ${displayComplexity}`, 
-        details: "O sistema está agora otimizado e pronto para submissão ao QG." 
-      });
+      res.json({ ok: true, message: `CÓDIGO LIMPO! Complexidade: ${complexity}`, details: "O sistema está otimizado para o QG." });
     }
   } catch (e) { res.json({ ok: false, message: "Erro ao ler ficheiro." }); }
 });
@@ -86,8 +84,8 @@ app.post('/final/api/score', (req, res) => {
     const src = fs.readFileSync(path.join(__dirname, '../rooms/final-modernisation/src/monolith.js'), 'utf8');
     const sandbox = { module: { exports: {} }, exports: {}, console, Date, Math, Number, String, JSON, Array, Object, Error, require: () => ({}), process: { argv: [], exit: () => {} } };
     vm.createContext(sandbox); vm.runInContext(src, sandbox);
-    const svc = sandbox.module.exports.calcScore ? sandbox.module.exports : (sandbox.exports.calcScore ? sandbox.exports : sandbox);
-    res.json({ ok: true, ...svc.calcScore(req.body) });
+    const svc = sandbox.module.exports.calcScore || sandbox.exports.calcScore || sandbox.calcScore;
+    res.json({ ok: true, ...svc(req.body) });
   } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
 });
 app.get('/final/api/source', (req, res) => res.json({ ok: true, source: fs.readFileSync(path.join(__dirname, '../rooms/final-modernisation/src/monolith.js'), 'utf8') }));
