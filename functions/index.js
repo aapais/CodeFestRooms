@@ -69,7 +69,7 @@ function validateRoomCode(roomId, sourceCode) {
 
     if (roomId === 'room3') {
       if (/['"`]\s*\+\s*\w+|\w+\s*\+\s*['"`]/.test(sourceCode)) {
-        return { ok: false, error: "BRECHA DE SEGURANÇA: Concatenação de strings detetada em query SQL. Usa Prepared Statements." };
+        return { ok: false, error: "BRECHA DE SEGURANÇA: Concatenação de strings detetada em query SQL." };
       }
       const hasHashing = sourceCode.includes('bcrypt') || sourceCode.includes('hashSync') || sourceCode.includes('pbkdf2');
       return { ok: true, points: 150, bonus: hasHashing ? 100 : 0 };
@@ -128,18 +128,37 @@ router.post('/team/login', async (req, res) => {
 router.post('/team/update', async (req, res) => {
   const { name, token, completedRoom, sourceCode, status, result } = req.body;
   try {
+    // 1. Verificar se o tempo acabou
+    const timerDoc = await db.doc(TIMER_DOC).get();
+    let timeIsUp = false;
+    if (timerDoc.exists) {
+      const { startTime, duration } = timerDoc.data();
+      if (startTime && (Date.now() > startTime + (duration * 1000))) {
+        timeIsUp = true;
+      }
+    }
+
     const snap = await db.collection('teams').where('name', '==', name).limit(1).get();
     if (snap.empty) return res.status(404).json({ ok: false, error: "Equipa não encontrada" });
     const teamDoc = snap.docs[0], teamData = teamDoc.data();
     if (token && teamData.token !== token) return res.status(403).json({ ok: false, error: "Token inválido" });
+    
     let pts = 0, bonus = 0, msg = result || "";
     if (completedRoom && sourceCode) {
       if (teamData.completedRooms && teamData.completedRooms.includes(completedRoom)) return res.json({ ok: true, message: "Já concluído." });
+      
       const v = validateRoomCode(completedRoom, sourceCode);
       if (!v.ok) return res.status(400).json({ ok: false, error: v.error });
-      pts = v.points; bonus = v.bonus || 0;
-      msg = `Missão cumprida! (+${pts + bonus} pts)`;
+      
+      if (timeIsUp) {
+        msg = `Missão validada, mas o tempo esgotou! Pontos não atribuídos.`;
+        pts = 0; bonus = 0;
+      } else {
+        pts = v.points; bonus = v.bonus || 0;
+        msg = `Missão cumprida! (+${pts + bonus} pts)`;
+      }
     }
+
     const upd = { updatedAt: admin.firestore.FieldValue.serverTimestamp() };
     if (status) upd.status = status;
     if (msg) upd.lastResult = msg;
@@ -148,9 +167,14 @@ router.post('/team/update', async (req, res) => {
       upd.completedRooms = admin.firestore.FieldValue.arrayUnion(completedRoom);
       if (bonus > 0) upd[`bonusMap.${completedRoom}`] = bonus;
       upd.status = 'completed-' + completedRoom;
+    } else if (completedRoom && timeIsUp) {
+      // Se terminou mas o tempo acabou, marcamos como completo mas sem pontos
+      upd.completedRooms = admin.firestore.FieldValue.arrayUnion(completedRoom);
+      upd.status = 'completed-late-' + completedRoom;
     }
+
     await teamDoc.ref.update(upd);
-    res.json({ ok: true, pointsAdded: pts + bonus });
+    res.json({ ok: true, pointsAdded: pts + bonus, timeIsUp });
   } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
 });
 app.use('/api', router);
