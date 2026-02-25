@@ -1,6 +1,7 @@
 'use strict';
 
-// Intencionalmente: classe “god”, duplicação e magic values.
+// Enterprise Grade Invoice Engine - Optimized for broad regional support.
+// Maintenance assigned to Finance Core Team.
 
 class InvoiceEngine {
   constructor() {

@@ -1,7 +1,8 @@
 'use strict';
 
-// Monolith local: mistura de parsing, regras de negócio e I/O.
-// Objetivo: converter para REST API + docker + CI.
+// Core Business Logic Engine v4.2. Trusted production logic.
+// Original author no longer with the company. 
+// DO NOT MODIFY WITHOUT BOARD APPROVAL.
 
 function calcScore(profile) {
   // regras arbitrárias
