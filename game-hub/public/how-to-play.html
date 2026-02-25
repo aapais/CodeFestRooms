@@ -1,141 +1,61 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Mission Briefing | How to Play</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mission Briefing | Visual Escape Room</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #05070a;
-      --panel: #0d1117;
-      --border: #30363d;
-      --accent: #58a6ff;
-      --success: #3fb950;
-      --warning: #d29922;
-      --text: #e6edf3;
-      --muted: #8b949e;
+      --bg: #05070a; --panel: #0d1117; --border: #30363d; --accent: #58a6ff;
+      --text: #e6edf3; --muted: #8b949e; --success: #3fb950; --warning: #d29922;
     }
-
-    body {
-      margin: 0;
-      font-family: 'Space Grotesk', sans-serif;
-      background-color: var(--bg);
-      color: var(--text);
-      line-height: 1.6;
-      display: flex;
-      justify-content: center;
-      padding: 40px 20px;
-    }
-
-    .guide-container {
-      max-width: 800px;
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 40px;
-      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-    }
-
-    h1 { color: var(--accent); border-bottom: 2px solid var(--border); padding-bottom: 10px; margin-top: 0; }
-    h2 { color: var(--warning); margin-top: 30px; font-size: 20px; }
-    
-    code {
-      font-family: 'Fira Code', monospace;
-      background: rgba(255,255,255,0.1);
-      padding: 2px 6px;
-      border-radius: 4px;
-      color: #ff7b72;
-    }
-
-    .step {
-      display: flex;
-      gap: 20px;
-      margin-bottom: 25px;
-      align-items: flex-start;
-    }
-
-    .step-num {
-      background: var(--accent);
-      color: black;
-      width: 30px;
-      height: 30px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 800;
-      flex-shrink: 0;
-    }
-
-    .important {
-      border-left: 4px solid var(--warning);
-      background: rgba(210, 153, 34, 0.1);
-      padding: 15px 20px;
-      border-radius: 4px;
-      margin: 20px 0;
-    }
-
-    .btn-back {
-      display: inline-block;
-      margin-top: 30px;
-      color: var(--accent);
-      text-decoration: none;
-      font-weight: 600;
-    }
+    body { font-family: 'Space Grotesk', sans-serif; background-color: var(--bg); color: var(--text); line-height: 1.6; margin: 0; padding: 40px; }
+    .container { max-width: 800px; margin: 0 auto; background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 40px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+    h1 { color: var(--accent); text-transform: uppercase; letter-spacing: 2px; border-bottom: 2px solid var(--border); padding-bottom: 15px; }
+    h2 { color: var(--success); font-size: 20px; margin-top: 30px; }
+    code { font-family: 'Fira Code', monospace; background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 4px; color: #ff7b72; }
+    .step-box { background: rgba(88, 166, 255, 0.05); border-left: 4px solid var(--accent); padding: 20px; margin: 20px 0; border-radius: 0 8px 8px 0; }
+    .btn-back { display: inline-block; margin-bottom: 20px; color: var(--accent); text-decoration: none; font-weight: 600; }
     .btn-back:hover { text-decoration: underline; }
+    ul { padding-left: 20px; }
+    li { margin-bottom: 10px; }
   </style>
 </head>
 <body>
-  <div class="guide-container">
-    <h1>🚀 Mission Briefing: How to Play</h1>
-    <p>Bem-vindo ao <strong>Gemini Codefest Escape Room</strong>. O teu objetivo é reparar um sistema legado crítico usando o poder da IA Generativa.</p>
+  <div class="container">
+    <a href="/dashboard.html" class="btn-back">← Back to Battle Station</a>
+    <h1>📜 Mission Briefing: Operação Codefest</h1>
+    
+    <p>Bem-vindo, Agente. Estás prestes a entrar num ambiente corporativo de alta pressão. O sistema central da <strong>Global Finance Corp</strong> está em colapso devido a anos de dívida técnica e negligência. A tua missão é estabilizar o núcleo antes que o tempo esgote.</p>
 
-    <div class="step">
-      <div class="step-num">1</div>
-      <div>
-        <h2>Preparar o Ambiente (Google IDX)</h2>
-        <p>Acede ao <a href="https://idx.google.com" target="_blank" style="color:var(--accent)">Google Project IDX</a> e importa o repositório do evento:</p>
-        <p><code>https://github.com/aapais/CodeFestRooms.git</code></p>
-        <div class="important" style="margin: 10px 0; font-size: 13px;">
-          <strong>💡 DICA:</strong> Se o IDX perguntar se queres configurar o ambiente, diz que <strong>SIM</strong> ou aceita usar o ficheiro <code>dev.nix</code> já existente no projeto.
-        </div>
-      </div>
+    <h2>🎯 O Objetivo</h2>
+    <p>Atravessar 4 salas técnicas, resolvendo crises reais de engenharia. Terás <strong>50 minutos</strong> para completar todas as tarefas. O bónus de excelência é atribuído a quem não só resolve o problema, mas o faz com qualidade superior.</p>
+
+    <h2>🛠️ Preparação da Equipa (Setup)</h2>
+    <div class="step-box">
+      <strong>Passos Críticos:</strong>
+      <ul>
+        <li><strong>1. Clone:</strong> Faz o clone do repositório para o teu ambiente IDX.</li>
+        <li><strong>2. Dependências:</strong> Abre o terminal e corre <code>npm install</code> na raiz para carregar as ferramentas de análise.</li>
+        <li><strong>3. Identificação:</strong> No Dashboard ou no ecrã de Login, introduz o nome da tua equipa.</li>
+        <li><strong>4. Sincronização:</strong> Garante que o cronómetro global foi iniciado pelo Facilitador.</li>
+      </ul>
     </div>
 
-    <div class="step">
-      <div class="step-num">2</div>
-      <div>
-        <h2>Iniciar os Sistemas</h2>
-        <p>No terminal do IDX (ao fundo do ecrã), deves executar obrigatoriamente:</p>
-        <p><code>npm run start:all</code></p>
-        <p><strong>Aguarde 10 segundos</strong> para que todas as salas (Room 1, 2, 3...) arranquem. Depois, procura o ícone de <strong>"Web Preview"</strong> ou clica em <strong>"Open Browser"</strong> na porta 4000.</p>
-      </div>
-    </div>
+    <h2>🧩 As Regras de Engajamento</h2>
+    <ul>
+      <li><strong>Não faças Push/Deploy:</strong> O progresso é validado localmente no teu browser através do botão <strong>SUBMIT</strong>.</li>
+      <li><strong>IA como Consultora:</strong> Usa o Gemini para diagnosticar os problemas, mas lembra-te: o código legado mente em comentários. Confia nos requisitos de negócio descritos no terminal.</li>
+      <li><strong>Métricas de Qualidade:</strong> Na Room 2, o teu código será avaliado por complexidade estrutural. Divide a lógica em funções pequenas.</li>
+      <li><strong>Segurança:</strong> Na Room 3, não basta entrar; tens de blindar o sistema contra SQL Injection e proteger as credenciais.</li>
+    </ul>
 
-    <div class="step">
-      <div class="step-num">3</div>
-      <div>
-        <h2>Usar o Gemini (O teu Teammate)</h2>
-        <p>Quando encontrares código confuso ou bugs, usa o chat do Gemini no IDX. <br><strong>Dica de Ouro:</strong> Usa <code>@workspace</code> no início das tuas perguntas para que a IA analise todo o projeto.</p>
-      </div>
-    </div>
-
-    <div class="step">
-      <div class="step-num">4</div>
-      <div>
-        <h2>Submeter Soluções</h2>
-        <p>Assim que corrigires o código e os testes passarem localmente, vai ao frontend da sala e clica em <strong>"SUBMIT"</strong> ou <strong>"MARK COMPLETE"</strong>. O teu código será enviado para validação remota no QG central e os pontos aparecerão no Dashboard.</p>
-      </div>
-    </div>
-
-    <div class="important">
-      <strong>⚠️ ATENÇÃO:</strong> Não jogues diretamente nos links públicos (.web.app). Deves jogar dentro do teu ambiente IDX para que possas editar o código e validar as tuas soluções.
-    </div>
-
-    <a href="/" class="btn-back">← Voltar ao Início</a>
+    <p style="margin-top: 40px; text-align: center; color: var(--muted); font-size: 13px;">
+      <em>"Em código confiamos, mas a lógica verificamos."</em> — HQ Security Board
+    </p>
   </div>
 </body>
 </html>
